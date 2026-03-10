@@ -94,7 +94,20 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .date-clear{background:none;border:none;cursor:pointer;color:#bbb;font-size:11px;padding:2px 4px;transition:color .1s;line-height:1;}
 .date-clear:hover{color:var(--red);}
 
-/* ── STATS ── */
+/* ── LEGENDA ── */
+.legenda-wrap{position:relative;}
+.btn-legenda{background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;padding:6px 14px;border-radius:20px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.btn-legenda:hover{border-color:var(--accent);color:var(--accent);}
+.btn-legenda svg{width:12px;height:12px;flex-shrink:0;}
+.legenda-popup{display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;width:340px;box-shadow:0 8px 32px rgba(0,0,0,.12);z-index:300;}
+.legenda-popup.open{display:block;}
+.legenda-section{margin-bottom:14px;}
+.legenda-section:last-child{margin-bottom:0;}
+.legenda-section-title{font-family:'Manrope',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text);margin-bottom:8px;}
+.legenda-item{display:flex;align-items:baseline;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);}
+.legenda-item:last-child{border-bottom:none;}
+.legenda-badge{font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:2px 8px;border-radius:10px;font-weight:500;white-space:nowrap;flex-shrink:0;}
+.legenda-desc{font-size:10px;color:var(--muted);line-height:1.4;}
 .stats-gestor-row{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
 .stat-chip{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;display:flex;flex-direction:column;gap:1px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
 .stat-val{font-family:'Manrope',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.03em;}
@@ -214,7 +227,53 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
   <!-- STATS + GESTOR ROW -->
   <div class="stats-gestor-row" id="statsBar">
     <!-- filled by renderStats() -->
-    <button class="btn-gestor" id="btnGestor" onclick="openPinModal()" style="margin-left:auto;">
+    <div class="legenda-wrap" style="margin-left:auto;">
+      <button class="btn-legenda" onclick="toggleLegenda(event)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 11V8M8 5.5v.5"/></svg>
+        Legenda
+      </button>
+      <div class="legenda-popup" id="legendaPopup">
+        <div class="legenda-section">
+          <div class="legenda-section-title">Prioridade</div>
+          <div class="legenda-item">
+            <span class="legenda-badge prio-tag urgente">Urgente</span>
+            <span class="legenda-desc">Requer atenção imediata — deve ser tratado antes de qualquer outra tarefa</span>
+          </div>
+          <div class="legenda-item">
+            <span class="legenda-badge prio-tag normal">Normal</span>
+            <span class="legenda-desc">A tratar durante o dia de hoje, sem atrasos</span>
+          </div>
+          <div class="legenda-item">
+            <span class="legenda-badge prio-tag baixa">Baixa</span>
+            <span class="legenda-desc">Sem pressão imediata — pode ser feito nos próximos dias</span>
+          </div>
+        </div>
+        <div class="legenda-section">
+          <div class="legenda-section-title">Estado</div>
+          <div class="legenda-item">
+            <span class="legenda-badge estado-pill aguardar">A aguardar</span>
+            <span class="legenda-desc">Pedido recebido, ainda não iniciado</span>
+          </div>
+          <div class="legenda-item">
+            <span class="legenda-badge estado-pill progresso">Em progresso</span>
+            <span class="legenda-desc">A ser trabalhado agora</span>
+          </div>
+          <div class="legenda-item">
+            <span class="legenda-badge estado-pill pendente">Pendente</span>
+            <span class="legenda-desc">Aguarda resposta, informação ou aprovação externa</span>
+          </div>
+          <div class="legenda-item">
+            <span class="legenda-badge estado-pill concluido">Concluído</span>
+            <span class="legenda-desc">Tarefa terminada com sucesso</span>
+          </div>
+          <div class="legenda-item">
+            <span class="legenda-badge estado-pill cancelado">Cancelado</span>
+            <span class="legenda-desc">Tarefa anulada ou deixou de ser necessária</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-gestor" id="btnGestor" onclick="openPinModal()">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="8" rx="1.5"/><path d="M5 7V5a3 3 0 016 0v2"/></svg>
       Modo Gestor
     </button>
@@ -597,14 +656,17 @@ function renderStats() {
   const progresso  = tasks.filter(t => t.estado === 'progresso').length;
   const urgentes   = tasks.filter(t => t.prioridade === 'urgente' && t.estado !== 'concluido' && t.estado !== 'cancelado').length;
   const concluidas = tasks.filter(t => t.estado === 'concluido').length;
+  const legendaWrap = document.querySelector('.legenda-wrap');
   const btn = document.getElementById('btnGestor');
-  document.getElementById('statsBar').innerHTML = `
+  const bar = document.getElementById('statsBar');
+  bar.innerHTML = `
     <div class="stat-chip"><span class="stat-val">${total}</span><span class="stat-lbl">Total</span></div>
     <div class="stat-chip s-progresso"><span class="stat-val">${progresso}</span><span class="stat-lbl">Em progresso</span></div>
     <div class="stat-chip s-urgente"><span class="stat-val">${urgentes}</span><span class="stat-lbl">Urgentes</span></div>
     <div class="stat-chip s-ok"><span class="stat-val">${concluidas}</span><span class="stat-lbl">Concluídas</span></div>
   `;
-  document.getElementById('statsBar').appendChild(btn);
+  bar.appendChild(legendaWrap);
+  bar.appendChild(btn);
 }
 
 function renderList() {
@@ -701,6 +763,20 @@ function selPrio(p) {
   selPrioVal = p;
   document.querySelectorAll('.prio-pill').forEach(b => b.classList.toggle('sel', b.dataset.p === p));
 }
+
+// ═══════════════════════════════════════
+// LEGENDA
+// ═══════════════════════════════════════
+function toggleLegenda(e) {
+  e.stopPropagation();
+  document.getElementById('legendaPopup').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  const popup = document.getElementById('legendaPopup');
+  if (popup && !popup.closest('.legenda-wrap').contains(e.target)) {
+    popup.classList.remove('open');
+  }
+});
 
 // ═══════════════════════════════════════
 // PIN / GESTOR
