@@ -326,7 +326,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
 <div class="tip" id="tip"></div>
 
-<script type="module">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
 // ═══════════════════════════════════════════════
 // DATA
 // ═══════════════════════════════════════════════
@@ -945,10 +947,8 @@ function showTip(e, day, dept) {
 function hideTip(){ tipEl.classList.remove('on'); }
 
 // ═══════════════════════════════════════════════
-// FIREBASE
+// FIREBASE (compat SDK — funciona em GitHub Pages)
 // ═══════════════════════════════════════════════
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBbTDfCCC9o5oxMSMRsvCUC50Iu6L0aqT8",
@@ -956,21 +956,17 @@ const firebaseConfig = {
   projectId: "calendario-trabalho-39a6c",
   storageBucket: "calendario-trabalho-39a6c.firebasestorage.app",
   messagingSenderId: "596069405321",
-  appId: "1:596069405321:web:275bb9da220206d3da6c58",
-  measurementId: "G-E0ZX8DCPHH"
+  appId: "1:596069405321:web:275bb9da220206d3da6c58"
 };
 
-const fbApp = initializeApp(firebaseConfig);
-const db    = getFirestore(fbApp);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-// ID deste calendário — muda este valor em cada ficheiro HTML para ter calendários separados
 const CALENDAR_ID = 'calendario_lisboa';
-const docRef = doc(db, 'calendarios', CALENDAR_ID);
+const docRef = db.collection('calendarios').doc(CALENDAR_ID);
 
 let isSaving = false;
-let remoteUpdatePending = false;
 
-// ── INDICADOR de estado ──
 function setStatus(msg, color) {
   const el = document.getElementById('syncStatus');
   if (!el) return;
@@ -978,13 +974,12 @@ function setStatus(msg, color) {
   el.style.color = color || 'var(--muted)';
 }
 
-// ── GUARDAR no Firestore ──
 async function saveToFirebase() {
   if (isSaving) return;
   isSaving = true;
   setStatus('A guardar…', '#f59e0b');
   try {
-    await setDoc(docRef, {
+    await docRef.set({
       departments: departments,
       events: events,
       updatedAt: Date.now()
@@ -992,25 +987,22 @@ async function saveToFirebase() {
     setStatus('✓ Guardado', '#16a34a');
     setTimeout(() => setStatus(''), 3000);
   } catch(e) {
-    console.error(e);
+    console.error('Erro Firebase:', e);
     setStatus('Erro ao guardar', '#dc2626');
   }
   isSaving = false;
 }
 
-// ── CARREGAR e ouvir alterações em tempo real ──
 function startRealtimeSync() {
   setStatus('A ligar…', '#f59e0b');
-  onSnapshot(docRef, (snap) => {
-    if (!snap.exists()) {
-      // Documento ainda não existe — guarda os dados default
+  docRef.onSnapshot((snap) => {
+    if (!snap.exists) {
       saveToFirebase();
       return;
     }
     const data = snap.data();
-    // Evita loop: só actualiza se não fomos nós a escrever
     if (!isSaving) {
-      if (data.departments) departments = data.departments;
+      if (data.departments && data.departments.length) departments = data.departments;
       if (data.events)      events      = data.events;
       if (!departments.find(d => d.id === selDeptId)) selDeptId = departments[0]?.id || '';
       render();
@@ -1018,58 +1010,29 @@ function startRealtimeSync() {
       setTimeout(() => setStatus(''), 3000);
     }
   }, (err) => {
-    console.error(err);
+    console.error('Firebase listener error:', err);
     setStatus('Erro de ligação', '#dc2626');
   });
 }
 
-// Todas as funções que alteram dados chamam saveToFirebase no fim
-const _patchSave = (fn) => function(...args) { const r = fn(...args); saveToFirebase(); return r; };
-// Patch das funções que modificam dados
-const _applyDay   = applyDay;   applyDay   = function(){ _applyDay();   saveToFirebase(); };
-const _applyRange = applyRange; applyRange = function(){ _applyRange(); saveToFirebase(); };
-const _addEvent   = addEvent;   addEvent   = function(){ _addEvent();   saveToFirebase(); };
-const _delEvent   = delEvent;   delEvent   = function(i){ _delEvent(i); saveToFirebase(); };
-const _saveDept   = saveDept;   saveDept   = function(){ _saveDept();   saveToFirebase(); };
-const _removeDept = removeDept; removeDept = function(i){ _removeDept(i); saveToFirebase(); };
+// Patch funções que alteram dados para guardar automaticamente
+const _applyDay      = applyDay;      applyDay      = function(){ _applyDay();      saveToFirebase(); };
+const _applyRange    = applyRange;    applyRange    = function(){ _applyRange();    saveToFirebase(); };
+const _addEvent      = addEvent;      addEvent      = function(){ _addEvent();      saveToFirebase(); };
+const _delEvent      = delEvent;      delEvent      = function(i){ _delEvent(i);    saveToFirebase(); };
+const _saveDept      = saveDept;      saveDept      = function(){ _saveDept();      saveToFirebase(); };
+const _removeDept    = removeDept;    removeDept    = function(i){ _removeDept(i);  saveToFirebase(); };
 const _saveEditEvent = saveEditEvent; saveEditEvent = function(){ _saveEditEvent(); saveToFirebase(); };
 
-// Patch inline color pickers nos dept cards — já chamam render() que não guarda,
-// então interceptamos via MutationObserver não é necessário; em vez disso
-// adicionamos saveToFirebase() ao handler de cor em buildDeptCards
 const _buildDeptCards = buildDeptCards;
 buildDeptCards = function() {
   _buildDeptCards();
-  // Re-bind color inputs to also save
   document.querySelectorAll('.dept-card input[type=color]').forEach(input => {
     input.addEventListener('change', () => saveToFirebase());
   });
 };
 
-// ── ARRANQUE ──
 startRealtimeSync();
-
-// ── EXPOR FUNÇÕES AO SCOPE GLOBAL (necessário com type="module") ──
-window.toggleEditor    = toggleEditor;
-window.switchTab       = switchTab;
-window.setDeptSilent   = setDeptSilent;
-window.onSlider        = onSlider;
-window.applyDay        = applyDay;
-window.applyRange      = applyRange;
-window.setEvType       = setEvType;
-window.togglePin       = togglePin;
-window.addEvent        = addEvent;
-window.delEvent        = delEvent;
-window.openEditEvModal = openEditEvModal;
-window.saveEditEvent   = saveEditEvent;
-window.setEditEvType   = setEditEvType;
-window.toggleEditPin   = toggleEditPin;
-window.openAddDeptModal= openAddDeptModal;
-window.openEditDeptModal=openEditDeptModal;
-window.saveDept        = saveDept;
-window.removeDept      = removeDept;
-window.closeModal      = closeModal;
-window.buildDeptColorScaleEdit = buildDeptColorScaleEdit;
 </script>
 </body>
 </html>
