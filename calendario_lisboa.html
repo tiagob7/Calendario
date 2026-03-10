@@ -18,7 +18,8 @@ h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,28px
 .subtitle{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px;}
 
 /* LAYOUT */
-.layout{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;}
+.layout{display:grid;grid-template-columns:1fr;gap:20px;align-items:start;}
+.layout.editor-open{grid-template-columns:1fr 340px;}
 @media(max-width:920px){.layout{grid-template-columns:1fr;}}
 
 /* CALENDAR PANEL */
@@ -712,6 +713,7 @@ function toggleEditor() {
   editorOpen = !editorOpen;
   document.getElementById('editor').classList.toggle('open', editorOpen);
   document.getElementById('editToggleBtn').classList.toggle('active', editorOpen);
+  document.querySelector('.layout').classList.toggle('editor-open', editorOpen);
   if (editorOpen) render();
 }
 
@@ -919,8 +921,11 @@ document.getElementById('editModal').addEventListener('click', function(e){ if(e
 document.getElementById('deptModal').addEventListener('click', function(e){ if(e.target===this) closeModal('deptModal'); });
 
 document.addEventListener('click', e => {
-  const cal = document.getElementById('calPanel');
-  if (cal && !cal.contains(e.target)) { selDay=null; render(); }
+  const cal    = document.getElementById('calPanel');
+  const editor = document.getElementById('editor');
+  const inCal    = cal    && cal.contains(e.target);
+  const inEditor = editor && editor.contains(e.target);
+  if (!inCal && !inEditor) { selDay=null; render(); }
 });
 
 function switchTab(t) {
