@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendário de Trabalho Mensal</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@600;700;800&display=swap');
+
+:root{
+  --bg:#f4f4f6;--surface:#fff;--surface2:#f7f7f9;--border:#e2e2e8;
+  --text:#1a1a22;--muted:#8888a0;--accent:#2563eb;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;padding:32px 20px;}
+.page{max-width:1320px;margin:0 auto;}
+h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,28px);letter-spacing:-.03em;margin-bottom:4px;}
+.subtitle{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px;}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:1fr;gap:20px;align-items:start;}
+.layout.editor-open{grid-template-columns:1fr 340px;}
+@media(max-width:920px){.layout{grid-template-columns:1fr;}}
+
+/* CALENDAR PANEL */
+.cal-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px 28px;overflow-x:auto;box-shadow:0 1px 6px rgba(0,0,0,.06);}
+
+.legend{display:flex;gap:16px;margin-bottom:20px;align-items:center;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;}
+.legend-scale{display:flex;gap:2px;margin-left:3px;}
+.scale-seg{width:9px;height:5px;border-radius:1px;}
+.edit-toggle-btn{margin-left:auto;background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;padding:5px 12px;border-radius:20px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;}
+.edit-toggle-btn:hover{border-color:var(--accent);color:var(--accent);}
+.edit-toggle-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.edit-toggle-btn svg{width:12px;height:12px;flex-shrink:0;}
+
+.days-row{display:grid;grid-template-columns:repeat(30,1fr);gap:2px;margin-bottom:11px;}
+.day-num{text-align:center;font-size:10px;color:var(--muted);padding:1px 0;}
+
+.track-section{margin-bottom:5px;}
+.track-name{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px;}
+.track{display:grid;grid-template-columns:repeat(30,1fr);gap:2px;height:20px;}
+.seg{height:100%;border-radius:3px;cursor:pointer;transition:transform .12s,box-shadow .12s;outline:2px solid transparent;outline-offset:2px;}
+.seg:hover{transform:scaleY(1.5);box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.seg.sel{outline:2px solid var(--accent);transform:scaleY(1.5);}
+
+.divider{border:none;border-top:1px solid var(--border);margin:18px 0;}
+
+/* TIMELINE EVENTS */
+.ev-title{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:7px;}
+.ev-grid{display:grid;grid-template-columns:repeat(30,1fr);gap:2px;min-height:80px;}
+.ev-cell{display:flex;flex-direction:column;align-items:center;position:relative;}
+.ev-dot{width:5px;height:5px;border-radius:50%;margin-bottom:3px;flex-shrink:0;}
+.ev-text{font-size:8px;writing-mode:vertical-rl;transform:rotate(180deg);color:var(--muted);white-space:nowrap;line-height:1.2;max-height:80px;overflow:hidden;}
+.ev-range-bar{position:absolute;height:4px;border-radius:2px;top:6px;left:0;z-index:1;}
+
+/* SUMMARY */
+.all-events-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px 26px;margin-top:18px;box-shadow:0 1px 6px rgba(0,0,0,.06);}
+.summary-cols{display:grid;gap:14px;}
+.summary-card{border-radius:10px;padding:16px 18px;border:1px solid var(--border);background:var(--surface2);}
+.summary-card h3{font-family:'Manrope',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;}
+.summary-card ul{list-style:none;font-size:11px;color:var(--muted);}
+.summary-card ul li{display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--border);}
+.summary-card ul li:last-child{border-bottom:none;}
+.li-day{font-size:10px;color:var(--text);font-weight:600;min-width:60px;flex-shrink:0;}
+.li-label{color:var(--muted);}
+.no-events{font-size:11px;color:#bbb;padding:4px 0;}
+
+/* EDITOR */
+.editor{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;position:sticky;top:20px;box-shadow:0 1px 6px rgba(0,0,0,.06);display:none;max-height:calc(100vh - 40px);overflow-y:auto;}
+.editor.open{display:block;}
+.editor-title{font-family:'Manrope',sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;}
+
+.tabs{display:flex;gap:4px;margin-bottom:16px;}
+.tab{flex:1;padding:7px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.07em;border-radius:6px;cursor:pointer;transition:all .15s;}
+.tab.active{background:var(--text);color:#fff;border-color:var(--text);}
+.tab-content{display:none;}.tab-content.active{display:block;}
+
+.field-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;display:block;}
+.info-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:10px;color:var(--muted);margin-bottom:14px;line-height:1.7;}
+.info-box b{color:var(--text);}
+
+/* dept selector for intensity */
+.dept-sel-list{display:flex;flex-direction:column;gap:4px;margin-bottom:14px;}
+.dept-sel-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--border);background:var(--surface2);border-radius:7px;cursor:pointer;transition:all .15s;font-size:11px;}
+.dept-sel-item:hover{border-color:#aaa;}
+.dept-sel-item.active{border-color:var(--accent);background:#eff4ff;color:var(--accent);}
+.dept-sel-swatch{width:32px;height:8px;border-radius:3px;flex-shrink:0;}
+.dept-sel-name{flex:1;}
+
+.day-mini-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-bottom:14px;}
+.dmb{aspect-ratio:1;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:9px;font-family:'DM Mono',monospace;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
+.dmb:hover{border-color:#aaa;color:var(--text);}
+.dmb.active{border-color:var(--accent);color:var(--accent);background:#eff4ff;}
+
+.slider-row{margin-bottom:12px;}
+.slider-top{display:flex;justify-content:space-between;margin-bottom:6px;}
+.slider-top span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;}
+.slider-val{font-size:15px;color:var(--text);font-weight:500;}
+input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:var(--border);border-radius:2px;outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.prev-bar{display:flex;gap:3px;margin-top:8px;height:10px;border-radius:4px;overflow:hidden;}
+.prev-seg{flex:1;transition:opacity .1s;}
+
+.range-row{display:flex;gap:6px;margin-bottom:8px;}
+.range-row>div{flex:1;}
+
+.btn{width:100%;padding:10px;border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;text-transform:uppercase;letter-spacing:.09em;transition:all .15s;margin-bottom:0;}
+.btn:hover{opacity:.82;}
+.btn-primary{background:var(--text);color:#fff;}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-red{background:#fde8e8;color:#a81a1a;border:1px solid #e8b4b4;}
+.btn-sm{padding:6px 10px;font-size:10px;width:auto;}
+
+.form-input,.form-select{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:8px 10px;border-radius:6px;outline:none;transition:border-color .15s;}
+.form-input:focus,.form-select:focus{border-color:var(--accent);}
+
+.toggle-row{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;margin-bottom:10px;cursor:pointer;}
+.toggle-pill{width:32px;height:18px;border-radius:9px;background:var(--border);position:relative;flex-shrink:0;transition:background .2s;}
+.toggle-pill::after{content:'';position:absolute;width:12px;height:12px;border-radius:50%;background:#fff;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.toggle-row.on .toggle-pill{background:var(--accent);}
+.toggle-row.on .toggle-pill::after{left:17px;}
+.toggle-label{font-size:10px;color:var(--muted);flex:1;}
+.toggle-row.on .toggle-label{color:var(--accent);}
+
+.type-row{display:flex;gap:4px;margin-bottom:12px;}
+.type-btn{flex:1;padding:6px;border:1px solid var(--border);background:transparent;font-family:'DM Mono',monospace;font-size:10px;border-radius:6px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;transition:all .15s;}
+.type-btn.active{background:var(--surface2);border-color:#888;color:var(--text);}
+
+.ev-list-item{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:4px;font-size:10px;}
+.ev-dot-sm{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.ev-day-lbl{color:var(--muted);min-width:50px;}
+.ev-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.icon-btn{background:none;border:none;cursor:pointer;font-size:13px;padding:0 2px;color:#aaa;transition:color .1s;}
+.icon-btn:hover{color:var(--text);}
+.icon-btn.del:hover{color:#a81a1a;}
+
+.hint{font-size:9.5px;color:#bbb;text-align:center;margin-top:10px;line-height:1.6;}
+
+/* ── DEPARTMENT LIST in Dept tab ── */
+.dept-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px;}
+.dept-card-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.dept-card-swatch{width:40px;height:10px;border-radius:4px;flex-shrink:0;}
+.dept-card-name{font-size:12px;font-weight:600;flex:1;}
+.dept-card-actions{display:flex;gap:4px;}
+
+/* color scale editor */
+.color-scale-editor{display:flex;gap:4px;align-items:center;margin-top:6px;}
+.color-step{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.color-step-preview{width:28px;height:18px;border-radius:4px;border:1px solid var(--border);cursor:pointer;transition:transform .1s;}
+.color-step-preview:hover{transform:scale(1.15);}
+.color-step-label{font-size:8px;color:var(--muted);}
+/* native color input hidden behind preview */
+.color-input-hidden{position:absolute;opacity:0;width:0;height:0;pointer-events:none;}
+
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:400;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:380px;box-shadow:0 12px 40px rgba(0,0,0,.15);max-height:90vh;overflow-y:auto;}
+.modal h2{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:18px;}
+.modal-footer{display:flex;gap:8px;margin-top:16px;}
+.modal-footer .btn{flex:1;padding:9px;margin-bottom:0;}
+
+/* dept modal color scale */
+.modal-scale-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;}
+.modal-color-step{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.modal-color-preview{width:36px;height:22px;border-radius:6px;border:2px solid var(--border);cursor:pointer;transition:border-color .15s;}
+.modal-color-preview:hover{border-color:var(--accent);}
+.modal-color-label{font-size:9px;color:var(--muted);}
+.color-picker-wrap{position:relative;display:inline-block;}
+.color-picker-wrap input[type=color]{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:none;padding:0;}
+
+/* tooltip */
+.tip{display:none;position:fixed;background:var(--text);color:#fff;border-radius:8px;padding:10px 14px;font-size:11px;z-index:500;pointer-events:none;max-width:230px;line-height:1.7;box-shadow:0 8px 24px rgba(0,0,0,.18);}
+.tip.on{display:block;}
+.tip strong{display:block;font-size:12px;margin-bottom:2px;}
+.tip .tn{font-size:10px;opacity:.65;}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Calendário de Carga de Trabalho</h1>
+  <p class="subtitle">Intensidade diária por departamento — dias 1 a 30</p>
+
+  <div class="layout">
+    <!-- LEFT -->
+    <div>
+      <div class="cal-panel" id="calPanel">
+        <div class="legend" id="legend">
+          <span id="syncStatus" style="margin-left:auto;font-size:10px;color:var(--muted);letter-spacing:.05em;"></span>
+          <button class="edit-toggle-btn" id="editToggleBtn" onclick="toggleEditor()">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z"/></svg>
+            clique para editar
+          </button>
+        </div>
+        <div class="days-row" id="daysRow"></div>
+        <div id="tracks"></div>
+        <div class="divider"></div>
+        <div class="ev-title">Eventos chave (fixados na linha)</div>
+        <div class="ev-grid" id="evGrid"></div>
+      </div>
+
+      <div class="all-events-panel">
+        <div class="summary-cols" id="summaryGrid"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: EDITOR -->
+    <div class="editor" id="editor">
+      <div class="editor-title">Editor</div>
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('intensity')">Intensidade</button>
+        <button class="tab" onclick="switchTab('events')">Eventos</button>
+        <button class="tab" onclick="switchTab('depts')">Departamentos</button>
+      </div>
+
+      <!-- INTENSITY TAB -->
+      <div class="tab-content active" id="tab-intensity">
+        <div class="info-box">Escolha o <b>departamento</b>, selecione o <b>dia</b> e ajuste o slider.</div>
+        <label class="field-label">Departamento</label>
+        <div class="dept-sel-list" id="deptSelList"></div>
+        <label class="field-label">Dia</label>
+        <div class="day-mini-grid" id="dayMiniGrid"></div>
+        <div class="slider-row">
+          <div class="slider-top"><span>Intensidade</span><span class="slider-val" id="sliderVal">3</span></div>
+          <input type="range" min="0" max="5" value="3" id="slider" oninput="onSlider(this.value)">
+          <div class="prev-bar" id="prevBar"></div>
+        </div>
+        <button class="btn btn-primary" onclick="applyDay()" style="margin-bottom:8px;">Aplicar ao dia selecionado</button>
+        <div class="divider"></div>
+        <label class="field-label">Aplicar a intervalo</label>
+        <div class="range-row">
+          <div><label class="field-label">De</label><input type="number" class="form-input" id="rFrom" min="1" max="30" value="1"></div>
+          <div><label class="field-label">Até</label><input type="number" class="form-input" id="rTo" min="1" max="30" value="5"></div>
+        </div>
+        <button class="btn btn-secondary" onclick="applyRange()">Aplicar intervalo</button>
+        <p class="hint">cinza = pouco trabalho · cor intensa = muito trabalho</p>
+      </div>
+
+      <!-- EVENTS TAB -->
+      <div class="tab-content" id="tab-events">
+        <div class="info-box">Adicione eventos por <b>dia específico</b> ou <b>intervalo</b>.</div>
+        <label class="field-label">Tipo de data</label>
+        <div class="type-row">
+          <button class="type-btn active" id="typeSingle" onclick="setEvType('single')">Dia único</button>
+          <button class="type-btn" id="typeRange" onclick="setEvType('range')">Intervalo</button>
+        </div>
+        <div id="evSingleFields">
+          <label class="field-label">Dia (1–30)</label>
+          <input type="number" class="form-input" id="evDay" min="1" max="30" placeholder="ex: 10" style="margin-bottom:10px;">
+        </div>
+        <div id="evRangeFields" style="display:none;">
+          <div class="range-row" style="margin-bottom:10px;">
+            <div><label class="field-label">De</label><input type="number" class="form-input" id="evFrom" min="1" max="30" placeholder="1"></div>
+            <div><label class="field-label">Até</label><input type="number" class="form-input" id="evTo" min="1" max="30" placeholder="5"></div>
+          </div>
+        </div>
+        <label class="field-label">Departamento</label>
+        <select class="form-select" id="evDept" style="margin-bottom:10px;"></select>
+        <label class="field-label">Descrição</label>
+        <input type="text" class="form-input" id="evLabel" placeholder="ex: Entrega SAFT" style="margin-bottom:10px;">
+        <div class="toggle-row" id="pinToggle" onclick="togglePin()">
+          <div class="toggle-pill"></div>
+          <span class="toggle-label">Fixar na linha do calendário</span>
+        </div>
+        <button class="btn btn-primary" onclick="addEvent()" style="margin-bottom:16px;">+ Adicionar evento</button>
+        <label class="field-label">Eventos actuais</label>
+        <div id="evList"></div>
+      </div>
+
+      <!-- DEPARTMENTS TAB -->
+      <div class="tab-content" id="tab-depts">
+        <div class="info-box">Gerencie os departamentos, os seus nomes e <b>escala de cores</b> (6 níveis: 0 = mínimo, 5 = máximo).</div>
+        <div id="deptCards"></div>
+        <button class="btn btn-secondary" onclick="openAddDeptModal()" style="margin-top:8px;">+ Adicionar departamento</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT EVENT MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h2>Editar Evento</h2>
+    <label class="field-label">Tipo de data</label>
+    <div class="type-row" style="margin-bottom:12px;">
+      <button class="type-btn active" id="editTypeSingle" onclick="setEditEvType('single')">Dia único</button>
+      <button class="type-btn" id="editTypeRange" onclick="setEditEvType('range')">Intervalo</button>
+    </div>
+    <div id="editSingleFields"><label class="field-label">Dia (1–30)</label><input type="number" class="form-input" id="editDay" min="1" max="30" style="margin-bottom:10px;"></div>
+    <div id="editRangeFields" style="display:none;">
+      <div class="range-row" style="margin-bottom:10px;">
+        <div><label class="field-label">De</label><input type="number" class="form-input" id="editFrom" min="1" max="30"></div>
+        <div><label class="field-label">Até</label><input type="number" class="form-input" id="editTo" min="1" max="30"></div>
+      </div>
+    </div>
+    <label class="field-label">Departamento</label>
+    <select class="form-select" id="editEvDept" style="margin-bottom:10px;"></select>
+    <label class="field-label">Descrição</label>
+    <input type="text" class="form-input" id="editLabel" style="margin-bottom:10px;">
+    <div class="toggle-row" id="editPinToggle" onclick="toggleEditPin()">
+      <div class="toggle-pill"></div>
+      <span class="toggle-label">Fixar na linha do calendário</span>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('editModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEditEvent()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT DEPT MODAL -->
+<div class="modal-overlay" id="deptModal">
+  <div class="modal">
+    <h2 id="deptModalTitle">Novo Departamento</h2>
+    <label class="field-label">Nome</label>
+    <input type="text" class="form-input" id="deptName" placeholder="ex: Recursos Humanos" style="margin-bottom:14px;">
+    <label class="field-label">Escala de cores (0 = mínimo · 5 = máximo)</label>
+    <div class="modal-scale-row" id="deptColorScaleEdit"></div>
+    <p style="font-size:10px;color:var(--muted);margin-top:6px;margin-bottom:14px;">Clique em cada cor para alterar. A escala deve ir do mais claro (0) para o mais escuro/saturado (5).</p>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('deptModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveDept()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="tip" id="tip"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+// ═══════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════
+
+// Each dept: { id, name, colors[6], data[30] }
+let departments = [
+  {
+    id: 'conta',
+    name: 'Contabilidade',
+    colors: ['#d4d4d8','#e8b4b4','#d97777','#c44040','#a81a1a','#6e0808'],
+    data: [5,5,5,5,5,5,4,4,3,3,2,1,1,2,2,3,3,3,4,4,4,4,4,5,5,5,5,5,5,5]
+  },
+  {
+    id: 'payroll',
+    name: 'Payroll / RH',
+    colors: ['#d4d4d8','#a8b8d8','#5f85c0','#2d5fa8','#163d80','#0a1f4a'],
+    data: [1,4,4,4,4,4,4,3,3,5,3,3,3,3,3,5,5,4,4,4,4,3,3,3,3,3,3,3,3,3]
+  }
+];
+
+let events = [
+  {dayFrom:1,  dayTo:1,  label:'Faturação Mensais/2Q', deptId:'conta',   pinned:true},
+  {dayFrom:5,  dayTo:5,  label:'SAFT',                 deptId:'conta',   pinned:true},
+  {dayFrom:6,  dayTo:7,  label:'Pagamentos',            deptId:'conta',   pinned:true},
+  {dayFrom:10, dayTo:10, label:'Seg. Social prelim.',   deptId:'payroll', pinned:true},
+  {dayFrom:16, dayTo:17, label:'Seg. Social final',     deptId:'payroll', pinned:true},
+  {dayFrom:21, dayTo:30, label:'Recibos escritório',    deptId:'conta',   pinned:true},
+];
+
+// ── STATE ──
+let selDeptId  = 'conta';
+let selDay     = null;
+let newPin     = false;
+let evType     = 'single';
+let editEvIdx  = null;
+let editEvPin  = false;
+let editEvType = 'single';
+let editDeptIdx   = null; // null = new
+let editDeptColors = [];
+let editorOpen = false;
+
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+function getDept(id) { return departments.find(d => d.id === id); }
+function genId()     { return 'dept_' + Math.random().toString(36).slice(2,8); }
+
+function segColor(dept, val) {
+  return dept.colors[Math.min(5, Math.max(0, val))];
+}
+
+// ═══════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════
+function render() {
+  buildLegend();
+  buildDaysRow();
+  buildTracks();
+  buildEvGrid();
+  buildSummary();
+  if (editorOpen) {
+    buildDeptSelList();
+    buildDayMiniGrid();
+    updatePrevBar();
+    buildEvList();
+    buildDeptCards();
+    rebuildDeptSelects();
+  }
+}
+
+function buildLegend() {
+  const legend = document.getElementById('legend');
+  const btn    = document.getElementById('editToggleBtn');
+  const status = document.getElementById('syncStatus');
+  legend.innerHTML = '';
+  departments.forEach(dept => {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    const scale = document.createElement('div');
+    scale.className = 'legend-scale';
+    dept.colors.forEach(c => {
+      const s = document.createElement('div');
+      s.className = 'scale-seg';
+      s.style.background = c;
+      scale.appendChild(s);
+    });
+    item.appendChild(scale);
+    item.appendChild(document.createTextNode(dept.name));
+    legend.appendChild(item);
+  });
+  if (status) legend.appendChild(status);
+  if (btn)    legend.appendChild(btn);
+}
+
+function buildDaysRow() {
+  const dr = document.getElementById('daysRow');
+  dr.innerHTML = '';
+  for (let d=1;d<=30;d++) {
+    const el = document.createElement('div');
+    el.className = 'day-num';
+    el.textContent = d;
+    dr.appendChild(el);
+  }
+}
+
+function buildTracks() {
+  const container = document.getElementById('tracks');
+  container.innerHTML = '';
+  departments.forEach(dept => {
+    const section = document.createElement('div');
+    section.className = 'track-section';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'track-name';
+    nameEl.textContent = dept.name;
+    const track = document.createElement('div');
+    track.className = 'track';
+    for (let d=1;d<=30;d++) {
+      const seg = document.createElement('div');
+      const val = dept.data[d-1];
+      seg.className = 'seg' + (selDay===d && selDeptId===dept.id ? ' sel' : '');
+      seg.style.background = segColor(dept, val);
+      seg.addEventListener('click', e => {
+        e.stopPropagation();
+        if (selDay===d && selDeptId===dept.id) {
+          selDay = null;
+        } else {
+          selDay = d; selDeptId = dept.id;
+          if (editorOpen) {
+            document.getElementById('slider').value = val;
+            document.getElementById('sliderVal').textContent = val;
+            switchTab('intensity');
+          }
+        }
+        render();
+      });
+      seg.addEventListener('mousemove', e => showTip(e, d, dept));
+      seg.addEventListener('mouseleave', hideTip);
+      track.appendChild(seg);
+    }
+    section.appendChild(nameEl);
+    section.appendChild(track);
+    container.appendChild(section);
+    // small spacer
+    const sp = document.createElement('div');
+    sp.style.height = '6px';
+    container.appendChild(sp);
+  });
+}
+
+function buildEvGrid() {
+  const grid = document.getElementById('evGrid');
+  grid.innerHTML = '';
+  const pinned = events.filter(ev => ev.pinned);
+  for (let d=1;d<=30;d++) {
+    const cell = document.createElement('div');
+    cell.className = 'ev-cell';
+    pinned.filter(ev => ev.dayFrom===d && ev.dayTo===d).forEach(ev => {
+      const dept = getDept(ev.deptId);
+      const dot = document.createElement('div');
+      dot.className = 'ev-dot';
+      dot.style.background = dept ? dept.colors[4] : '#888';
+      const txt = document.createElement('div');
+      txt.className = 'ev-text';
+      txt.textContent = ev.label;
+      cell.appendChild(dot);
+      cell.appendChild(txt);
+    });
+    pinned.filter(ev => ev.dayFrom===d && ev.dayTo>d).forEach(ev => {
+      const dept = getDept(ev.deptId);
+      const dot = document.createElement('div');
+      dot.className = 'ev-dot';
+      dot.style.background = dept ? dept.colors[4] : '#888';
+      const bar = document.createElement('div');
+      bar.className = 'ev-range-bar';
+      bar.style.background = dept ? dept.colors[3] : '#aaa';
+      bar.dataset.span = ev.dayTo - ev.dayFrom + 1;
+      const txt = document.createElement('div');
+      txt.className = 'ev-text';
+      txt.textContent = ev.label;
+      cell.appendChild(dot);
+      cell.appendChild(bar);
+      cell.appendChild(txt);
+    });
+    grid.appendChild(cell);
+  }
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.ev-range-bar').forEach(bar => {
+      const span = parseInt(bar.dataset.span);
+      const cell = bar.closest('.ev-cell');
+      if (!cell) return;
+      bar.style.width = (cell.offsetWidth * span + 2*(span-1)) + 'px';
+    });
+  });
+}
+
+function buildSummary() {
+  const wrap = document.getElementById('summaryGrid');
+  wrap.innerHTML = '';
+  const cols = Math.min(departments.length, 3);
+  wrap.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  departments.forEach(dept => {
+    const card = document.createElement('div');
+    card.className = 'summary-card';
+    card.style.borderLeft = `3px solid ${dept.colors[4]}`;
+    const evList = events.filter(ev => ev.deptId===dept.id).sort((a,b) => a.dayFrom-b.dayFrom);
+    const dayLabel = ev => ev.dayFrom===ev.dayTo ? `Dia ${ev.dayFrom}` : `Dia ${ev.dayFrom}–${ev.dayTo}`;
+    const rows = evList.length
+      ? evList.map(ev => `<li><span class="li-day">${dayLabel(ev)}</span><span class="li-label">${ev.label}</span></li>`).join('')
+      : '<li><span class="li-label no-events">Sem eventos</span></li>';
+    card.innerHTML = `<h3 style="color:${dept.colors[4]}">${dept.name}</h3><ul>${rows}</ul>`;
+    wrap.appendChild(card);
+  });
+}
+
+// ── EDITOR PANELS ──
+function buildDeptSelList() {
+  const list = document.getElementById('deptSelList');
+  list.innerHTML = '';
+  departments.forEach(dept => {
+    const item = document.createElement('div');
+    item.className = 'dept-sel-item' + (selDeptId===dept.id ? ' active' : '');
+    const sw = document.createElement('div');
+    sw.className = 'dept-sel-swatch';
+    const grad = `linear-gradient(to right, ${dept.colors.join(',')})`;
+    sw.style.background = grad;
+    item.appendChild(sw);
+    item.appendChild(document.createTextNode(dept.name));
+    item.onclick = () => { selDeptId = dept.id; render(); };
+    list.appendChild(item);
+  });
+}
+
+function buildDayMiniGrid() {
+  const g = document.getElementById('dayMiniGrid');
+  g.innerHTML = '';
+  for (let d=1;d<=30;d++) {
+    const b = document.createElement('button');
+    b.className = 'dmb'+(d===selDay?' active':'');
+    b.textContent = d;
+    b.onclick = e => {
+      e.stopPropagation();
+      selDay = d===selDay ? null : d;
+      if (selDay) {
+        const dept = getDept(selDeptId);
+        const v = dept ? dept.data[d-1] : 3;
+        document.getElementById('slider').value = v;
+        document.getElementById('sliderVal').textContent = v;
+      }
+      render();
+    };
+    g.appendChild(b);
+  }
+}
+
+function updatePrevBar() {
+  const bar = document.getElementById('prevBar');
+  const v = parseInt(document.getElementById('slider').value);
+  const dept = getDept(selDeptId);
+  const cols = dept ? dept.colors : Array(6).fill('#ccc');
+  bar.innerHTML = '';
+  cols.forEach((c,i) => {
+    const s = document.createElement('div');
+    s.className = 'prev-seg';
+    s.style.background = c;
+    s.style.opacity = i===v ? '1' : '0.28';
+    bar.appendChild(s);
+  });
+}
+
+function buildEvList() {
+  const list = document.getElementById('evList');
+  list.innerHTML = '';
+  const sorted = [...events].sort((a,b)=>a.dayFrom-b.dayFrom);
+  if (!sorted.length) { list.innerHTML = '<div style="font-size:10px;color:#bbb;text-align:center;padding:10px;">Sem eventos</div>'; return; }
+  sorted.forEach(ev => {
+    const idx = events.indexOf(ev);
+    const dept = getDept(ev.deptId);
+    const dayLbl = ev.dayFrom===ev.dayTo ? `Dia ${ev.dayFrom}` : `${ev.dayFrom}–${ev.dayTo}`;
+    const item = document.createElement('div');
+    item.className = 'ev-list-item';
+    item.innerHTML = `
+      <div class="ev-dot-sm" style="background:${dept?dept.colors[4]:'#888'}"></div>
+      <div class="ev-day-lbl">${dayLbl}</div>
+      <div class="ev-name">${ev.label}</div>
+      <span style="font-size:9px;color:${ev.pinned?'var(--accent)':'#ccc'};">${ev.pinned?'📌':''}</span>
+      <button class="icon-btn" title="Editar" onclick="openEditEvModal(${idx})">✎</button>
+      <button class="icon-btn del" title="Eliminar" onclick="delEvent(${idx})">×</button>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function buildDeptCards() {
+  const wrap = document.getElementById('deptCards');
+  wrap.innerHTML = '';
+  departments.forEach((dept, i) => {
+    const card = document.createElement('div');
+    card.className = 'dept-card';
+    const header = document.createElement('div');
+    header.className = 'dept-card-header';
+    const sw = document.createElement('div');
+    sw.className = 'dept-card-swatch';
+    sw.style.background = `linear-gradient(to right, ${dept.colors.join(',')})`;
+    const nm = document.createElement('div');
+    nm.className = 'dept-card-name';
+    nm.textContent = dept.name;
+    const actions = document.createElement('div');
+    actions.className = 'dept-card-actions';
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn btn-secondary btn-sm';
+    editBtn.textContent = '✎ Editar';
+    editBtn.style.fontSize = '10px';
+    editBtn.onclick = () => openEditDeptModal(i);
+    actions.appendChild(editBtn);
+    if (departments.length > 1) {
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn btn-red btn-sm';
+      delBtn.textContent = '× Remover';
+      delBtn.style.fontSize = '10px';
+      delBtn.onclick = () => removeDept(i);
+      actions.appendChild(delBtn);
+    }
+    header.appendChild(sw);
+    header.appendChild(nm);
+    header.appendChild(actions);
+    // mini color scale preview
+    const scaleRow = document.createElement('div');
+    scaleRow.className = 'color-scale-editor';
+    dept.colors.forEach((c, ci) => {
+      const step = document.createElement('div');
+      step.className = 'color-step';
+      const wrap2 = document.createElement('div');
+      wrap2.className = 'color-picker-wrap';
+      const preview = document.createElement('div');
+      preview.className = 'color-step-preview';
+      preview.style.background = c;
+      preview.title = `Nível ${ci}`;
+      const input = document.createElement('input');
+      input.type = 'color';
+      input.value = c;
+      input.addEventListener('input', e => {
+        dept.colors[ci] = e.target.value;
+        preview.style.background = e.target.value;
+        render();
+      });
+      wrap2.appendChild(preview);
+      wrap2.appendChild(input);
+      const lbl = document.createElement('div');
+      lbl.className = 'color-step-label';
+      lbl.textContent = ci === 0 ? 'min' : ci === 5 ? 'max' : ci;
+      step.appendChild(wrap2);
+      step.appendChild(lbl);
+      scaleRow.appendChild(step);
+    });
+    card.appendChild(header);
+    card.appendChild(scaleRow);
+    wrap.appendChild(card);
+  });
+}
+
+function rebuildDeptSelects() {
+  ['evDept','editEvDept'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '';
+    departments.forEach(dept => {
+      const opt = document.createElement('option');
+      opt.value = dept.id;
+      opt.textContent = dept.name;
+      sel.appendChild(opt);
+    });
+    if (departments.find(d=>d.id===prev)) sel.value = prev;
+  });
+}
+
+// ═══════════════════════════════════════════════
+// ACTIONS — INTENSITY
+// ═══════════════════════════════════════════════
+function toggleEditor() {
+  editorOpen = !editorOpen;
+  document.getElementById('editor').classList.toggle('open', editorOpen);
+  document.getElementById('editToggleBtn').classList.toggle('active', editorOpen);
+  document.querySelector('.layout').classList.toggle('editor-open', editorOpen);
+  if (editorOpen) render();
+}
+
+function onSlider(v) {
+  document.getElementById('sliderVal').textContent = v;
+  updatePrevBar();
+}
+
+function applyDay() {
+  if (!selDay) { alert('Selecione um dia primeiro.'); return; }
+  const v = parseInt(document.getElementById('slider').value);
+  const dept = getDept(selDeptId);
+  if (dept) { dept.data[selDay-1] = v; render(); }
+}
+
+function applyRange() {
+  const from = parseInt(document.getElementById('rFrom').value);
+  const to   = parseInt(document.getElementById('rTo').value);
+  const v    = parseInt(document.getElementById('slider').value);
+  if (isNaN(from)||isNaN(to)||from<1||to>30||from>to) { alert('Intervalo inválido.'); return; }
+  const dept = getDept(selDeptId);
+  if (dept) { for(let d=from;d<=to;d++) dept.data[d-1]=v; render(); }
+}
+
+// ═══════════════════════════════════════════════
+// ACTIONS — EVENTS
+// ═══════════════════════════════════════════════
+function setEvType(t) {
+  evType = t;
+  document.getElementById('typeSingle').classList.toggle('active', t==='single');
+  document.getElementById('typeRange').classList.toggle('active', t==='range');
+  document.getElementById('evSingleFields').style.display = t==='single'?'':'none';
+  document.getElementById('evRangeFields').style.display  = t==='range'?'':'none';
+}
+
+function togglePin() {
+  newPin = !newPin;
+  document.getElementById('pinToggle').classList.toggle('on', newPin);
+}
+
+function addEvent() {
+  const label  = document.getElementById('evLabel').value.trim();
+  const deptId = document.getElementById('evDept').value;
+  let dayFrom, dayTo;
+  if (evType==='single') {
+    dayFrom = dayTo = parseInt(document.getElementById('evDay').value);
+    if (!dayFrom||dayFrom<1||dayFrom>30) { alert('Dia inválido.'); return; }
+  } else {
+    dayFrom = parseInt(document.getElementById('evFrom').value);
+    dayTo   = parseInt(document.getElementById('evTo').value);
+    if (isNaN(dayFrom)||isNaN(dayTo)||dayFrom<1||dayTo>30||dayFrom>dayTo) { alert('Intervalo inválido.'); return; }
+  }
+  if (!label) { alert('Preencha a descrição.'); return; }
+  events.push({dayFrom, dayTo, label, deptId, pinned:newPin});
+  document.getElementById('evDay').value = '';
+  document.getElementById('evFrom').value = '';
+  document.getElementById('evTo').value = '';
+  document.getElementById('evLabel').value = '';
+  newPin = false;
+  document.getElementById('pinToggle').classList.remove('on');
+  render();
+}
+
+function delEvent(i) { events.splice(i,1); render(); }
+
+// ── edit event modal ──
+function setEditEvType(t) {
+  editEvType = t;
+  document.getElementById('editTypeSingle').classList.toggle('active', t==='single');
+  document.getElementById('editTypeRange').classList.toggle('active', t==='range');
+  document.getElementById('editSingleFields').style.display = t==='single'?'':'none';
+  document.getElementById('editRangeFields').style.display  = t==='range'?'':'none';
+}
+
+function toggleEditPin() {
+  editEvPin = !editEvPin;
+  document.getElementById('editPinToggle').classList.toggle('on', editEvPin);
+}
+
+function openEditEvModal(i) {
+  editEvIdx = i;
+  const ev = events[i];
+  const isRange = ev.dayFrom !== ev.dayTo;
+  editEvType = isRange ? 'range' : 'single';
+  setEditEvType(editEvType);
+  if (isRange) { document.getElementById('editFrom').value=ev.dayFrom; document.getElementById('editTo').value=ev.dayTo; }
+  else { document.getElementById('editDay').value=ev.dayFrom; }
+  rebuildDeptSelects();
+  document.getElementById('editEvDept').value = ev.deptId;
+  document.getElementById('editLabel').value  = ev.label;
+  editEvPin = ev.pinned;
+  document.getElementById('editPinToggle').classList.toggle('on', editEvPin);
+  document.getElementById('editModal').classList.add('open');
+}
+
+function saveEditEvent() {
+  if (editEvIdx===null) return;
+  const label  = document.getElementById('editLabel').value.trim();
+  const deptId = document.getElementById('editEvDept').value;
+  if (!label) { alert('Preencha a descrição.'); return; }
+  let dayFrom, dayTo;
+  if (editEvType==='single') {
+    dayFrom = dayTo = parseInt(document.getElementById('editDay').value);
+    if (!dayFrom||dayFrom<1||dayFrom>30) { alert('Dia inválido.'); return; }
+  } else {
+    dayFrom = parseInt(document.getElementById('editFrom').value);
+    dayTo   = parseInt(document.getElementById('editTo').value);
+    if (isNaN(dayFrom)||isNaN(dayTo)||dayFrom<1||dayTo>30||dayFrom>dayTo) { alert('Intervalo inválido.'); return; }
+  }
+  events[editEvIdx] = {dayFrom, dayTo, label, deptId, pinned:editEvPin};
+  closeModal('editModal');
+  render();
+}
+
+// ═══════════════════════════════════════════════
+// ACTIONS — DEPARTMENTS
+// ═══════════════════════════════════════════════
+function openAddDeptModal() {
+  editDeptIdx = null;
+  document.getElementById('deptModalTitle').textContent = 'Novo Departamento';
+  document.getElementById('deptName').value = '';
+  editDeptColors = ['#d4d4d8','#c0c0c8','#a0a0b8','#7070a0','#404080','#1a1a60'];
+  buildDeptColorScaleEdit();
+  document.getElementById('deptModal').classList.add('open');
+}
+
+function openEditDeptModal(i) {
+  editDeptIdx = i;
+  const dept = departments[i];
+  document.getElementById('deptModalTitle').textContent = 'Editar Departamento';
+  document.getElementById('deptName').value = dept.name;
+  editDeptColors = [...dept.colors];
+  buildDeptColorScaleEdit();
+  document.getElementById('deptModal').classList.add('open');
+}
+
+function buildDeptColorScaleEdit() {
+  const row = document.getElementById('deptColorScaleEdit');
+  row.innerHTML = '';
+  editDeptColors.forEach((c, i) => {
+    const step = document.createElement('div');
+    step.className = 'modal-color-step';
+    const wrap = document.createElement('div');
+    wrap.className = 'color-picker-wrap';
+    wrap.style.position = 'relative';
+    const preview = document.createElement('div');
+    preview.className = 'modal-color-preview';
+    preview.style.background = c;
+    const input = document.createElement('input');
+    input.type = 'color';
+    input.value = c;
+    input.addEventListener('input', e => {
+      editDeptColors[i] = e.target.value;
+      preview.style.background = e.target.value;
+    });
+    wrap.appendChild(preview);
+    wrap.appendChild(input);
+    const lbl = document.createElement('div');
+    lbl.className = 'modal-color-label';
+    lbl.textContent = i===0?'min':i===5?'max':i;
+    step.appendChild(wrap);
+    step.appendChild(lbl);
+    row.appendChild(step);
+  });
+}
+
+function saveDept() {
+  const name = document.getElementById('deptName').value.trim();
+  if (!name) { alert('Preencha o nome.'); return; }
+  if (editDeptIdx === null) {
+    // new
+    departments.push({
+      id: genId(),
+      name,
+      colors: [...editDeptColors],
+      data: Array(30).fill(0)
+    });
+  } else {
+    departments[editDeptIdx].name   = name;
+    departments[editDeptIdx].colors = [...editDeptColors];
+  }
+  closeModal('deptModal');
+  render();
+}
+
+function removeDept(i) {
+  if (departments.length <= 1) { alert('Deve existir pelo menos um departamento.'); return; }
+  const dept = departments[i];
+  if (!confirm(`Remover "${dept.name}"? Os eventos deste departamento serão também eliminados.`)) return;
+  events = events.filter(ev => ev.deptId !== dept.id);
+  departments.splice(i,1);
+  if (selDeptId === dept.id) selDeptId = departments[0].id;
+  render();
+}
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  editEvIdx = null; editDeptIdx = null;
+}
+
+document.getElementById('editModal').addEventListener('click', function(e){ if(e.target===this) closeModal('editModal'); });
+document.getElementById('deptModal').addEventListener('click', function(e){ if(e.target===this) closeModal('deptModal'); });
+
+document.addEventListener('click', e => {
+  const cal    = document.getElementById('calPanel');
+  const editor = document.getElementById('editor');
+  const inCal    = cal    && cal.contains(e.target);
+  const inEditor = editor && editor.contains(e.target);
+  if (!inCal && !inEditor) { selDay=null; render(); }
+});
+
+function switchTab(t) {
+  const tabs = ['intensity','events','depts'];
+  document.querySelectorAll('.tab').forEach((b,i) => b.classList.toggle('active', tabs[i]===t));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+}
+
+// TOOLTIP
+const tipEl = document.getElementById('tip');
+function showTip(e, day, dept) {
+  const v   = dept.data[day-1];
+  const evs = events.filter(ev => ev.deptId===dept.id && day>=ev.dayFrom && day<=ev.dayTo);
+  tipEl.innerHTML = `
+    <strong>Dia ${day} — ${dept.name}</strong>
+    <span>${'●'.repeat(v)}${'○'.repeat(5-v)}</span>
+    ${evs.map(ev=>`<span class="tn">${ev.pinned?'📌':'·'} ${ev.label}</span>`).join('')}
+  `;
+  tipEl.classList.add('on');
+  tipEl.style.left = Math.min(e.clientX+14, window.innerWidth-240)+'px';
+  tipEl.style.top  = (e.clientY-10)+'px';
+}
+function hideTip(){ tipEl.classList.remove('on'); }
+
+// ═══════════════════════════════════════════════
+// FIREBASE (compat SDK — funciona em GitHub Pages)
+// ═══════════════════════════════════════════════
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBbTDfCCC9o5oxMSMRsvCUC50Iu6L0aqT8",
+  authDomain: "calendario-trabalho-39a6c.firebaseapp.com",
+  projectId: "calendario-trabalho-39a6c",
+  storageBucket: "calendario-trabalho-39a6c.firebasestorage.app",
+  messagingSenderId: "596069405321",
+  appId: "1:596069405321:web:275bb9da220206d3da6c58"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const CALENDAR_ID = 'calendario_porto';
+const docRef = db.collection('calendarios').doc(CALENDAR_ID);
+
+let isSaving = false;
+
+function setStatus(msg, color) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = color || 'var(--muted)';
+}
+
+async function saveToFirebase() {
+  if (isSaving) return;
+  isSaving = true;
+  setStatus('A guardar…', '#f59e0b');
+  try {
+    await docRef.set({
+      departments: departments,
+      events: events,
+      updatedAt: Date.now()
+    });
+    setStatus('✓ Guardado', '#16a34a');
+    setTimeout(() => setStatus(''), 3000);
+  } catch(e) {
+    console.error('Erro Firebase:', e);
+    setStatus('Erro ao guardar', '#dc2626');
+  }
+  isSaving = false;
+}
+
+function startRealtimeSync() {
+  setStatus('A ligar…', '#f59e0b');
+  docRef.onSnapshot((snap) => {
+    if (!snap.exists) {
+      saveToFirebase();
+      return;
+    }
+    const data = snap.data();
+    if (!isSaving) {
+      if (data.departments && data.departments.length) departments = data.departments;
+      if (data.events)      events      = data.events;
+      if (!departments.find(d => d.id === selDeptId)) selDeptId = departments[0]?.id || '';
+      render();
+      setStatus('✓ Sincronizado', '#16a34a');
+      setTimeout(() => setStatus(''), 3000);
+    }
+  }, (err) => {
+    console.error('Firebase listener error:', err);
+    setStatus('Erro de ligação', '#dc2626');
+  });
+}
+
+// Patch funções que alteram dados para guardar automaticamente
+const _applyDay      = applyDay;      applyDay      = function(){ _applyDay();      saveToFirebase(); };
+const _applyRange    = applyRange;    applyRange    = function(){ _applyRange();    saveToFirebase(); };
+const _addEvent      = addEvent;      addEvent      = function(){ _addEvent();      saveToFirebase(); };
+const _delEvent      = delEvent;      delEvent      = function(i){ _delEvent(i);    saveToFirebase(); };
+const _saveDept      = saveDept;      saveDept      = function(){ _saveDept();      saveToFirebase(); };
+const _removeDept    = removeDept;    removeDept    = function(i){ _removeDept(i);  saveToFirebase(); };
+const _saveEditEvent = saveEditEvent; saveEditEvent = function(){ _saveEditEvent(); saveToFirebase(); };
+
+const _buildDeptCards = buildDeptCards;
+buildDeptCards = function() {
+  _buildDeptCards();
+  document.querySelectorAll('.dept-card input[type=color]').forEach(input => {
+    input.addEventListener('change', () => saveToFirebase());
+  });
+};
+
+startRealtimeSync();
+</script>
+</body>
+</html>
