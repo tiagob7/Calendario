@@ -399,8 +399,8 @@ function render() {
 
 function buildLegend() {
   const legend = document.getElementById('legend');
-  // keep edit button, rebuild legend items before it
-  const btn = document.getElementById('editToggleBtn');
+  const btn    = document.getElementById('editToggleBtn');
+  const status = document.getElementById('syncStatus');
   legend.innerHTML = '';
   departments.forEach(dept => {
     const item = document.createElement('div');
@@ -417,7 +417,8 @@ function buildLegend() {
     item.appendChild(document.createTextNode(dept.name));
     legend.appendChild(item);
   });
-  legend.appendChild(btn);
+  if (status) legend.appendChild(status);
+  if (btn)    legend.appendChild(btn);
 }
 
 function buildDaysRow() {
@@ -1047,6 +1048,28 @@ buildDeptCards = function() {
 
 // ── ARRANQUE ──
 startRealtimeSync();
+
+// ── EXPOR FUNÇÕES AO SCOPE GLOBAL (necessário com type="module") ──
+window.toggleEditor    = toggleEditor;
+window.switchTab       = switchTab;
+window.setDeptSilent   = setDeptSilent;
+window.onSlider        = onSlider;
+window.applyDay        = applyDay;
+window.applyRange      = applyRange;
+window.setEvType       = setEvType;
+window.togglePin       = togglePin;
+window.addEvent        = addEvent;
+window.delEvent        = delEvent;
+window.openEditEvModal = openEditEvModal;
+window.saveEditEvent   = saveEditEvent;
+window.setEditEvType   = setEditEvType;
+window.toggleEditPin   = toggleEditPin;
+window.openAddDeptModal= openAddDeptModal;
+window.openEditDeptModal=openEditDeptModal;
+window.saveDept        = saveDept;
+window.removeDept      = removeDept;
+window.closeModal      = closeModal;
+window.buildDeptColorScaleEdit = buildDeptColorScaleEdit;
 </script>
 </body>
 </html>
