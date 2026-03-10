@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Calendário de Trabalho Mensal</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@600;700;800&display=swap');
 
 :root{
   --bg:#f4f4f6;--surface:#fff;--surface2:#f7f7f9;--border:#e2e2e8;
@@ -14,7 +14,7 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;padding:32px 20px;}
 .page{max-width:1320px;margin:0 auto;}
-h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,28px);letter-spacing:-.03em;margin-bottom:4px;}
+h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,28px);letter-spacing:-.03em;margin-bottom:4px;}
 .subtitle{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px;}
 
 /* LAYOUT */
@@ -58,7 +58,7 @@ h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,28px
 .all-events-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px 26px;margin-top:18px;box-shadow:0 1px 6px rgba(0,0,0,.06);}
 .summary-cols{display:grid;gap:14px;}
 .summary-card{border-radius:10px;padding:16px 18px;border:1px solid var(--border);background:var(--surface2);}
-.summary-card h3{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;}
+.summary-card h3{font-family:'Manrope',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;}
 .summary-card ul{list-style:none;font-size:11px;color:var(--muted);}
 .summary-card ul li{display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--border);}
 .summary-card ul li:last-child{border-bottom:none;}
@@ -69,7 +69,7 @@ h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,28px
 /* EDITOR */
 .editor{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;position:sticky;top:20px;box-shadow:0 1px 6px rgba(0,0,0,.06);display:none;max-height:calc(100vh - 40px);overflow-y:auto;}
 .editor.open{display:block;}
-.editor-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;}
+.editor-title{font-family:'Manrope',sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;}
 
 .tabs{display:flex;gap:4px;margin-bottom:16px;}
 .tab{flex:1;padding:7px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.07em;border-radius:6px;cursor:pointer;transition:all .15s;}
