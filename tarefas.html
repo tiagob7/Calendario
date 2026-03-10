@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestão de Tarefas</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@600;700;800&display=swap');
+
+:root {
+  --bg:#f4f4f6; --surface:#fff; --surface2:#f7f7f9; --border:#e2e2e8;
+  --text:#1a1a22; --muted:#8888a0; --accent:#2563eb;
+  --green:#16a34a; --green-bg:#f0fdf4; --green-border:#bbf7d0;
+  --blue:#2563eb;  --blue-bg:#eff6ff;  --blue-border:#bfdbfe;
+  --red:#dc2626;   --red-bg:#fef2f2;   --red-border:#fecaca;
+  --amber:#d97706; --amber-bg:#fffbeb; --amber-border:#fde68a;
+  --gray-bg:#f4f4f6; --gray-border:#e2e2e8;
+  --urgent:#dc2626; --normal:#d97706; --baixa:#16a34a;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;padding:32px 20px;}
+.page{max-width:860px;margin:0 auto;}
+h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,28px);letter-spacing:-.03em;margin-bottom:4px;}
+.subtitle{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px;}
+
+/* ── HEADER BAR ── */
+.header-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:16px;flex-wrap:wrap;}
+.header-left{}
+.header-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+#syncStatus{font-size:10px;color:var(--muted);letter-spacing:.05em;}
+.btn-gestor{background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;padding:6px 14px;border-radius:20px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;}
+.btn-gestor:hover{border-color:var(--accent);color:var(--accent);}
+.btn-gestor.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.btn-gestor svg{width:12px;height:12px;}
+
+/* ── NOVO PEDIDO ── */
+.novo-pedido-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px 26px;margin-bottom:20px;box-shadow:0 1px 6px rgba(0,0,0,.06);}
+.panel-title{font-family:'Manrope',sans-serif;font-size:13px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.panel-title svg{width:15px;height:15px;color:var(--accent);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr;}}
+.form-grid .full{grid-column:1/-1;}
+.field-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;display:block;}
+.form-input,.form-select{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:8px 10px;border-radius:6px;outline:none;transition:border-color .15s;}
+.form-input:focus,.form-select:focus{border-color:var(--accent);}
+.form-input::placeholder{color:#bbb;}
+
+/* priority radio pills */
+.prio-row{display:flex;gap:6px;}
+.prio-pill{flex:1;padding:7px 4px;border:1px solid var(--border);background:transparent;font-family:'DM Mono',monospace;font-size:10px;border-radius:6px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;transition:all .15s;text-align:center;}
+.prio-pill[data-p="urgente"].sel{background:var(--red-bg);border-color:var(--urgent);color:var(--urgent);}
+.prio-pill[data-p="normal"].sel{background:var(--amber-bg);border-color:var(--normal);color:var(--normal);}
+.prio-pill[data-p="baixa"].sel{background:var(--green-bg);border-color:var(--baixa);color:var(--baixa);}
+.prio-pill:not(.sel):hover{border-color:#aaa;color:var(--text);}
+
+.btn{border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;text-transform:uppercase;letter-spacing:.09em;transition:all .15s;padding:10px 18px;}
+.btn:hover{opacity:.82;}
+.btn-primary{background:var(--text);color:#fff;}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.btn-sm{padding:5px 10px;font-size:10px;}
+
+/* ── FILTROS / ORDENAÇÃO ── */
+.controls-bar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.controls-bar .label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-right:2px;}
+.sort-btn{padding:5px 12px;border:1px solid var(--border);background:transparent;font-family:'DM Mono',monospace;font-size:10px;border-radius:20px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;transition:all .15s;}
+.sort-btn.active{background:var(--text);border-color:var(--text);color:#fff;}
+.sort-btn:not(.active):hover{border-color:#aaa;color:var(--text);}
+.filter-sep{width:1px;height:16px;background:var(--border);margin:0 4px;}
+.filter-btn{padding:5px 12px;border:1px solid var(--border);background:transparent;font-family:'DM Mono',monospace;font-size:10px;border-radius:20px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;transition:all .15s;}
+.filter-btn.active{background:var(--surface2);border-color:#888;color:var(--text);}
+.filter-btn:hover{border-color:#aaa;}
+.count-badge{margin-left:auto;font-size:10px;color:var(--muted);letter-spacing:.05em;}
+
+/* ── TASK CARDS ── */
+.tasks-list{display:flex;flex-direction:column;gap:8px;}
+.task-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.05);transition:box-shadow .15s;position:relative;overflow:hidden;}
+.task-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.09);}
+/* left accent bar */
+.task-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:12px 0 0 12px;}
+.task-card.estado-aguardar::before{background:var(--gray-border);}
+.task-card.estado-progresso::before{background:var(--blue);}
+.task-card.estado-concluido::before{background:var(--green);}
+.task-card.estado-cancelado::before{background:var(--red);}
+.task-card.estado-bloqueado::before{background:var(--amber);}
+/* dim completed */
+.task-card.estado-concluido{opacity:.72;}
+.task-card.estado-cancelado{opacity:.6;}
+
+.card-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.card-num{font-size:10px;color:var(--muted);min-width:22px;padding-top:1px;flex-shrink:0;}
+.card-title{font-size:13px;font-weight:500;flex:1;line-height:1.4;}
+.card-title.done{text-decoration:line-through;color:var(--muted);}
+.card-prio{flex-shrink:0;}
+
+.prio-tag{font-size:9px;text-transform:uppercase;letter-spacing:.08em;padding:3px 8px;border-radius:10px;font-weight:500;}
+.prio-tag.urgente{background:var(--red-bg);color:var(--urgent);border:1px solid var(--red-border);}
+.prio-tag.normal{background:var(--amber-bg);color:var(--normal);border:1px solid var(--amber-border);}
+.prio-tag.baixa{background:var(--green-bg);color:var(--baixa);border:1px solid var(--green-border);}
+
+.card-meta{display:flex;align-items:center;gap:12px;font-size:10px;color:var(--muted);flex-wrap:wrap;}
+.meta-item{display:flex;align-items:center;gap:4px;}
+.meta-item svg{width:11px;height:11px;opacity:.6;}
+
+.estado-pill{font-size:9px;text-transform:uppercase;letter-spacing:.08em;padding:3px 9px;border-radius:10px;font-weight:500;}
+.estado-pill.aguardar{background:var(--gray-bg);color:var(--muted);border:1px solid var(--gray-border);}
+.estado-pill.progresso{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);}
+.estado-pill.concluido{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.estado-pill.cancelado{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.estado-pill.bloqueado{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
+
+/* gestor controls — hidden by default */
+.card-gestor{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.card-gestor.show{display:block;}
+.card-gestor-row{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;}
+.estado-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:6px 8px;border-radius:6px;outline:none;cursor:pointer;flex-shrink:0;}
+.notas-input{flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:6px 8px;border-radius:6px;outline:none;resize:none;transition:border-color .15s;}
+.notas-input:focus{border-color:var(--accent);}
+.icon-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:4px;color:#bbb;transition:color .1s;}
+.icon-btn:hover.del{color:var(--red);}
+.icon-btn:hover{color:var(--text);}
+
+/* notas display */
+.card-notas{margin-top:8px;font-size:10px;color:var(--muted);background:var(--surface2);border:1px dashed var(--border);border-radius:6px;padding:7px 10px;line-height:1.6;}
+.card-notas-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#bbb;margin-bottom:3px;}
+
+/* empty state */
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted);}
+.empty-state svg{width:36px;height:36px;opacity:.3;margin-bottom:12px;}
+.empty-state p{font-size:12px;}
+
+/* ── STATS BAR ── */
+.stats-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.stat-chip{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;display:flex;flex-direction:column;gap:2px;min-width:90px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.stat-val{font-family:'Manrope',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.03em;}
+.stat-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);}
+.stat-chip.s-progresso .stat-val{color:var(--blue);}
+.stat-chip.s-urgente .stat-val{color:var(--urgent);}
+.stat-chip.s-ok .stat-val{color:var(--green);}
+
+/* ── MODALS ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:400;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:340px;box-shadow:0 12px 40px rgba(0,0,0,.15);}
+.modal h2{font-family:'Manrope',sans-serif;font-size:15px;font-weight:700;margin-bottom:6px;}
+.modal p{font-size:11px;color:var(--muted);margin-bottom:18px;line-height:1.6;}
+.pin-input{width:100%;text-align:center;letter-spacing:.4em;font-size:24px;font-family:'Manrope',sans-serif;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;outline:none;transition:border-color .15s;margin-bottom:6px;}
+.pin-input:focus{border-color:var(--accent);}
+.pin-error{font-size:10px;color:var(--red);text-align:center;margin-bottom:12px;min-height:16px;}
+.modal-footer{display:flex;gap:8px;margin-top:4px;}
+.modal-footer .btn{flex:1;}
+
+/* toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;font-size:11px;padding:10px 20px;border-radius:20px;opacity:0;transition:all .25s;pointer-events:none;z-index:600;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header-row">
+    <div class="header-left">
+      <h1>Gestão de Tarefas</h1>
+      <p class="subtitle">Pedidos por ordem de chegada — atualização em tempo real</p>
+    </div>
+    <div class="header-right">
+      <span id="syncStatus"></span>
+      <button class="btn-gestor" id="btnGestor" onclick="openPinModal()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="8" rx="1.5"/><path d="M5 7V5a3 3 0 016 0v2"/></svg>
+        Modo Gestor
+      </button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-bar" id="statsBar"></div>
+
+  <!-- NOVO PEDIDO -->
+  <div class="novo-pedido-panel">
+    <div class="panel-title">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v3.5l2 1.5"/></svg>
+      Novo pedido
+    </div>
+    <div class="form-grid">
+      <div>
+        <label class="field-label">O teu nome *</label>
+        <input type="text" class="form-input" id="fNome" placeholder="ex: Ana Silva" maxlength="50">
+      </div>
+      <div>
+        <label class="field-label">Prioridade</label>
+        <div class="prio-row" id="prioRow">
+          <button class="prio-pill" data-p="urgente" onclick="selPrio('urgente')">🔴 Urgente</button>
+          <button class="prio-pill sel" data-p="normal" onclick="selPrio('normal')">🟡 Normal</button>
+          <button class="prio-pill" data-p="baixa" onclick="selPrio('baixa')">🟢 Baixa</button>
+        </div>
+      </div>
+      <div class="full">
+        <label class="field-label">Título da tarefa *</label>
+        <input type="text" class="form-input" id="fTitulo" placeholder="ex: Relatório mensal — Cliente X" maxlength="100">
+      </div>
+      <div class="full">
+        <label class="field-label">Descrição / detalhe</label>
+        <input type="text" class="form-input" id="fDescricao" placeholder="ex: Enviar até sexta, incluir anexo PDF com dados de março" maxlength="300">
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+      <button class="btn btn-primary" onclick="submitPedido()">+ Nova Tarefa</button>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls-bar">
+    <span class="label">Ordenar:</span>
+    <button class="sort-btn active" data-sort="prio" onclick="setSort('prio')">Prioridade</button>
+    <button class="sort-btn" data-sort="fifo" onclick="setSort('fifo')">Chegada</button>
+    <button class="sort-btn" data-sort="estado" onclick="setSort('estado')">Estado</button>
+    <div class="filter-sep"></div>
+    <span class="label">Filtro:</span>
+    <button class="filter-btn active" data-f="todos" onclick="setFilter('todos')">Todos</button>
+    <button class="filter-btn" data-f="activos" onclick="setFilter('activos')">Activos</button>
+    <button class="filter-btn" data-f="concluido" onclick="setFilter('concluido')">Concluídos</button>
+    <span class="count-badge" id="countBadge"></span>
+  </div>
+
+  <!-- TASK LIST -->
+  <div class="tasks-list" id="tasksList"></div>
+
+</div>
+
+<!-- PIN MODAL -->
+<div class="modal-overlay" id="pinModal">
+  <div class="modal">
+    <h2>Modo Gestor</h2>
+    <p>Introduz o PIN de 4 dígitos para activar os controlos de gestão.</p>
+    <input type="password" inputmode="numeric" maxlength="4" class="pin-input" id="pinInput" placeholder="••••" oninput="onPinInput()">
+    <div class="pin-error" id="pinError"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closePinModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="checkPin()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+// ═══════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════
+const GESTOR_PIN = '1234'; // ← altera aqui o teu PIN
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBbTDfCCC9o5oxMSMRsvCUC50Iu6L0aqT8",
+  authDomain: "calendario-trabalho-39a6c.firebaseapp.com",
+  projectId: "calendario-trabalho-39a6c",
+  storageBucket: "calendario-trabalho-39a6c.firebasestorage.app",
+  messagingSenderId: "596069405321",
+  appId: "1:596069405321:web:275bb9da220206d3da6c58"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const col = db.collection('tarefas_todo');
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let tasks       = [];
+let isGestor    = false;
+let selPrioVal  = 'normal';
+let sortMode    = 'prio';   // prio | fifo | estado
+let filterMode  = 'todos';  // todos | activos | concluido
+
+// ═══════════════════════════════════════════════
+// FIREBASE — real-time listener
+// ═══════════════════════════════════════════════
+function setStatus(msg, color) {
+  const el = document.getElementById('syncStatus');
+  if (el) { el.textContent = msg; el.style.color = color || 'var(--muted)'; }
+}
+
+function startSync() {
+  setStatus('A ligar…', '#f59e0b');
+  col.orderBy('ordemChegada', 'asc').onSnapshot(snap => {
+    tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    render();
+    setStatus('✓ Sincronizado', '#16a34a');
+    setTimeout(() => setStatus(''), 3000);
+  }, err => {
+    console.error(err);
+    setStatus('Erro de ligação', '#dc2626');
+  });
+}
+
+// ═══════════════════════════════════════════════
+// SUBMIT PEDIDO
+// ═══════════════════════════════════════════════
+async function submitPedido() {
+  const nome      = document.getElementById('fNome').value.trim();
+  const titulo    = document.getElementById('fTitulo').value.trim();
+  const descricao = document.getElementById('fDescricao').value.trim();
+  if (!nome)   { toast('Introduz o teu nome!'); return; }
+  if (!titulo) { toast('Introduz o título da tarefa!'); return; }
+
+  const maxOrdem = tasks.length ? Math.max(...tasks.map(t => t.ordemChegada || 0)) : 0;
+
+  try {
+    await col.add({
+      titulo,
+      descricao,
+      solicitante: nome,
+      prioridade: selPrioVal,
+      estado: 'aguardar',
+      notas: '',
+      criadaEm: Date.now(),
+      ordemChegada: maxOrdem + 1
+    });
+    document.getElementById('fNome').value      = '';
+    document.getElementById('fTitulo').value    = '';
+    document.getElementById('fDescricao').value = '';
+    selPrio('normal');
+    toast('✓ Tarefa adicionada!');
+  } catch(e) {
+    console.error(e);
+    toast('Erro ao adicionar tarefa.');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// UPDATE TASK (gestor)
+// ═══════════════════════════════════════════════
+async function updateEstado(id, val) {
+  try {
+    await col.doc(id).update({ estado: val });
+  } catch(e) { toast('Erro ao atualizar.'); }
+}
+
+async function updateNotas(id, val) {
+  try {
+    await col.doc(id).update({ notas: val });
+  } catch(e) {}
+}
+
+async function deleteTask(id) {
+  if (!confirm('Eliminar esta tarefa permanentemente?')) return;
+  try {
+    await col.doc(id).delete();
+    toast('Tarefa eliminada.');
+  } catch(e) { toast('Erro ao eliminar.'); }
+}
+
+// ═══════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════
+const ESTADO_ORDER = { progresso:0, aguardar:1, bloqueado:2, cancelado:3, concluido:4 };
+const PRIO_ORDER   = { urgente:0, normal:1, baixa:2 };
+
+function getSorted(list) {
+  const copy = [...list];
+  if (sortMode === 'fifo') {
+    copy.sort((a,b) => (a.ordemChegada||0) - (b.ordemChegada||0));
+  } else if (sortMode === 'prio') {
+    copy.sort((a,b) => {
+      const pd = (PRIO_ORDER[a.prioridade]||1) - (PRIO_ORDER[b.prioridade]||1);
+      if (pd !== 0) return pd;
+      return (a.ordemChegada||0) - (b.ordemChegada||0);
+    });
+  } else { // estado
+    copy.sort((a,b) => {
+      const ed = (ESTADO_ORDER[a.estado]||1) - (ESTADO_ORDER[b.estado]||1);
+      if (ed !== 0) return ed;
+      return (PRIO_ORDER[a.prioridade]||1) - (PRIO_ORDER[b.prioridade]||1);
+    });
+  }
+  return copy;
+}
+
+function getFiltered(list) {
+  if (filterMode === 'activos')   return list.filter(t => t.estado !== 'concluido' && t.estado !== 'cancelado');
+  if (filterMode === 'concluido') return list.filter(t => t.estado === 'concluido' || t.estado === 'cancelado');
+  return list;
+}
+
+const ESTADO_LABEL = {
+  aguardar:'A aguardar', progresso:'Em progresso',
+  concluido:'Concluído', cancelado:'Cancelado', bloqueado:'Bloqueado'
+};
+const PRIO_LABEL = { urgente:'Urgente', normal:'Normal', baixa:'Baixa' };
+
+function fmtDate(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000)   return 'agora mesmo';
+  if (diff < 3600000) return Math.floor(diff/60000) + ' min atrás';
+  if (diff < 86400000)return Math.floor(diff/3600000) + 'h atrás';
+  return d.toLocaleDateString('pt-PT',{day:'2-digit',month:'short'});
+}
+
+function render() {
+  renderStats();
+  renderList();
+}
+
+function renderStats() {
+  const total     = tasks.length;
+  const progresso = tasks.filter(t => t.estado === 'progresso').length;
+  const urgentes  = tasks.filter(t => t.prioridade === 'urgente' && t.estado !== 'concluido' && t.estado !== 'cancelado').length;
+  const concluidas= tasks.filter(t => t.estado === 'concluido').length;
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-chip"><span class="stat-val">${total}</span><span class="stat-lbl">Total</span></div>
+    <div class="stat-chip s-progresso"><span class="stat-val">${progresso}</span><span class="stat-lbl">Em progresso</span></div>
+    <div class="stat-chip s-urgente"><span class="stat-val">${urgentes}</span><span class="stat-lbl">Urgentes</span></div>
+    <div class="stat-chip s-ok"><span class="stat-val">${concluidas}</span><span class="stat-lbl">Concluídas</span></div>
+  `;
+}
+
+function renderList() {
+  const container = document.getElementById('tasksList');
+  const filtered  = getFiltered(getSorted(tasks));
+
+  document.getElementById('countBadge').textContent = filtered.length + ' tarefa' + (filtered.length !== 1 ? 's' : '');
+
+  if (!filtered.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/><path d="M8 14h4M8 18h8"/></svg>
+        <p>Nenhuma tarefa encontrada.</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = '';
+  filtered.forEach((task, idx) => {
+    const card = document.createElement('div');
+    card.className = `task-card estado-${task.estado}`;
+
+    const titleClass  = (task.estado === 'concluido' || task.estado === 'cancelado') ? 'card-title done' : 'card-title';
+    const gestorShow  = isGestor ? 'show' : '';
+
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="card-num">#${task.ordemChegada || (idx+1)}</div>
+        <div class="${titleClass}">${escHtml(task.titulo)}</div>
+        <div class="card-prio"><span class="prio-tag ${task.prioridade}">${PRIO_LABEL[task.prioridade]||task.prioridade}</span></div>
+      </div>
+      ${task.descricao ? `<div style="padding:2px 0 8px 30px;font-size:11px;color:var(--muted);line-height:1.55;">${escHtml(task.descricao)}</div>` : ''}
+      <div class="card-meta">
+        <span class="meta-item">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1.5"/></svg>
+          ${fmtDate(task.criadaEm)}
+        </span>
+        <span class="meta-item">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="2.5"/><path d="M3 13c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5"/></svg>
+          ${escHtml(task.solicitante)}
+        </span>
+        <span class="estado-pill ${task.estado}">${ESTADO_LABEL[task.estado]||task.estado}</span>
+      </div>
+      ${task.notas ? `<div class="card-notas"><div class="card-notas-label">Nota do gestor</div>${escHtml(task.notas)}</div>` : ''}
+      <div class="card-gestor ${gestorShow}" id="gestor-${task.id}">
+        <div class="card-gestor-row">
+          <select class="estado-select" onchange="updateEstado('${task.id}', this.value)">
+            <option value="aguardar"  ${task.estado==='aguardar'  ?'selected':''}>⬜ A aguardar</option>
+            <option value="progresso" ${task.estado==='progresso' ?'selected':''}>🔵 Em progresso</option>
+            <option value="concluido" ${task.estado==='concluido' ?'selected':''}>✅ Concluído</option>
+            <option value="cancelado" ${task.estado==='cancelado' ?'selected':''}>🔴 Cancelado</option>
+            <option value="bloqueado" ${task.estado==='bloqueado' ?'selected':''}>🟠 Bloqueado</option>
+          </select>
+          <textarea class="notas-input" rows="1" placeholder="Nota interna (opcional)…" onchange="updateNotas('${task.id}', this.value)">${escHtml(task.notas||'')}</textarea>
+          <button class="icon-btn del" title="Eliminar" onclick="deleteTask('${task.id}')">🗑</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// SORT / FILTER
+// ═══════════════════════════════════════════════
+function setSort(mode) {
+  sortMode = mode;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === mode));
+  renderList();
+}
+
+function setFilter(mode) {
+  filterMode = mode;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.f === mode));
+  renderList();
+}
+
+// ═══════════════════════════════════════════════
+// PRIO SELECT
+// ═══════════════════════════════════════════════
+function selPrio(p) {
+  selPrioVal = p;
+  document.querySelectorAll('.prio-pill').forEach(b => b.classList.toggle('sel', b.dataset.p === p));
+}
+
+// ═══════════════════════════════════════════════
+// PIN / GESTOR MODE
+// ═══════════════════════════════════════════════
+function openPinModal() {
+  if (isGestor) {
+    isGestor = false;
+    document.getElementById('btnGestor').classList.remove('active');
+    // hide all gestor panels
+    document.querySelectorAll('.card-gestor').forEach(el => el.classList.remove('show'));
+    toast('Modo gestor desactivado.');
+    return;
+  }
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('pinModal').classList.add('open');
+  setTimeout(() => document.getElementById('pinInput').focus(), 100);
+}
+
+function closePinModal() {
+  document.getElementById('pinModal').classList.remove('open');
+}
+
+function onPinInput() {
+  if (document.getElementById('pinInput').value.length === 4) checkPin();
+}
+
+function checkPin() {
+  const val = document.getElementById('pinInput').value;
+  if (val === GESTOR_PIN) {
+    isGestor = true;
+    document.getElementById('btnGestor').classList.add('active');
+    closePinModal();
+    // show all gestor panels
+    document.querySelectorAll('.card-gestor').forEach(el => el.classList.add('show'));
+    toast('✓ Modo gestor activado.');
+  } else {
+    document.getElementById('pinError').textContent = 'PIN incorreto. Tenta novamente.';
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinInput').focus();
+  }
+}
+
+document.getElementById('pinModal').addEventListener('click', function(e){ if(e.target===this) closePinModal(); });
+document.getElementById('pinInput').addEventListener('keydown', e => { if(e.key==='Enter') checkPin(); });
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+startSync();
+</script>
+</body>
+</html>
