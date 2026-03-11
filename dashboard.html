@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Painel Geral</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@600;700;800&display=swap');
+
+:root {
+  --bg:#f4f4f6; --surface:#fff; --surface2:#f7f7f9; --border:#e2e2e8;
+  --text:#1a1a22; --muted:#8888a0; --accent:#2563eb;
+  --green:#16a34a; --green-bg:#f0fdf4; --green-border:#bbf7d0;
+  --blue:#2563eb;  --blue-bg:#eff6ff;  --blue-border:#bfdbfe;
+  --red:#dc2626;   --red-bg:#fef2f2;   --red-border:#fecaca;
+  --amber:#d97706; --amber-bg:#fffbeb; --amber-border:#fde68a;
+  --purple:#7c3aed;--purple-bg:#f5f3ff;--purple-border:#ddd6fe;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;padding:32px 20px;}
+.page{max-width:1200px;margin:0 auto;}
+h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,28px);letter-spacing:-.03em;margin-bottom:4px;}
+.subtitle{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px;}
+
+/* HEADER */
+.header-top{display:flex;align-items:center;gap:16px;margin-bottom:4px;flex-wrap:wrap;}
+.header-top h1{margin-bottom:0;}
+#syncStatus{font-size:10px;color:var(--muted);letter-spacing:.05em;margin-left:auto;}
+.last-update{font-size:10px;color:var(--muted);letter-spacing:.04em;}
+
+/* NAV LINKS */
+.nav-links{display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap;}
+.nav-link{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:1px solid var(--border);background:var(--surface);border-radius:20px;font-size:10px;color:var(--muted);text-decoration:none;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.07em;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.nav-link:hover{border-color:var(--accent);color:var(--accent);}
+.nav-link svg{width:11px;height:11px;}
+
+/* BIG KPI ROW */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:24px;}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:0 1px 5px rgba(0,0,0,.05);position:relative;overflow:hidden;}
+.kpi-card::before{content:'';position:absolute;right:-10px;top:-10px;width:60px;height:60px;border-radius:50%;opacity:.06;}
+.kpi-card.k-total::before{background:var(--text);}
+.kpi-card.k-urgente::before{background:var(--red);}
+.kpi-card.k-progresso::before{background:var(--blue);}
+.kpi-card.k-concluido::before{background:var(--green);}
+.kpi-card.k-com::before{background:var(--purple);}
+.kpi-card.k-pendente::before{background:var(--amber);}
+.kpi-val{font-family:'Manrope',sans-serif;font-size:32px;font-weight:800;letter-spacing:-.04em;line-height:1;}
+.kpi-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-top:5px;}
+.kpi-sub{font-size:9px;color:var(--muted);margin-top:3px;opacity:.7;}
+.kpi-card.k-urgente .kpi-val{color:var(--red);}
+.kpi-card.k-progresso .kpi-val{color:var(--blue);}
+.kpi-card.k-concluido .kpi-val{color:var(--green);}
+.kpi-card.k-com .kpi-val{color:var(--purple);}
+.kpi-card.k-pendente .kpi-val{color:var(--amber);}
+
+/* MAIN GRID */
+.main-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:860px){.main-grid{grid-template-columns:1fr;}}
+.main-grid .full{grid-column:1/-1;}
+
+/* PANELS */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;box-shadow:0 1px 6px rgba(0,0,0,.06);}
+.panel-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.panel-title{font-family:'Manrope',sans-serif;font-size:13px;font-weight:700;flex:1;}
+.panel-link{font-size:10px;color:var(--accent);text-decoration:none;text-transform:uppercase;letter-spacing:.07em;opacity:.8;transition:opacity .15s;}
+.panel-link:hover{opacity:1;}
+.panel-badge{font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:3px 8px;border-radius:10px;font-weight:500;}
+
+/* TAREFAS LIST */
+.task-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:11px;}
+.task-row:last-child{border-bottom:none;}
+.task-prio-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.task-prio-dot.urgente{background:var(--red);}
+.task-prio-dot.normal{background:var(--amber);}
+.task-prio-dot.baixa{background:var(--green);}
+.task-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.task-person{font-size:10px;color:var(--muted);white-space:nowrap;margin-left:auto;max-width:90px;overflow:hidden;text-overflow:ellipsis;}
+.estado-pill{font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:2px 7px;border-radius:10px;font-weight:500;flex-shrink:0;}
+.estado-pill.aguardar{background:var(--bg);color:var(--muted);border:1px solid var(--border);}
+.estado-pill.progresso{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);}
+.estado-pill.concluido{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.estado-pill.cancelado{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.estado-pill.pendente{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
+
+/* COMUNICADOS LIST */
+.com-row{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);}
+.com-row:last-child{border-bottom:none;}
+.tipo-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.tipo-dot.geral{background:var(--blue);}
+.tipo-dot.urgente{background:var(--red);}
+.tipo-dot.info{background:var(--purple);}
+.tipo-dot.aviso{background:var(--amber);}
+.com-content{flex:1;min-width:0;}
+.com-titulo-row{font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.com-meta-row{font-size:10px;color:var(--muted);margin-top:2px;}
+.tipo-tag-sm{font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:2px 7px;border-radius:10px;font-weight:500;flex-shrink:0;}
+.tipo-tag-sm.geral{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);}
+.tipo-tag-sm.urgente{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.tipo-tag-sm.info{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border);}
+.tipo-tag-sm.aviso{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
+
+/* CALENDAR MINI */
+.cal-grid{display:grid;grid-template-columns:repeat(30,1fr);gap:2px;}
+.cal-dept-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px;margin-top:8px;}
+.cal-dept-label:first-child{margin-top:0;}
+.cal-seg{height:14px;border-radius:2px;cursor:default;transition:opacity .1s;}
+.cal-seg:hover{opacity:.75;}
+.cal-day-nums{display:grid;grid-template-columns:repeat(30,1fr);gap:2px;margin-bottom:10px;}
+.cal-day-num{text-align:center;font-size:8px;color:var(--muted);}
+
+/* EVENTOS RECENTES */
+.ev-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:10px;}
+.ev-row:last-child{border-bottom:none;}
+.ev-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.ev-day-badge{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:2px 6px;font-size:9px;white-space:nowrap;flex-shrink:0;}
+.ev-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);}
+.ev-dept{font-size:9px;color:var(--muted);opacity:.7;white-space:nowrap;}
+
+/* ACTIVIDADE RECENTE */
+.activity-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.activity-row:last-child{border-bottom:none;}
+.activity-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.activity-icon.task{background:var(--blue-bg);}
+.activity-icon.com{background:var(--purple-bg);}
+.activity-content{flex:1;min-width:0;}
+.activity-text{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.activity-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.activity-time{font-size:10px;color:var(--muted);white-space:nowrap;flex-shrink:0;}
+
+/* URGENTE BANNER */
+.urgente-banner{background:var(--red-bg);border:1px solid var(--red-border);border-radius:12px;padding:11px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:11px;color:var(--red);}
+.urgente-banner svg{width:15px;height:15px;flex-shrink:0;}
+.urgente-banner strong{font-family:'Manrope',sans-serif;font-weight:700;}
+
+/* PROGRESS BAR */
+.progress-wrap{margin-top:14px;}
+.progress-row{display:flex;justify-content:space-between;margin-bottom:5px;font-size:10px;color:var(--muted);}
+.progress-bar-bg{background:var(--border);border-radius:4px;height:6px;overflow:hidden;}
+.progress-bar-fill{height:100%;border-radius:4px;background:var(--accent);transition:width .4s;}
+
+/* EMPTY */
+.empty-mini{text-align:center;padding:20px;color:var(--muted);font-size:11px;}
+
+/* loading pulse */
+@keyframes pulse{0%,100%{opacity:.4;}50%{opacity:1;}}
+.loading{animation:pulse 1.4s infinite;font-size:11px;color:var(--muted);padding:20px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header-top">
+    <h1>Dashboard</h1>
+    <span class="last-update" id="lastUpdate"></span>
+    <span id="syncStatus"></span>
+  </div>
+  <p class="subtitle">Visão geral — tarefas · comunicados · calendário</p>
+
+  <!-- NAV -->
+  <div class="nav-links">
+    <a class="nav-link" href="tarefas.html">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="10" height="10" rx="1.5"/><path d="M6 7l1.5 1.5L10 6"/></svg>
+      Tarefas
+    </a>
+    <a class="nav-link" href="comunicados.html">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2H3a1 1 0 00-1 1v9a1 1 0 001 1h3l2 2 2-2h3a1 1 0 001-1V3a1 1 0 00-1-1z"/></svg>
+      Comunicados
+    </a>
+    <a class="nav-link" href="calendario_quarteira.html">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M5 1v3M11 1v3M2 7h12"/></svg>
+      Calendário
+    </a>
+  </div>
+
+  <!-- URGENTE BANNER -->
+  <div id="urgenteBanner" style="display:none;"></div>
+
+  <!-- KPI ROW -->
+  <div class="kpi-row" id="kpiRow">
+    <div class="kpi-card"><div class="loading">A carregar…</div></div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- TAREFAS ACTIVAS -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">📋 Tarefas activas</span>
+        <a class="panel-link" href="tarefas.html">Ver todas →</a>
+      </div>
+      <div id="tasksList"><div class="loading">A carregar…</div></div>
+      <div class="progress-wrap" id="progressWrap" style="display:none;">
+        <div class="progress-row">
+          <span>Progresso geral</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- COMUNICADOS RECENTES -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">📢 Comunicados recentes</span>
+        <a class="panel-link" href="comunicados.html">Ver todos →</a>
+      </div>
+      <div id="comList"><div class="loading">A carregar…</div></div>
+    </div>
+
+    <!-- CALENDÁRIO MINI (full width) -->
+    <div class="panel full">
+      <div class="panel-header">
+        <span class="panel-title">📅 Carga de trabalho do mês</span>
+        <a class="panel-link" href="calendario_quarteira.html">Editar →</a>
+      </div>
+      <div id="calMini"><div class="loading">A carregar…</div></div>
+    </div>
+
+    <!-- EVENTOS DO CALENDÁRIO -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">🗓 Eventos do mês</span>
+        <a class="panel-link" href="calendario_quarteira.html">Ver calendário →</a>
+      </div>
+      <div id="evList"><div class="loading">A carregar…</div></div>
+    </div>
+
+    <!-- ACTIVIDADE RECENTE -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">⚡ Actividade recente</span>
+      </div>
+      <div id="activityList"><div class="loading">A carregar…</div></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBbTDfCCC9o5oxMSMRsvCUC50Iu6L0aqT8",
+  authDomain: "calendario-trabalho-39a6c.firebaseapp.com",
+  projectId: "calendario-trabalho-39a6c",
+  storageBucket: "calendario-trabalho-39a6c.firebasestorage.app",
+  messagingSenderId: "596069405321",
+  appId: "1:596069405321:web:275bb9da220206d3da6c58"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ── STATE ──
+let tasks        = [];
+let comunicados  = [];
+let calData      = null;   // { departments, events }
+let loadedFlags  = { tasks: false, com: false, cal: false };
+
+function setStatus(msg, color) {
+  const el = document.getElementById('syncStatus');
+  if (el) { el.textContent = msg; el.style.color = color || 'var(--muted)'; }
+}
+
+function checkAllLoaded() {
+  if (loadedFlags.tasks && loadedFlags.com && loadedFlags.cal) {
+    renderAll();
+    setStatus('✓ Sincronizado', '#16a34a');
+    setTimeout(() => setStatus(''), 3000);
+    const now = new Date();
+    document.getElementById('lastUpdate').textContent =
+      'Actualizado às ' + now.toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
+  }
+}
+
+// ── LISTENERS ──
+function startSync() {
+  setStatus('A ligar…', '#f59e0b');
+
+  // Tarefas
+  db.collection('tarefas_todo').orderBy('ordemChegada','asc').onSnapshot(snap => {
+    tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    loadedFlags.tasks = true;
+    checkAllLoaded();
+    if (loadedFlags.com && loadedFlags.cal) renderAll();
+  }, err => { console.error('tasks:', err); setStatus('Erro', '#dc2626'); });
+
+  // Comunicados
+  db.collection('comunicados').orderBy('criadoEm','desc').onSnapshot(snap => {
+    comunicados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    loadedFlags.com = true;
+    checkAllLoaded();
+    if (loadedFlags.tasks && loadedFlags.cal) renderAll();
+  }, err => { console.error('com:', err); });
+
+  // Calendário
+  db.collection('calendarios').doc('calendario_quarteira').onSnapshot(snap => {
+    calData = snap.exists ? snap.data() : null;
+    loadedFlags.cal = true;
+    checkAllLoaded();
+    if (loadedFlags.tasks && loadedFlags.com) renderAll();
+  }, err => { console.error('cal:', err); loadedFlags.cal = true; });
+}
+
+// ── RENDER ALL ──
+function renderAll() {
+  renderUrgenteBanner();
+  renderKPIs();
+  renderTasks();
+  renderComunicados();
+  renderCalMini();
+  renderEvents();
+  renderActivity();
+}
+
+// ── URGENTE BANNER ──
+function renderUrgenteBanner() {
+  const banner   = document.getElementById('urgenteBanner');
+  const urgentes = comunicados.filter(c => c.tipo === 'urgente' && !c.arquivado);
+  if (!urgentes.length) { banner.style.display = 'none'; return; }
+  banner.style.display = 'block';
+  banner.innerHTML = urgentes.slice(0,2).map(u => `
+    <div class="urgente-banner">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L1.5 13h13L8 2z"/><path d="M8 7v3M8 11.5v.5"/></svg>
+      <div><strong>${escHtml(u.titulo)}</strong> — ${escHtml(u.autor||'')} · ${fmtShort(u.criadoEm)}</div>
+    </div>
+  `).join('');
+}
+
+// ── KPIs ──
+function renderKPIs() {
+  const activas    = tasks.filter(t => t.estado !== 'concluido' && t.estado !== 'cancelado');
+  const urgentes   = activas.filter(t => t.prioridade === 'urgente');
+  const progresso  = activas.filter(t => t.estado === 'progresso');
+  const concluidas = tasks.filter(t => t.estado === 'concluido');
+  const pendentes  = activas.filter(t => t.estado === 'pendente');
+  const comAtivos  = comunicados.filter(c => !c.arquivado);
+
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi-card k-total">
+      <div class="kpi-val">${activas.length}</div>
+      <div class="kpi-lbl">Tarefas activas</div>
+      <div class="kpi-sub">${tasks.length} no total</div>
+    </div>
+    <div class="kpi-card k-urgente">
+      <div class="kpi-val">${urgentes.length}</div>
+      <div class="kpi-lbl">Urgentes</div>
+      <div class="kpi-sub">requerem atenção</div>
+    </div>
+    <div class="kpi-card k-progresso">
+      <div class="kpi-val">${progresso.length}</div>
+      <div class="kpi-lbl">Em progresso</div>
+      <div class="kpi-sub">a ser trabalhadas</div>
+    </div>
+    <div class="kpi-card k-pendente">
+      <div class="kpi-val">${pendentes.length}</div>
+      <div class="kpi-lbl">Pendentes</div>
+      <div class="kpi-sub">aguardam resposta</div>
+    </div>
+    <div class="kpi-card k-concluido">
+      <div class="kpi-val">${concluidas.length}</div>
+      <div class="kpi-lbl">Concluídas</div>
+      <div class="kpi-sub">total histórico</div>
+    </div>
+    <div class="kpi-card k-com">
+      <div class="kpi-val">${comAtivos.length}</div>
+      <div class="kpi-lbl">Comunicados</div>
+      <div class="kpi-sub">activos</div>
+    </div>
+  `;
+}
+
+// ── TASKS ──
+const ESTADO_LABEL = { aguardar:'A aguardar', progresso:'Em progresso', concluido:'Concluído', cancelado:'Cancelado', pendente:'Pendente' };
+const PRIO_ORDER   = { urgente:0, normal:1, baixa:2 };
+
+function renderTasks() {
+  const container = document.getElementById('tasksList');
+  // sort: urgente primeiro, depois estado
+  const activas = tasks
+    .filter(t => t.estado !== 'concluido' && t.estado !== 'cancelado')
+    .sort((a,b) => {
+      const pd = (PRIO_ORDER[a.prioridade]??1) - (PRIO_ORDER[b.prioridade]??1);
+      if (pd !== 0) return pd;
+      return (a.ordemChegada||0) - (b.ordemChegada||0);
+    })
+    .slice(0, 8);
+
+  if (!activas.length) {
+    container.innerHTML = '<div class="empty-mini">Sem tarefas activas 🎉</div>';
+    document.getElementById('progressWrap').style.display = 'none';
+    return;
+  }
+
+  container.innerHTML = activas.map(t => `
+    <div class="task-row">
+      <div class="task-prio-dot ${t.prioridade}"></div>
+      <div class="task-name">${escHtml(t.titulo)}</div>
+      <div class="task-person">${escHtml(t.solicitante)}</div>
+      <span class="estado-pill ${t.estado||'aguardar'}">${ESTADO_LABEL[t.estado]||t.estado}</span>
+    </div>
+  `).join('');
+
+  // progress bar
+  const total     = tasks.filter(t => t.estado !== 'cancelado').length;
+  const concluidas = tasks.filter(t => t.estado === 'concluido').length;
+  if (total > 0) {
+    const pct = Math.round(concluidas / total * 100);
+    document.getElementById('progressWrap').style.display = 'block';
+    document.getElementById('progressPct').textContent = pct + '%';
+    document.getElementById('progressBar').style.width  = pct + '%';
+  }
+}
+
+// ── COMUNICADOS ──
+const TIPO_LABEL = { geral:'Geral', urgente:'Urgente', info:'Info', aviso:'Aviso' };
+
+function renderComunicados() {
+  const container = document.getElementById('comList');
+  const recentes  = comunicados.filter(c => !c.arquivado).slice(0, 6);
+
+  if (!recentes.length) {
+    container.innerHTML = '<div class="empty-mini">Sem comunicados activos.</div>';
+    return;
+  }
+
+  container.innerHTML = recentes.map(c => `
+    <div class="com-row">
+      <div class="tipo-dot ${c.tipo}"></div>
+      <div class="com-content">
+        <div class="com-titulo-row">${escHtml(c.titulo)}</div>
+        <div class="com-meta-row">${escHtml(c.autor||'—')} · ${fmtShort(c.criadoEm)}</div>
+      </div>
+      <span class="tipo-tag-sm ${c.tipo}">${TIPO_LABEL[c.tipo]||c.tipo}</span>
+    </div>
+  `).join('');
+}
+
+// ── CALENDAR MINI ──
+function renderCalMini() {
+  const container = document.getElementById('calMini');
+  if (!calData || !calData.departments || !calData.departments.length) {
+    container.innerHTML = '<div class="empty-mini">Sem dados de calendário.</div>';
+    return;
+  }
+
+  const { departments } = calData;
+
+  // day numbers row
+  let html = '<div class="cal-day-nums">';
+  for (let d = 1; d <= 30; d++) {
+    html += `<div class="cal-day-num">${d}</div>`;
+  }
+  html += '</div>';
+
+  departments.forEach(dept => {
+    html += `<div class="cal-dept-label">${escHtml(dept.name)}</div>`;
+    html += '<div class="cal-grid">';
+    for (let d = 0; d < 30; d++) {
+      const val   = dept.data ? dept.data[d] : 0;
+      const color = dept.colors ? dept.colors[Math.min(5, Math.max(0, val))] : '#ddd';
+      html += `<div class="cal-seg" style="background:${color}" title="Dia ${d+1}: ${val}"></div>`;
+    }
+    html += '</div>';
+  });
+
+  container.innerHTML = html;
+}
+
+// ── EVENTS ──
+function renderEvents() {
+  const container = document.getElementById('evList');
+  if (!calData || !calData.events || !calData.events.length) {
+    container.innerHTML = '<div class="empty-mini">Sem eventos no calendário.</div>';
+    return;
+  }
+
+  const events = [...calData.events].sort((a,b) => a.dayFrom - b.dayFrom).slice(0,10);
+  const depts  = calData.departments || [];
+  const getDept = id => depts.find(d => d.id === id);
+
+  container.innerHTML = events.map(ev => {
+    const dept   = getDept(ev.deptId);
+    const color  = dept ? dept.colors[4] : '#888';
+    const dayLbl = ev.dayFrom === ev.dayTo ? `Dia ${ev.dayFrom}` : `Dia ${ev.dayFrom}–${ev.dayTo}`;
+    return `
+      <div class="ev-row">
+        <div class="ev-dot" style="background:${color}"></div>
+        <span class="ev-day-badge">${escHtml(dayLbl)}</span>
+        <div class="ev-label">${escHtml(ev.label)}</div>
+        <div class="ev-dept">${dept ? escHtml(dept.name) : ''}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── ACTIVITY ──
+function renderActivity() {
+  const container = document.getElementById('activityList');
+
+  // merge tarefas + comunicados recentes numa timeline
+  const items = [
+    ...tasks.map(t => ({ type:'task', ts: t.criadaEm||0, label: t.titulo, sub: t.solicitante, estado: t.estado })),
+    ...comunicados.map(c => ({ type:'com', ts: c.criadoEm||0, label: c.titulo, sub: c.autor, tipo: c.tipo }))
+  ].sort((a,b) => b.ts - a.ts).slice(0, 8);
+
+  if (!items.length) {
+    container.innerHTML = '<div class="empty-mini">Sem actividade recente.</div>';
+    return;
+  }
+
+  container.innerHTML = items.map(item => {
+    const icon = item.type === 'task' ? '📋' : '📢';
+    const cls  = item.type === 'task' ? 'task' : 'com';
+    const sub  = item.type === 'task'
+      ? `${escHtml(item.sub||'')} · ${ESTADO_LABEL[item.estado]||item.estado}`
+      : `Comunicado · ${escHtml(item.sub||'')}`;
+    return `
+      <div class="activity-row">
+        <div class="activity-icon ${cls}">${icon}</div>
+        <div class="activity-content">
+          <div class="activity-text">${escHtml(item.label)}</div>
+          <div class="activity-sub">${sub}</div>
+        </div>
+        <div class="activity-time">${fmtShort(item.ts)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── UTILS ──
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtShort(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - ts;
+  if (diff < 60000)    return 'agora mesmo';
+  if (diff < 3600000)  return Math.floor(diff/60000) + ' min atrás';
+  if (diff < 86400000) return Math.floor(diff/3600000) + 'h atrás';
+  const d = new Date(ts);
+  return d.toLocaleDateString('pt-PT',{day:'2-digit',month:'short'});
+}
+
+// ── INIT ──
+startSync();
+</script>
+</body>
+</html>
