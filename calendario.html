@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Calendário de Trabalho</title>
 <style>
-<style>
+
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@600;700;800&display=swap');
 
 :root{
@@ -176,12 +176,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .tip.on{display:block;}
 .tip strong{display:block;font-size:12px;margin-bottom:2px;}
 .tip .tn{font-size:10px;opacity:.65;}
+
 </style>
 </head>
 <body>
+
+<div class="page">
 <div class="page">
   <h1>Calendário de Carga de Trabalho</h1>
-  <p class="subtitle">Intensidade diária por departamento — dias 1 a 30</p>
+  <p class="subtitle" id="pageSubtitle">A carregar…</p>
 
   <div class="layout">
     <!-- LEFT -->
@@ -327,159 +330,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 </div>
 
 <div class="tip" id="tip"></div>
-
-
-</style>
-</head>
-<body>
-
-<div class="page">
-
-  <!-- HEADER -->
-  <div class="header-top" style="display:flex;align-items:baseline;gap:16px;margin-bottom:6px;">
-    <h1 id="pageTitle">Calendário</h1>
-    <span id="syncStatus" style="font-size:10px;color:var(--muted);letter-spacing:.05em;margin-left:auto;"></span>
-  </div>
-  <p class="subtitle" id="pageSubtitle">A carregar escritório…</p>
-
-  <!-- LAYOUT (calendar + editor) -->
-  <div class="layout" id="layout">
-    <!-- CALENDAR PANEL -->
-    <div class="cal-panel" id="calPanel">
-      <div class="legend" id="legend">
-        <span id="syncStatus2" style="font-size:10px;color:var(--muted);"></span>
-        <button class="edit-toggle-btn" id="editToggleBtn" onclick="toggleEditor()">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2l3 3L5 14H2v-3L11 2z"/></svg>
-          Editar
-        </button>
-      </div>
-
-      <div class="days-row" id="daysRow"></div>
-      <div id="tracks"></div>
-      <hr class="divider">
-
-      <div class="ev-title">Eventos do mês</div>
-      <div class="ev-grid" id="evGrid"></div>
-      <hr class="divider">
-
-      <div class="ev-title">Resumo por departamento</div>
-      <div class="summary-grid" id="summaryGrid"></div>
-    </div>
-
-    <!-- EDITOR PANEL (same as original) -->
-    <div class="editor" id="editor">
-      <div class="editor-header">
-        <span>Editor</span>
-        <button class="close-editor-btn" onclick="toggleEditor()">✕</button>
-      </div>
-
-      <div class="dept-sel-list" id="deptSelList"></div>
-
-      <div class="editor-tabs">
-        <button class="tab active" onclick="switchTab('intensity')">Intensidade</button>
-        <button class="tab" onclick="switchTab('events')">Eventos</button>
-        <button class="tab" onclick="switchTab('depts')">Departamentos</button>
-      </div>
-
-      <!-- TAB: INTENSITY -->
-      <div class="tab-content active" id="tab-intensity">
-        <div class="section-label">Dia seleccionado</div>
-        <div class="day-mini-grid" id="dayMiniGrid"></div>
-        <div class="slider-row">
-          <span class="slider-lbl">0</span>
-          <input type="range" id="slider" min="0" max="5" value="3" class="slider" oninput="onSlider(this.value)">
-          <span class="slider-lbl">5</span>
-          <span class="slider-val" id="sliderVal">3</span>
-        </div>
-        <div class="prev-bar" id="prevBar"></div>
-        <div class="btn-row">
-          <button class="btn btn-primary" onclick="applyDay()">Aplicar ao dia</button>
-          <button class="btn btn-secondary" onclick="applyRange()">Aplicar ao intervalo</button>
-        </div>
-        <div class="range-row">
-          <input type="number" id="rFrom" min="1" max="30" placeholder="De" class="range-input">
-          <span>–</span>
-          <input type="number" id="rTo" min="1" max="30" placeholder="Até" class="range-input">
-        </div>
-      </div>
-
-      <!-- TAB: EVENTS -->
-      <div class="tab-content" id="tab-events">
-        <div class="section-label">Novo evento</div>
-        <div class="ev-form">
-          <input type="text" id="evLabel" placeholder="Descrição do evento" class="ev-input">
-          <select id="evDept" class="ev-select"></select>
-          <div class="ev-type-row">
-            <button class="ev-type-btn active" id="typeSingle" onclick="setEvType('single')">Dia único</button>
-            <button class="ev-type-btn" id="typeRange" onclick="setEvType('range')">Intervalo</button>
-            <button class="pin-toggle" id="pinToggle" onclick="togglePin()" title="Fixar no calendário">📌</button>
-          </div>
-          <div id="evSingleFields">
-            <input type="number" id="evDay" min="1" max="30" placeholder="Dia (1–30)" class="ev-input">
-          </div>
-          <div id="evRangeFields" style="display:none;">
-            <div class="ev-range-inputs">
-              <input type="number" id="evFrom" min="1" max="30" placeholder="De" class="ev-input">
-              <span>–</span>
-              <input type="number" id="evTo" min="1" max="30" placeholder="Até" class="ev-input">
-            </div>
-          </div>
-          <button class="btn btn-primary" onclick="addEvent()">+ Adicionar evento</button>
-        </div>
-        <div class="section-label" style="margin-top:14px;">Eventos existentes</div>
-        <div class="ev-list" id="evList"></div>
-      </div>
-
-      <!-- TAB: DEPARTMENTS -->
-      <div class="tab-content" id="tab-depts">
-        <button class="btn btn-primary" style="width:100%;margin-bottom:12px;" onclick="openAddDeptModal()">+ Novo departamento</button>
-        <div id="deptCards"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- TOOLTIP -->
-<div class="tip" id="tip"></div>
-
-<!-- MODAL: EDIT EVENT -->
-<div class="modal-overlay" id="editModal">
-  <div class="modal">
-    <h2>Editar Evento</h2>
-    <input type="text" id="editLabel" placeholder="Descrição" class="ev-input">
-    <select id="editEvDept" class="ev-select"></select>
-    <div class="ev-type-row">
-      <button class="ev-type-btn active" id="editTypeSingle" onclick="setEditEvType('single')">Dia único</button>
-      <button class="ev-type-btn" id="editTypeRange" onclick="setEditEvType('range')">Intervalo</button>
-      <button class="pin-toggle" id="editPinToggle" onclick="toggleEditPin()">📌</button>
-    </div>
-    <div id="editSingleFields"><input type="number" id="editDay" min="1" max="30" placeholder="Dia" class="ev-input"></div>
-    <div id="editRangeFields" style="display:none;">
-      <div class="ev-range-inputs">
-        <input type="number" id="editFrom" min="1" max="30" placeholder="De" class="ev-input">
-        <span>–</span>
-        <input type="number" id="editTo" min="1" max="30" placeholder="Até" class="ev-input">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('editModal')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveEditEvent()">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: DEPARTMENT -->
-<div class="modal-overlay" id="deptModal">
-  <div class="modal">
-    <h2 id="deptModalTitle">Departamento</h2>
-    <input type="text" id="deptName" placeholder="Nome do departamento" class="ev-input" style="margin-bottom:12px;">
-    <div class="section-label">Escala de cores (0 = mínimo, 5 = máximo)</div>
-    <div class="color-scale-edit-row" id="deptColorScaleEdit"></div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('deptModal')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveDept()">Guardar</button>
-    </div>
-  </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -497,18 +347,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 </script>
 <script src="auth.js"></script>
-<script>
-const db = firebase.firestore();
-
-// ── Escritório activo (definido depois de authReady) ──
-let CALENDAR_ID = null;
-let docRef      = null;
-let isSaving    = false;
-
-// ─────────────────────────────────────────────
-// CALENDAR LOGIC (idêntico ao original)
-// ─────────────────────────────────────────────
-
 <script>
 // ═══════════════════════════════════════════════
 // DATA
@@ -1133,13 +971,14 @@ function hideTip(){ tipEl.classList.remove('on'); }
 
 // ═══════════════════════════════════════════════
 
+const db = firebase.firestore();
 
-// ─────────────────────────────────────────────
-// FIREBASE SYNC
-// ─────────────────────────────────────────────
+let CALENDAR_ID = null;
+let docRef      = null;
+let isSaving    = false;
 
 function setStatus(msg, color) {
-  ['syncStatus','syncStatus2'].forEach(id => {
+  ['syncStatus'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.textContent = msg; el.style.color = color || 'var(--muted)'; }
   });
@@ -1180,13 +1019,13 @@ function startRealtimeSync() {
 }
 
 // Patch: guardar automaticamente ao editar
-const _applyDay      = applyDay;      applyDay      = function()  { _applyDay();       saveToFirebase(); };
-const _applyRange    = applyRange;    applyRange    = function()  { _applyRange();     saveToFirebase(); };
-const _addEvent      = addEvent;      addEvent      = function()  { _addEvent();       saveToFirebase(); };
-const _delEvent      = delEvent;      delEvent      = function(i) { _delEvent(i);      saveToFirebase(); };
-const _saveDept      = saveDept;      saveDept      = function()  { _saveDept();       saveToFirebase(); };
-const _removeDept    = removeDept;    removeDept    = function(i) { _removeDept(i);    saveToFirebase(); };
-const _saveEditEvent = saveEditEvent; saveEditEvent = function()  { _saveEditEvent();  saveToFirebase(); };
+const _applyDay      = applyDay;      applyDay      = function()  { _applyDay();      saveToFirebase(); };
+const _applyRange    = applyRange;    applyRange    = function()  { _applyRange();    saveToFirebase(); };
+const _addEvent      = addEvent;      addEvent      = function()  { _addEvent();      saveToFirebase(); };
+const _delEvent      = delEvent;      delEvent      = function(i) { _delEvent(i);     saveToFirebase(); };
+const _saveDept      = saveDept;      saveDept      = function()  { _saveDept();      saveToFirebase(); };
+const _removeDept    = removeDept;    removeDept    = function(i) { _removeDept(i);   saveToFirebase(); };
+const _saveEditEvent = saveEditEvent; saveEditEvent = function()  { _saveEditEvent(); saveToFirebase(); };
 
 const _buildDeptCards = buildDeptCards;
 buildDeptCards = function() {
@@ -1196,26 +1035,23 @@ buildDeptCards = function() {
   });
 };
 
-// ─────────────────────────────────────────────
-// INIT — aguarda autenticação
-// ─────────────────────────────────────────────
+// INIT - aguarda autenticacao
 document.addEventListener('authReady', ({ detail }) => {
   window.renderNavbar('calendario');
 
   const escritorio = window.escritorioAtivo() || 'geral';
-
-  // Título da página
   const nomes = { quarteira:'Quarteira', albufeira:'Albufeira', lisboa:'Lisboa', porto:'Porto', todos:'Todos', geral:'Geral' };
   const nomeEscritorio = nomes[escritorio] || escritorio;
-  document.getElementById('pageTitle').textContent = `Calendário — ${nomeEscritorio}`;
-  document.getElementById('pageSubtitle').textContent = `Escritório de ${nomeEscritorio}`;
 
-  // Documento Firestore baseado no escritório
-  CALENDAR_ID = `calendario_${escritorio}`;
+  document.getElementById('pageTitle').textContent = 'Calendário — ' + nomeEscritorio;
+  document.getElementById('pageSubtitle').textContent = 'Escritório de ' + nomeEscritorio;
+
+  CALENDAR_ID = 'calendario_' + escritorio;
   docRef = db.collection('calendarios').doc(CALENDAR_ID);
 
   startRealtimeSync();
 });
+
 </script>
 </body>
 </html>
