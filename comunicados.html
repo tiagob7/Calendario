@@ -6,7 +6,6 @@
 <title>Comunicados Internos</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@600;700;800&display=swap');
-
 :root {
   --bg:#f4f4f6; --surface:#fff; --surface2:#f7f7f9; --border:#e2e2e8;
   --text:#1a1a22; --muted:#8888a0; --accent:#2563eb;
@@ -17,17 +16,13 @@
   --purple:#7c3aed; --purple-bg:#f5f3ff; --purple-border:#ddd6fe;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;padding:32px 20px;}
-.page{max-width:900px;margin:0 auto;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;}
+.page{max-width:900px;margin:0 auto;padding:32px 20px;}
 h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,28px);letter-spacing:-.03em;margin-bottom:4px;}
 .subtitle{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px;}
-
-/* HEADER */
 .header-top{display:flex;align-items:baseline;gap:16px;margin-bottom:20px;}
 .header-top h1{margin-bottom:0;}
 #syncStatus{font-size:10px;color:var(--muted);letter-spacing:.05em;margin-left:auto;}
-
-/* STATS */
 .stats-row{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
 .stat-chip{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;display:flex;flex-direction:column;gap:1px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
 .stat-val{font-family:'Manrope',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.03em;}
@@ -36,25 +31,10 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .stat-chip.s-geral .stat-val{color:var(--blue);}
 .stat-chip.s-urgente .stat-val{color:var(--red);}
 .stat-chip.s-info .stat-val{color:var(--purple);}
-
-/* LEGENDA */
-.legenda-wrap{position:relative;margin-left:auto;}
-.btn-legenda{background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;padding:6px 14px;border-radius:20px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;}
-.btn-legenda:hover{border-color:var(--accent);color:var(--accent);}
-.legenda-popup{display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;width:320px;box-shadow:0 8px 32px rgba(0,0,0,.12);z-index:300;}
-.legenda-popup.open{display:block;}
-.legenda-section-title{font-family:'Manrope',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text);margin-bottom:8px;}
-.legenda-item{display:flex;align-items:baseline;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);}
-.legenda-item:last-child{border-bottom:none;}
-.legenda-badge{font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:2px 8px;border-radius:10px;font-weight:500;white-space:nowrap;flex-shrink:0;}
-.legenda-desc{font-size:10px;color:var(--muted);line-height:1.4;}
-
-/* GESTOR BTN */
-.btn-gestor{background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;padding:6px 14px;border-radius:20px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;white-space:nowrap;}
-.btn-gestor:hover{border-color:var(--accent);color:var(--accent);}
-.btn-gestor.active{background:var(--accent);border-color:var(--accent);color:#fff;}
-
-/* FORM PANEL */
+/* admin: botão novo comunicado */
+.btn-novo{background:var(--text);color:#fff;border:none;font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.07em;padding:7px 16px;border-radius:20px;cursor:pointer;display:none;align-items:center;gap:6px;transition:opacity .15s;margin-left:auto;}
+.btn-novo.show{display:flex;}
+.btn-novo:hover{opacity:.82;}
 .form-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px 26px;margin-bottom:20px;box-shadow:0 1px 6px rgba(0,0,0,.06);display:none;}
 .form-panel.open{display:block;}
 .panel-title{font-family:'Manrope',sans-serif;font-size:13px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
@@ -66,8 +46,6 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
 .form-input::placeholder,.form-textarea::placeholder{color:#bbb;}
 .form-textarea{resize:vertical;min-height:80px;line-height:1.6;}
-
-/* tipo pills */
 .tipo-row{display:flex;gap:6px;}
 .tipo-pill{flex:1;padding:7px 4px;border:1px solid var(--border);background:transparent;font-family:'DM Mono',monospace;font-size:10px;border-radius:6px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;transition:all .15s;text-align:center;}
 .tipo-pill[data-t="geral"].sel{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);}
@@ -75,32 +53,17 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .tipo-pill[data-t="info"].sel{background:var(--purple-bg);border-color:var(--purple);color:var(--purple);}
 .tipo-pill[data-t="aviso"].sel{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
 .tipo-pill:not(.sel):hover{border-color:#aaa;color:var(--text);}
-
-.dept-row{display:flex;gap:6px;flex-wrap:wrap;}
-.dept-chip{padding:5px 10px;border:1px solid var(--border);background:transparent;font-family:'DM Mono',monospace;font-size:10px;border-radius:20px;cursor:pointer;color:var(--muted);transition:all .15s;}
-.dept-chip.sel{background:var(--text);border-color:var(--text);color:#fff;}
-.dept-chip:not(.sel):hover{border-color:#aaa;color:var(--text);}
-
 .btn{border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;text-transform:uppercase;letter-spacing:.09em;transition:all .15s;padding:10px 18px;}
 .btn:hover{opacity:.82;}
 .btn-primary{background:var(--text);color:#fff;}
 .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
-.btn-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
-
-/* CONTROLS */
 .controls-wrap{margin-bottom:16px;}
 .controls-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-.controls-row+.controls-row{margin-top:8px;}
 .ctrl-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;min-width:52px;}
 .filter-btn{padding:5px 11px;border:1px solid var(--border);background:transparent;font-family:'DM Mono',monospace;font-size:10px;border-radius:20px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;transition:all .15s;white-space:nowrap;}
 .filter-btn.active{background:var(--surface2);border-color:#888;color:var(--text);}
-.filter-btn:hover{border-color:#aaa;}
 .count-badge{margin-left:auto;font-size:10px;color:var(--muted);white-space:nowrap;}
-
-/* COMUNICADOS LIST */
 .comunicados-list{display:flex;flex-direction:column;gap:8px;}
-
-/* CARD */
 .com-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.05);transition:box-shadow .15s;position:relative;overflow:hidden;}
 .com-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.09);}
 .com-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:14px 0 0 14px;}
@@ -109,108 +72,59 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .com-card.tipo-info::before{background:var(--purple);}
 .com-card.tipo-aviso::before{background:var(--amber);}
 .com-card.arquivado{opacity:.6;}
-
-/* card header */
+.com-card.tipo-urgente{border-color:#fecaca;}
 .com-header{display:grid;grid-template-columns:auto 1fr auto auto auto;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;user-select:none;}
-.com-tipo-badge{flex-shrink:0;}
 .com-titulo{font-size:12px;font-weight:500;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .com-titulo.arquivado{text-decoration:line-through;color:var(--muted);}
 .com-dept-tag{font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:3px 8px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);white-space:nowrap;flex-shrink:0;}
 .com-meta{font-size:10px;color:var(--muted);white-space:nowrap;flex-shrink:0;}
 .chevron{width:14px;height:14px;color:var(--muted);flex-shrink:0;transition:transform .2s;}
 .chevron.open{transform:rotate(180deg);}
-
-/* card body */
 .com-body{display:none;padding:0 16px 14px 16px;border-top:1px solid var(--border);}
 .com-body.open{display:block;}
 .com-text{font-size:11px;color:var(--muted);line-height:1.65;margin:12px 0 10px 0;white-space:pre-wrap;}
 .com-footer-row{display:flex;align-items:center;gap:10px;font-size:10px;color:var(--muted);flex-wrap:wrap;}
 .com-author{display:flex;align-items:center;gap:4px;}
 .com-author svg{width:11px;height:11px;opacity:.5;}
-.com-date-full{opacity:.7;}
-
-/* gestor actions */
+/* admin actions */
 .com-gestor{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
 .com-gestor.show{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
 .arquivo-btn{padding:5px 11px;border:1px solid var(--border);background:transparent;font-family:'DM Mono',monospace;font-size:10px;border-radius:20px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;transition:all .15s;}
-.arquivo-btn:hover{border-color:#aaa;color:var(--text);}
 .arquivo-btn.active{background:var(--surface2);border-color:#888;color:var(--text);}
 .icon-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:4px;color:#bbb;transition:color .1s;}
-.icon-btn:hover{color:var(--text);}
 .icon-btn.del:hover{color:var(--red);}
-
-/* tipo tags */
 .tipo-tag{font-size:9px;text-transform:uppercase;letter-spacing:.08em;padding:3px 8px;border-radius:10px;font-weight:500;flex-shrink:0;}
 .tipo-tag.geral{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);}
 .tipo-tag.urgente{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
 .tipo-tag.info{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border);}
 .tipo-tag.aviso{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
-
-/* destaque urgente */
-.com-card.tipo-urgente{border-color:#fecaca;}
-
-/* empty */
-.empty-state{text-align:center;padding:48px 20px;color:var(--muted);}
-.empty-state svg{width:36px;height:36px;opacity:.3;margin-bottom:12px;}
-.empty-state p{font-size:12px;}
-
-/* MODAL PIN */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:400;align-items:center;justify-content:center;}
-.modal-overlay.open{display:flex;}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:340px;box-shadow:0 12px 40px rgba(0,0,0,.15);}
-.modal h2{font-family:'Manrope',sans-serif;font-size:15px;font-weight:700;margin-bottom:6px;}
-.modal p{font-size:11px;color:var(--muted);margin-bottom:18px;line-height:1.6;}
-.pin-input{width:100%;text-align:center;letter-spacing:.4em;font-size:24px;font-family:'Manrope',sans-serif;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;outline:none;transition:border-color .15s;margin-bottom:6px;}
-.pin-input:focus{border-color:var(--accent);}
-.pin-error{font-size:10px;color:var(--red);text-align:center;margin-bottom:12px;min-height:16px;}
-.modal-footer{display:flex;gap:8px;margin-top:4px;}
-.modal-footer .btn{flex:1;}
-
-/* toast */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;font-size:11px;padding:10px 20px;border-radius:20px;opacity:0;transition:all .25s;pointer-events:none;z-index:600;white-space:nowrap;}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
-/* pinned urgente banner */
 .urgente-banner{background:var(--red-bg);border:1px solid var(--red-border);border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;font-size:11px;color:var(--red);}
 .urgente-banner svg{width:16px;height:16px;flex-shrink:0;}
 .urgente-banner strong{font-family:'Manrope',sans-serif;font-weight:700;}
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted);}
+.empty-state svg{width:36px;height:36px;opacity:.3;margin-bottom:12px;}
+.empty-state p{font-size:12px;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;font-size:11px;padding:10px 20px;border-radius:20px;opacity:0;transition:all .25s;pointer-events:none;z-index:600;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
 <div class="page">
-
   <div class="header-top">
     <h1>Comunicados Internos</h1>
     <span id="syncStatus"></span>
   </div>
   <p class="subtitle">Avisos, informações e comunicações da equipa</p>
 
-  <!-- STATS + CONTROLS -->
   <div class="stats-row" id="statsBar">
-    <!-- filled by renderStats() -->
-    <div class="legenda-wrap">
-      <button class="btn-legenda" onclick="toggleLegenda(event)">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 11V8M8 5.5v.5"/></svg>
-        Legenda
-      </button>
-      <div class="legenda-popup" id="legendaPopup">
-        <div class="legenda-section-title" style="margin-bottom:8px;">Tipo de comunicado</div>
-        <div class="legenda-item"><span class="legenda-badge tipo-tag geral">Geral</span><span class="legenda-desc">Informação geral para toda a equipa</span></div>
-        <div class="legenda-item"><span class="legenda-badge tipo-tag urgente">Urgente</span><span class="legenda-desc">Comunicado prioritário — requer atenção imediata</span></div>
-        <div class="legenda-item"><span class="legenda-badge tipo-tag info">Info</span><span class="legenda-desc">Informação técnica ou de processo</span></div>
-        <div class="legenda-item"><span class="legenda-badge tipo-tag aviso">Aviso</span><span class="legenda-desc">Alerta ou ponto de atenção importante</span></div>
-      </div>
-    </div>
-    <button class="btn-gestor" id="btnGestor" onclick="openPinModal()">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="8" rx="1.5"/><path d="M5 7V5a3 3 0 016 0v2"/></svg>
-      Modo Gestor
-    </button>
+    <div style="font-size:11px;color:var(--muted);">A carregar…</div>
+    <!-- botão novo comunicado (só admin) -->
+    <button class="btn-novo" id="btnNovoCom" onclick="toggleForm()">+ Novo comunicado</button>
   </div>
 
-  <!-- URGENTES BANNER -->
   <div id="urgenteBanner" style="display:none;"></div>
 
-  <!-- FORM (gestor only) -->
+  <!-- FORM (só admin) -->
   <div class="form-panel" id="formPanel">
     <div class="panel-title">
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2H3a1 1 0 00-1 1v9a1 1 0 001 1h3l2 2 2-2h3a1 1 0 001-1V3a1 1 0 00-1-1z"/></svg>
@@ -242,21 +156,20 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
         <label class="field-label">Departamento (opcional)</label>
         <select class="form-select" id="fDept">
           <option value="">Todos os departamentos</option>
-          <option value="Contabilidade">Contabilidade</option>
-          <option value="Payroll / RH">Payroll / RH</option>
-          <option value="Comercial">Comercial</option>
-          <option value="Operações">Operações</option>
-          <option value="Direcção">Direcção</option>
+          <option>Contabilidade</option>
+          <option>Payroll / RH</option>
+          <option>Comercial</option>
+          <option>Operações</option>
+          <option>Direcção</option>
         </select>
       </div>
     </div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
-      <button class="btn btn-secondary" onclick="closeForm()">Cancelar</button>
-      <button class="btn btn-primary" onclick="submitComunicado()">Publicar comunicado</button>
+      <button class="btn btn-secondary" onclick="toggleForm()">Cancelar</button>
+      <button class="btn btn-primary" onclick="submitComunicado()">Publicar</button>
     </div>
   </div>
 
-  <!-- CONTROLS -->
   <div class="controls-wrap">
     <div class="controls-row">
       <span class="ctrl-label">Filtrar:</span>
@@ -268,32 +181,15 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
     </div>
   </div>
 
-  <!-- LIST -->
   <div class="comunicados-list" id="comunicadosList"></div>
-
-</div>
-
-<!-- PIN MODAL -->
-<div class="modal-overlay" id="pinModal">
-  <div class="modal">
-    <h2>Modo Gestor</h2>
-    <p>Introduz o PIN para publicar e gerir comunicados.</p>
-    <input type="password" inputmode="numeric" maxlength="4" class="pin-input" id="pinInput" placeholder="••••" oninput="onPinInput()">
-    <div class="pin-error" id="pinError"></div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closePinModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="checkPin()">Entrar</button>
-    </div>
-  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
-const GESTOR_PIN = '9005';
-
 const firebaseConfig = {
   apiKey: "AIzaSyBbTDfCCC9o5oxMSMRsvCUC50Iu6L0aqT8",
   authDomain: "calendario-trabalho-39a6c.firebaseapp.com",
@@ -302,42 +198,57 @@ const firebaseConfig = {
   messagingSenderId: "596069405321",
   appId: "1:596069405321:web:275bb9da220206d3da6c58"
 };
-
 firebase.initializeApp(firebaseConfig);
-const db  = firebase.firestore();
-const col = db.collection('comunicados');
-
-// ── STATE ──
-let comunicados  = [];
-let isGestor     = false;
-let selTipoVal   = 'geral';
-let filterMode   = 'activos';
+</script>
+<script src="auth.js"></script>
+<script>
+const db = firebase.firestore();
+let col;
+let comunicados = [], selTipoVal = 'geral', filterMode = 'activos';
 const expandedIds = new Set();
+const TIPO_LABEL = { geral:'Geral', urgente:'Urgente', info:'Info', aviso:'Aviso' };
+const TIPO_EMOJI = { geral:'📢', urgente:'🚨', info:'ℹ️', aviso:'⚠️' };
 
-// ── FIREBASE ──
+document.addEventListener('authReady', ({ detail }) => {
+  window.renderNavbar('comunicados');
+  const isAdmin = window.isAdmin();
+  const escritorio = window.escritorioAtivo();
+
+  // mostrar botão "novo comunicado" só para admin
+  if (isAdmin) {
+    document.getElementById('btnNovoCom').classList.add('show');
+    // preencher autor com nome do admin
+    if (detail.profile) document.getElementById('fAutor').value = detail.profile.nomeCompleto || detail.profile.nome || '';
+  }
+
+  col = db.collection('comunicados');
+  let query = col.orderBy('criadoEm', 'desc');
+  if (escritorio && escritorio !== 'todos') {
+    query = query.where('escritorio', '==', escritorio);
+  }
+
+  setStatus('A ligar…', '#f59e0b');
+  query.onSnapshot(snap => {
+    comunicados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    render();
+    setStatus('✓ Sincronizado', '#16a34a');
+    setTimeout(() => setStatus(''), 3000);
+  }, err => { console.error(err); setStatus('Erro', '#dc2626'); });
+});
+
 function setStatus(msg, color) {
   const el = document.getElementById('syncStatus');
   if (el) { el.textContent = msg; el.style.color = color || 'var(--muted)'; }
 }
 
-function startSync() {
-  setStatus('A ligar…', '#f59e0b');
-  col.orderBy('criadoEm','desc').onSnapshot(snap => {
-    comunicados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    render();
-    setStatus('✓ Sincronizado', '#16a34a');
-    setTimeout(() => setStatus(''), 3000);
-  }, err => {
-    console.error(err);
-    setStatus('Erro de ligação', '#dc2626');
-  });
+function toggleForm() {
+  document.getElementById('formPanel').classList.toggle('open');
 }
 
-// ── SUBMIT ──
 async function submitComunicado() {
   const titulo = document.getElementById('fTitulo').value.trim();
   const texto  = document.getElementById('fTexto').value.trim();
-  const autor  = document.getElementById('fAutor').value.trim() || 'Gestor';
+  const autor  = document.getElementById('fAutor').value.trim() || 'Administração';
   const dept   = document.getElementById('fDept').value;
   if (!titulo) { toast('Preenche o título!'); return; }
   if (!texto)  { toast('Escreve a mensagem!'); return; }
@@ -346,33 +257,27 @@ async function submitComunicado() {
       titulo, texto, autor, dept,
       tipo: selTipoVal,
       arquivado: false,
-      criadoEm: Date.now()
+      criadoEm: Date.now(),
+      escritorio: window.userProfile ? window.userProfile.escritorio : '',
+      criadoPor: window.currentUser ? window.currentUser.uid : ''
     });
     document.getElementById('fTitulo').value = '';
-    document.getElementById('fTexto').value  = '';
+    document.getElementById('fTexto').value = '';
     selTipo('geral');
-    closeForm();
+    toggleForm();
     toast('✓ Comunicado publicado!');
-  } catch(e) {
-    console.error(e);
-    toast('Erro ao publicar.');
-  }
+  } catch(e) { toast('Erro ao publicar.'); }
 }
 
-// ── UPDATE ──
 async function toggleArquivado(id, current) {
-  try { await col.doc(id).update({ arquivado: !current }); }
-  catch(e) { toast('Erro ao actualizar.'); }
+  try { await col.doc(id).update({ arquivado: !current }); } catch(e) { toast('Erro.'); }
 }
-
 async function deleteComunicado(id) {
-  if (!confirm('Eliminar este comunicado permanentemente?')) return;
+  if (!confirm('Eliminar este comunicado?')) return;
   expandedIds.delete(id);
-  try { await col.doc(id).delete(); toast('Comunicado eliminado.'); }
-  catch(e) { toast('Erro ao eliminar.'); }
+  try { await col.doc(id).delete(); toast('Eliminado.'); } catch(e) { toast('Erro.'); }
 }
 
-// ── FILTER ──
 function getFiltered() {
   let out = comunicados;
   if (filterMode === 'activos')   out = out.filter(c => !c.arquivado);
@@ -380,208 +285,76 @@ function getFiltered() {
   if (filterMode === 'arquivado') out = out.filter(c => c.arquivado);
   return out;
 }
+function setFilter(mode) { filterMode=mode; document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.f===mode)); renderList(); }
 
-function setFilter(mode) {
-  filterMode = mode;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.f === mode));
-  renderList();
-}
-
-// ── RENDER ──
-function render() {
-  renderStats();
-  renderUrgenteBanner();
-  renderList();
-}
+function render() { renderStats(); renderUrgenteBanner(); renderList(); }
 
 function renderStats() {
-  const total    = comunicados.filter(c => !c.arquivado).length;
-  const gerais   = comunicados.filter(c => c.tipo === 'geral'    && !c.arquivado).length;
-  const urgentes = comunicados.filter(c => c.tipo === 'urgente'  && !c.arquivado).length;
-  const infos    = comunicados.filter(c => (c.tipo === 'info' || c.tipo === 'aviso') && !c.arquivado).length;
-
-  const legendaWrap = document.querySelector('.legenda-wrap');
-  const btn = document.getElementById('btnGestor');
-  const bar = document.getElementById('statsBar');
-  bar.innerHTML = `
+  const total=comunicados.filter(c=>!c.arquivado).length;
+  const gerais=comunicados.filter(c=>c.tipo==='geral'&&!c.arquivado).length;
+  const urg=comunicados.filter(c=>c.tipo==='urgente'&&!c.arquivado).length;
+  const infos=comunicados.filter(c=>(c.tipo==='info'||c.tipo==='aviso')&&!c.arquivado).length;
+  const btnNovo = document.getElementById('btnNovoCom');
+  document.getElementById('statsBar').innerHTML = `
     <div class="stat-chip s-total"><span class="stat-val">${total}</span><span class="stat-lbl">Activos</span></div>
     <div class="stat-chip s-geral"><span class="stat-val">${gerais}</span><span class="stat-lbl">Gerais</span></div>
-    <div class="stat-chip s-urgente"><span class="stat-val">${urgentes}</span><span class="stat-lbl">Urgentes</span></div>
-    <div class="stat-chip s-info"><span class="stat-val">${infos}</span><span class="stat-lbl">Info/Aviso</span></div>
-  `;
-  bar.appendChild(legendaWrap);
-  bar.appendChild(btn);
+    <div class="stat-chip s-urgente"><span class="stat-val">${urg}</span><span class="stat-lbl">Urgentes</span></div>
+    <div class="stat-chip s-info"><span class="stat-val">${infos}</span><span class="stat-lbl">Info/Aviso</span></div>`;
+  document.getElementById('statsBar').appendChild(btnNovo);
 }
 
 function renderUrgenteBanner() {
   const banner = document.getElementById('urgenteBanner');
-  const urgentes = comunicados.filter(c => c.tipo === 'urgente' && !c.arquivado);
-  if (!urgentes.length) { banner.style.display = 'none'; return; }
-  banner.style.display = 'flex';
-  banner.innerHTML = urgentes.map(u => `
+  const urgentes = comunicados.filter(c=>c.tipo==='urgente'&&!c.arquivado);
+  if (!urgentes.length) { banner.style.display='none'; return; }
+  banner.style.display='flex'; banner.style.flexDirection='column'; banner.style.gap='8px';
+  banner.innerHTML=urgentes.map(u=>`
     <div class="urgente-banner">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L1.5 13h13L8 2z"/><path d="M8 7v3M8 11.5v.5"/></svg>
-      <div><strong>${escHtml(u.titulo)}</strong> — ${escHtml(u.autor || '')} · ${fmtDateShort(u.criadoEm)}</div>
-    </div>
-  `).join('');
+      <div><strong>${escHtml(u.titulo)}</strong> — ${escHtml(u.autor||'')} · ${fmtShort(u.criadoEm)}</div>
+    </div>`).join('');
 }
-
-const TIPO_LABEL = { geral:'Geral', urgente:'Urgente', info:'Info', aviso:'Aviso' };
-const TIPO_EMOJI = { geral:'📢', urgente:'🚨', info:'ℹ️', aviso:'⚠️' };
 
 function renderList() {
   const container = document.getElementById('comunicadosList');
-  const filtered  = getFiltered();
-  document.getElementById('countBadge').textContent = filtered.length + ' comunicado' + (filtered.length !== 1 ? 's' : '');
-
-  if (!filtered.length) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        <p>Nenhum comunicado encontrado.</p>
-      </div>`;
-    return;
-  }
-
-  container.innerHTML = '';
-  filtered.forEach(com => {
-    const isOpen = expandedIds.has(com.id);
-    const isArq  = com.arquivado;
-    const card   = document.createElement('div');
-    card.className = `com-card tipo-${com.tipo}${isArq ? ' arquivado' : ''}`;
-
-    card.innerHTML = `
+  const filtered = getFiltered();
+  const isAdmin = window.isAdmin && window.isAdmin();
+  document.getElementById('countBadge').textContent=filtered.length+' comunicado'+(filtered.length!==1?'s':'');
+  if (!filtered.length) { container.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><p>Nenhum comunicado encontrado.</p></div>'; return; }
+  container.innerHTML='';
+  filtered.forEach(com=>{
+    const isOpen=expandedIds.has(com.id), isArq=com.arquivado;
+    const card=document.createElement('div');
+    card.className=`com-card tipo-${com.tipo}${isArq?' arquivado':''}`;
+    card.innerHTML=`
       <div class="com-header" onclick="toggleCard('${com.id}')">
-        <span class="tipo-tag ${com.tipo}">${TIPO_EMOJI[com.tipo] || ''} ${TIPO_LABEL[com.tipo] || com.tipo}</span>
-        <div class="com-titulo${isArq ? ' arquivado' : ''}">${escHtml(com.titulo)}</div>
-        ${com.dept ? `<span class="com-dept-tag">${escHtml(com.dept)}</span>` : ''}
-        <div class="com-meta">${fmtDateShort(com.criadoEm)}</div>
-        <svg class="chevron ${isOpen ? 'open' : ''}" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6l4 4 4-4"/></svg>
+        <span class="tipo-tag ${com.tipo}">${TIPO_EMOJI[com.tipo]||''} ${TIPO_LABEL[com.tipo]||com.tipo}</span>
+        <div class="com-titulo${isArq?' arquivado':''}">${escHtml(com.titulo)}</div>
+        ${com.dept?`<span class="com-dept-tag">${escHtml(com.dept)}</span>`:''}
+        <div class="com-meta">${fmtShort(com.criadoEm)}</div>
+        <svg class="chevron ${isOpen?'open':''}" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6l4 4 4-4"/></svg>
       </div>
-      <div class="com-body ${isOpen ? 'open' : ''}">
+      <div class="com-body ${isOpen?'open':''}">
         <div class="com-text">${escHtml(com.texto)}</div>
         <div class="com-footer-row">
-          <span class="com-author">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="2.5"/><path d="M3 13c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5"/></svg>
-            ${escHtml(com.autor || '—')}
-          </span>
-          <span class="com-date-full">${fmtDateFull(com.criadoEm)}</span>
+          <span class="com-author"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="2.5"/><path d="M3 13c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5"/></svg>${escHtml(com.autor||'—')}</span>
+          <span style="opacity:.7;">${fmtDateFull(com.criadoEm)}</span>
         </div>
-        <div class="com-gestor ${isGestor ? 'show' : ''}">
-          <button class="arquivo-btn ${isArq ? 'active' : ''}" onclick="event.stopPropagation();toggleArquivado('${com.id}', ${isArq})">
-            ${isArq ? '↩ Restaurar' : '📁 Arquivar'}
-          </button>
-          <button class="icon-btn del" title="Eliminar" onclick="event.stopPropagation();deleteComunicado('${com.id}')">🗑</button>
+        <div class="com-gestor ${isAdmin?'show':''}">
+          <button class="arquivo-btn ${isArq?'active':''}" onclick="event.stopPropagation();toggleArquivado('${com.id}',${isArq})">${isArq?'↩ Restaurar':'📁 Arquivar'}</button>
+          <button class="icon-btn del" onclick="event.stopPropagation();deleteComunicado('${com.id}')">🗑</button>
         </div>
-      </div>
-    `;
+      </div>`;
     container.appendChild(card);
   });
 }
 
-// ── CARD ──
-function toggleCard(id) {
-  if (expandedIds.has(id)) expandedIds.delete(id);
-  else expandedIds.add(id);
-  renderList();
-}
-
-// ── TIPO ──
-function selTipo(t) {
-  selTipoVal = t;
-  document.querySelectorAll('.tipo-pill').forEach(b => b.classList.toggle('sel', b.dataset.t === t));
-}
-
-// ── FORM ──
-function closeForm() {
-  document.getElementById('formPanel').classList.remove('open');
-}
-
-// ── LEGENDA ──
-function toggleLegenda(e) {
-  e.stopPropagation();
-  document.getElementById('legendaPopup').classList.toggle('open');
-}
-document.addEventListener('click', function(e) {
-  const popup = document.getElementById('legendaPopup');
-  if (popup && !popup.closest('.legenda-wrap').contains(e.target)) popup.classList.remove('open');
-});
-
-// ── PIN / GESTOR ──
-function openPinModal() {
-  if (isGestor) {
-    isGestor = false;
-    document.getElementById('btnGestor').classList.remove('active');
-    document.getElementById('formPanel').classList.remove('open');
-    document.querySelectorAll('.com-gestor').forEach(el => el.classList.remove('show'));
-    toast('Modo gestor desactivado.');
-    return;
-  }
-  document.getElementById('pinInput').value = '';
-  document.getElementById('pinError').textContent = '';
-  document.getElementById('pinModal').classList.add('open');
-  setTimeout(() => document.getElementById('pinInput').focus(), 100);
-}
-
-function closePinModal() {
-  document.getElementById('pinModal').classList.remove('open');
-}
-
-function onPinInput() {
-  if (document.getElementById('pinInput').value.length === 4) checkPin();
-}
-
-function checkPin() {
-  const val = document.getElementById('pinInput').value;
-  if (val === GESTOR_PIN) {
-    isGestor = true;
-    document.getElementById('btnGestor').classList.add('active');
-    document.getElementById('formPanel').classList.add('open');
-    closePinModal();
-    document.querySelectorAll('.com-gestor').forEach(el => el.classList.add('show'));
-    toast('✓ Modo gestor activado.');
-  } else {
-    document.getElementById('pinError').textContent = 'PIN incorreto. Tenta novamente.';
-    document.getElementById('pinInput').value = '';
-    document.getElementById('pinInput').focus();
-  }
-}
-
-document.getElementById('pinModal').addEventListener('click', function(e){ if(e.target===this) closePinModal(); });
-document.getElementById('pinInput').addEventListener('keydown', e => { if(e.key==='Enter') checkPin(); });
-
-// ── UTILS ──
-function escHtml(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function fmtDateShort(ts) {
-  if (!ts) return '';
-  const diff = Date.now() - ts;
-  if (diff < 60000)    return 'agora mesmo';
-  if (diff < 3600000)  return Math.floor(diff/60000) + ' min atrás';
-  if (diff < 86400000) return Math.floor(diff/3600000) + 'h atrás';
-  const d = new Date(ts);
-  return d.toLocaleDateString('pt-PT',{day:'2-digit',month:'short'});
-}
-
-function fmtDateFull(ts) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  return d.toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'})
-    + ' às ' + d.toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
-}
-
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2800);
-}
-
-// ── INIT ──
-startSync();
+function toggleCard(id) { if(expandedIds.has(id)) expandedIds.delete(id); else expandedIds.add(id); renderList(); }
+function selTipo(t) { selTipoVal=t; document.querySelectorAll('.tipo-pill').forEach(b=>b.classList.toggle('sel',b.dataset.t===t)); }
+function escHtml(str) { if(!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtShort(ts) { if(!ts) return ''; const diff=Date.now()-ts; if(diff<60000) return 'agora mesmo'; if(diff<3600000) return Math.floor(diff/60000)+' min atrás'; if(diff<86400000) return Math.floor(diff/3600000)+'h atrás'; const d=new Date(ts); return d.toLocaleDateString('pt-PT',{day:'2-digit',month:'short'}); }
+function fmtDateFull(ts) { if(!ts) return ''; const d=new Date(ts); return d.toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'})+' às '+d.toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}); }
+function toast(msg) { const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2800); }
 </script>
 </body>
 </html>

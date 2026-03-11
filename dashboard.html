@@ -17,8 +17,8 @@
   --purple:#7c3aed;--purple-bg:#f5f3ff;--purple-border:#ddd6fe;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;padding:32px 20px;}
-.page{max-width:1200px;margin:0 auto;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;}
+.page{max-width:1200px;margin:0 auto;padding:32px 20px;}
 h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,28px);letter-spacing:-.03em;margin-bottom:4px;}
 .subtitle{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px;}
 
@@ -28,13 +28,23 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 #syncStatus{font-size:10px;color:var(--muted);letter-spacing:.05em;margin-left:auto;}
 .last-update{font-size:10px;color:var(--muted);letter-spacing:.04em;}
 
+/* ESCRITORIO BADGE — mostrado no subtítulo */
+.escritorio-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:3px 10px;font-size:10px;color:var(--text);
+  text-transform:capitalize;letter-spacing:.04em;
+  box-shadow:0 1px 3px rgba(0,0,0,.04);
+}
+.escritorio-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+
 /* NAV LINKS */
 .nav-links{display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap;}
 .nav-link{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:1px solid var(--border);background:var(--surface);border-radius:20px;font-size:10px;color:var(--muted);text-decoration:none;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.07em;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);}
 .nav-link:hover{border-color:var(--accent);color:var(--accent);}
 .nav-link svg{width:11px;height:11px;}
 
-/* BIG KPI ROW */
+/* KPI ROW */
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:24px;}
 .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:0 1px 5px rgba(0,0,0,.05);position:relative;overflow:hidden;}
 .kpi-card::before{content:'';position:absolute;right:-10px;top:-10px;width:60px;height:60px;border-radius:50%;opacity:.06;}
@@ -64,9 +74,8 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .panel-title{font-family:'Manrope',sans-serif;font-size:13px;font-weight:700;flex:1;}
 .panel-link{font-size:10px;color:var(--accent);text-decoration:none;text-transform:uppercase;letter-spacing:.07em;opacity:.8;transition:opacity .15s;}
 .panel-link:hover{opacity:1;}
-.panel-badge{font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:3px 8px;border-radius:10px;font-weight:500;}
 
-/* TAREFAS LIST */
+/* TAREFAS */
 .task-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:11px;}
 .task-row:last-child{border-bottom:none;}
 .task-prio-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
@@ -82,7 +91,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .estado-pill.cancelado{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
 .estado-pill.pendente{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
 
-/* COMUNICADOS LIST */
+/* COMUNICADOS */
 .com-row{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);}
 .com-row:last-child{border-bottom:none;}
 .tipo-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;}
@@ -108,7 +117,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .cal-day-nums{display:grid;grid-template-columns:repeat(30,1fr);gap:2px;margin-bottom:10px;}
 .cal-day-num{text-align:center;font-size:8px;color:var(--muted);}
 
-/* EVENTOS RECENTES */
+/* EVENTOS */
 .ev-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:10px;}
 .ev-row:last-child{border-bottom:none;}
 .ev-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
@@ -116,7 +125,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .ev-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);}
 .ev-dept{font-size:9px;color:var(--muted);opacity:.7;white-space:nowrap;}
 
-/* ACTIVIDADE RECENTE */
+/* ACTIVIDADE */
 .activity-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
 .activity-row:last-child{border-bottom:none;}
 .activity-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
@@ -126,6 +135,9 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .activity-text{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .activity-sub{font-size:10px;color:var(--muted);margin-top:2px;}
 .activity-time{font-size:10px;color:var(--muted);white-space:nowrap;flex-shrink:0;}
+
+/* ESCRITORIO TAG — nas rows (visível para admin) */
+.escritorio-tag{font-size:9px;padding:1px 6px;border-radius:8px;border:1px solid var(--border);color:var(--muted);background:var(--surface2);white-space:nowrap;flex-shrink:0;}
 
 /* URGENTE BANNER */
 .urgente-banner{background:var(--red-bg);border:1px solid var(--red-border);border-radius:12px;padding:11px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:11px;color:var(--red);}
@@ -138,15 +150,16 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .progress-bar-bg{background:var(--border);border-radius:4px;height:6px;overflow:hidden;}
 .progress-bar-fill{height:100%;border-radius:4px;background:var(--accent);transition:width .4s;}
 
-/* EMPTY */
+/* EMPTY / LOADING */
 .empty-mini{text-align:center;padding:20px;color:var(--muted);font-size:11px;}
-
-/* loading pulse */
 @keyframes pulse{0%,100%{opacity:.4;}50%{opacity:1;}}
 .loading{animation:pulse 1.4s infinite;font-size:11px;color:var(--muted);padding:20px;text-align:center;}
 </style>
 </head>
 <body>
+
+<!-- A navbar de auth é injetada aqui pelo auth.js -->
+
 <div class="page">
 
   <div class="header-top">
@@ -154,7 +167,11 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
     <span class="last-update" id="lastUpdate"></span>
     <span id="syncStatus"></span>
   </div>
-  <p class="subtitle">Visão geral — tarefas · comunicados · calendário</p>
+
+  <!-- subtítulo dinâmico: mostra escritório ativo -->
+  <p class="subtitle" id="subtitleRow">
+    Visão geral — tarefas · comunicados · calendário
+  </p>
 
   <!-- NAV -->
   <div class="nav-links">
@@ -166,9 +183,13 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2H3a1 1 0 00-1 1v9a1 1 0 001 1h3l2 2 2-2h3a1 1 0 001-1V3a1 1 0 00-1-1z"/></svg>
       Comunicados
     </a>
-    <a class="nav-link" href="calendario_quarteira.html">
+    <a class="nav-link" href="calendario.html">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M5 1v3M11 1v3M2 7h12"/></svg>
       Calendário
+    </a>
+    <a class="nav-link" href="admissoes.html">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3 2.7-5 6-5s6 2 6 5"/><path d="M11 8l2 2 3-3"/></svg>
+      Admissões
     </a>
   </div>
 
@@ -208,11 +229,11 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       <div id="comList"><div class="loading">A carregar…</div></div>
     </div>
 
-    <!-- CALENDÁRIO MINI (full width) -->
+    <!-- CALENDÁRIO MINI -->
     <div class="panel full">
       <div class="panel-header">
         <span class="panel-title">📅 Carga de trabalho do mês</span>
-        <a class="panel-link" href="calendario_quarteira.html">Editar →</a>
+        <a class="panel-link" href="calendario.html">Editar →</a>
       </div>
       <div id="calMini"><div class="loading">A carregar…</div></div>
     </div>
@@ -221,7 +242,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
     <div class="panel">
       <div class="panel-header">
         <span class="panel-title">🗓 Eventos do mês</span>
-        <a class="panel-link" href="calendario_quarteira.html">Ver calendário →</a>
+        <a class="panel-link" href="calendario.html">Ver calendário →</a>
       </div>
       <div id="evList"><div class="loading">A carregar…</div></div>
     </div>
@@ -237,8 +258,12 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
   </div>
 </div>
 
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- Auth module — protege a página e expõe userProfile -->
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyBbTDfCCC9o5oxMSMRsvCUC50Iu6L0aqT8",
@@ -248,59 +273,111 @@ const firebaseConfig = {
   messagingSenderId: "596069405321",
   appId: "1:596069405321:web:275bb9da220206d3da6c58"
 };
-
 firebase.initializeApp(firebaseConfig);
+</script>
+<script src="auth.js"></script>
+
+<script>
 const db = firebase.firestore();
 
 // ── STATE ──
-let tasks        = [];
-let comunicados  = [];
-let calData      = null;   // { departments, events }
-let loadedFlags  = { tasks: false, com: false, cal: false };
+let tasks       = [];
+let comunicados = [];
+let calData     = null;
+let loadedFlags = { tasks: false, com: false, cal: false };
+let unsubFns    = []; // para cancelar listeners ao mudar filtro
+
+// ── AGUARDAR AUTH ──
+document.addEventListener('authReady', ({ detail }) => {
+  const profile = detail.profile;
+
+  // Navbar
+  window.renderNavbar('dashboard');
+
+  // Subtítulo com escritório ativo
+  const escritorio = window.escritorioAtivo();
+  const labelEscritorio = escritorio === 'todos'
+    ? 'Todos os escritórios'
+    : escritorio.charAt(0).toUpperCase() + escritorio.slice(1);
+
+  document.getElementById('subtitleRow').innerHTML = `
+    Visão geral — tarefas · comunicados · calendário &nbsp;
+    <span class="escritorio-badge">
+      <span class="escritorio-dot"></span>
+      ${labelEscritorio}
+    </span>
+  `;
+
+  startSync(escritorio);
+});
+
+// ── LISTENERS COM FILTRO POR ESCRITÓRIO ──
+function startSync(escritorio) {
+  // Cancelar listeners anteriores (útil quando admin muda de filtro)
+  unsubFns.forEach(fn => fn());
+  unsubFns = [];
+  loadedFlags = { tasks: false, com: false, cal: false };
+
+  setStatus('A ligar…', '#f59e0b');
+
+  const filtrarPorEscritorio = (query) => {
+    // Se admin e "todos" → sem filtro; senão filtra pelo escritório
+    if (escritorio && escritorio !== 'todos') {
+      return query.where('escritorio', '==', escritorio);
+    }
+    return query;
+  };
+
+  // ── Tarefas ──
+  const qTarefas = filtrarPorEscritorio(
+    db.collection('tarefas_todo').orderBy('ordemChegada', 'asc')
+  );
+  const unsubTarefas = qTarefas.onSnapshot(snap => {
+    tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    loadedFlags.tasks = true;
+    checkAllLoaded();
+  }, err => { console.error('tasks:', err); setStatus('Erro', '#dc2626'); });
+  unsubFns.push(unsubTarefas);
+
+  // ── Comunicados ──
+  const qCom = filtrarPorEscritorio(
+    db.collection('comunicados').orderBy('criadoEm', 'desc')
+  );
+  const unsubCom = qCom.onSnapshot(snap => {
+    comunicados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    loadedFlags.com = true;
+    checkAllLoaded();
+  }, err => { console.error('com:', err); });
+  unsubFns.push(unsubCom);
+
+  // ── Calendário ──
+  // Usa o doc do escritório ativo; admin com "todos" usa o primeiro escritório disponível
+  const calDocId = (escritorio && escritorio !== 'todos')
+    ? 'calendario_' + escritorio
+    : 'calendario_quarteira'; // fallback para admin sem filtro
+
+  const unsubCal = db.collection('calendarios').doc(calDocId).onSnapshot(snap => {
+    calData = snap.exists ? snap.data() : null;
+    loadedFlags.cal = true;
+    checkAllLoaded();
+  }, err => { console.error('cal:', err); loadedFlags.cal = true; checkAllLoaded(); });
+  unsubFns.push(unsubCal);
+}
+
+// ── CHECK LOADED ──
+function checkAllLoaded() {
+  if (!loadedFlags.tasks || !loadedFlags.com || !loadedFlags.cal) return;
+  renderAll();
+  setStatus('✓ Sincronizado', '#16a34a');
+  setTimeout(() => setStatus(''), 3000);
+  const now = new Date();
+  document.getElementById('lastUpdate').textContent =
+    'Actualizado às ' + now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+}
 
 function setStatus(msg, color) {
   const el = document.getElementById('syncStatus');
   if (el) { el.textContent = msg; el.style.color = color || 'var(--muted)'; }
-}
-
-function checkAllLoaded() {
-  if (loadedFlags.tasks && loadedFlags.com && loadedFlags.cal) {
-    renderAll();
-    setStatus('✓ Sincronizado', '#16a34a');
-    setTimeout(() => setStatus(''), 3000);
-    const now = new Date();
-    document.getElementById('lastUpdate').textContent =
-      'Actualizado às ' + now.toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
-  }
-}
-
-// ── LISTENERS ──
-function startSync() {
-  setStatus('A ligar…', '#f59e0b');
-
-  // Tarefas
-  db.collection('tarefas_todo').orderBy('ordemChegada','asc').onSnapshot(snap => {
-    tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    loadedFlags.tasks = true;
-    checkAllLoaded();
-    if (loadedFlags.com && loadedFlags.cal) renderAll();
-  }, err => { console.error('tasks:', err); setStatus('Erro', '#dc2626'); });
-
-  // Comunicados
-  db.collection('comunicados').orderBy('criadoEm','desc').onSnapshot(snap => {
-    comunicados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    loadedFlags.com = true;
-    checkAllLoaded();
-    if (loadedFlags.tasks && loadedFlags.cal) renderAll();
-  }, err => { console.error('com:', err); });
-
-  // Calendário
-  db.collection('calendarios').doc('calendario_quarteira').onSnapshot(snap => {
-    calData = snap.exists ? snap.data() : null;
-    loadedFlags.cal = true;
-    checkAllLoaded();
-    if (loadedFlags.tasks && loadedFlags.com) renderAll();
-  }, err => { console.error('cal:', err); loadedFlags.cal = true; });
 }
 
 // ── RENDER ALL ──
@@ -320,10 +397,10 @@ function renderUrgenteBanner() {
   const urgentes = comunicados.filter(c => c.tipo === 'urgente' && !c.arquivado);
   if (!urgentes.length) { banner.style.display = 'none'; return; }
   banner.style.display = 'block';
-  banner.innerHTML = urgentes.slice(0,2).map(u => `
+  banner.innerHTML = urgentes.slice(0, 2).map(u => `
     <div class="urgente-banner">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L1.5 13h13L8 2z"/><path d="M8 7v3M8 11.5v.5"/></svg>
-      <div><strong>${escHtml(u.titulo)}</strong> — ${escHtml(u.autor||'')} · ${fmtShort(u.criadoEm)}</div>
+      <div><strong>${escHtml(u.titulo)}</strong> — ${escHtml(u.autor || '')} · ${fmtShort(u.criadoEm)}</div>
     </div>
   `).join('');
 }
@@ -372,18 +449,19 @@ function renderKPIs() {
 }
 
 // ── TASKS ──
-const ESTADO_LABEL = { aguardar:'A aguardar', progresso:'Em progresso', concluido:'Concluído', cancelado:'Cancelado', pendente:'Pendente' };
-const PRIO_ORDER   = { urgente:0, normal:1, baixa:2 };
+const ESTADO_LABEL = { aguardar: 'A aguardar', progresso: 'Em progresso', concluido: 'Concluído', cancelado: 'Cancelado', pendente: 'Pendente' };
+const PRIO_ORDER   = { urgente: 0, normal: 1, baixa: 2 };
 
 function renderTasks() {
   const container = document.getElementById('tasksList');
-  // sort: urgente primeiro, depois estado
+  const mostrarEscritorio = window.isAdmin() && window.escritorioAtivo() === 'todos';
+
   const activas = tasks
     .filter(t => t.estado !== 'concluido' && t.estado !== 'cancelado')
-    .sort((a,b) => {
-      const pd = (PRIO_ORDER[a.prioridade]??1) - (PRIO_ORDER[b.prioridade]??1);
+    .sort((a, b) => {
+      const pd = (PRIO_ORDER[a.prioridade] ?? 1) - (PRIO_ORDER[b.prioridade] ?? 1);
       if (pd !== 0) return pd;
-      return (a.ordemChegada||0) - (b.ordemChegada||0);
+      return (a.ordemChegada || 0) - (b.ordemChegada || 0);
     })
     .slice(0, 8);
 
@@ -398,12 +476,13 @@ function renderTasks() {
       <div class="task-prio-dot ${t.prioridade}"></div>
       <div class="task-name">${escHtml(t.titulo)}</div>
       <div class="task-person">${escHtml(t.solicitante)}</div>
-      <span class="estado-pill ${t.estado||'aguardar'}">${ESTADO_LABEL[t.estado]||t.estado}</span>
+      ${mostrarEscritorio && t.escritorio ? `<span class="escritorio-tag">${escHtml(t.escritorio)}</span>` : ''}
+      <span class="estado-pill ${t.estado || 'aguardar'}">${ESTADO_LABEL[t.estado] || t.estado}</span>
     </div>
   `).join('');
 
   // progress bar
-  const total     = tasks.filter(t => t.estado !== 'cancelado').length;
+  const total      = tasks.filter(t => t.estado !== 'cancelado').length;
   const concluidas = tasks.filter(t => t.estado === 'concluido').length;
   if (total > 0) {
     const pct = Math.round(concluidas / total * 100);
@@ -414,11 +493,12 @@ function renderTasks() {
 }
 
 // ── COMUNICADOS ──
-const TIPO_LABEL = { geral:'Geral', urgente:'Urgente', info:'Info', aviso:'Aviso' };
+const TIPO_LABEL = { geral: 'Geral', urgente: 'Urgente', info: 'Info', aviso: 'Aviso' };
 
 function renderComunicados() {
   const container = document.getElementById('comList');
-  const recentes  = comunicados.filter(c => !c.arquivado).slice(0, 6);
+  const mostrarEscritorio = window.isAdmin() && window.escritorioAtivo() === 'todos';
+  const recentes = comunicados.filter(c => !c.arquivado).slice(0, 6);
 
   if (!recentes.length) {
     container.innerHTML = '<div class="empty-mini">Sem comunicados activos.</div>';
@@ -430,9 +510,12 @@ function renderComunicados() {
       <div class="tipo-dot ${c.tipo}"></div>
       <div class="com-content">
         <div class="com-titulo-row">${escHtml(c.titulo)}</div>
-        <div class="com-meta-row">${escHtml(c.autor||'—')} · ${fmtShort(c.criadoEm)}</div>
+        <div class="com-meta-row">
+          ${escHtml(c.autor || '—')} · ${fmtShort(c.criadoEm)}
+          ${mostrarEscritorio && c.escritorio ? ` · <span style="text-transform:capitalize">${escHtml(c.escritorio)}</span>` : ''}
+        </div>
       </div>
-      <span class="tipo-tag-sm ${c.tipo}">${TIPO_LABEL[c.tipo]||c.tipo}</span>
+      <span class="tipo-tag-sm ${c.tipo}">${TIPO_LABEL[c.tipo] || c.tipo}</span>
     </div>
   `).join('');
 }
@@ -446,12 +529,8 @@ function renderCalMini() {
   }
 
   const { departments } = calData;
-
-  // day numbers row
   let html = '<div class="cal-day-nums">';
-  for (let d = 1; d <= 30; d++) {
-    html += `<div class="cal-day-num">${d}</div>`;
-  }
+  for (let d = 1; d <= 30; d++) html += `<div class="cal-day-num">${d}</div>`;
   html += '</div>';
 
   departments.forEach(dept => {
@@ -460,7 +539,7 @@ function renderCalMini() {
     for (let d = 0; d < 30; d++) {
       const val   = dept.data ? dept.data[d] : 0;
       const color = dept.colors ? dept.colors[Math.min(5, Math.max(0, val))] : '#ddd';
-      html += `<div class="cal-seg" style="background:${color}" title="Dia ${d+1}: ${val}"></div>`;
+      html += `<div class="cal-seg" style="background:${color}" title="Dia ${d + 1}: ${val}"></div>`;
     }
     html += '</div>';
   });
@@ -476,8 +555,8 @@ function renderEvents() {
     return;
   }
 
-  const events = [...calData.events].sort((a,b) => a.dayFrom - b.dayFrom).slice(0,10);
-  const depts  = calData.departments || [];
+  const events  = [...calData.events].sort((a, b) => a.dayFrom - b.dayFrom).slice(0, 10);
+  const depts   = calData.departments || [];
   const getDept = id => depts.find(d => d.id === id);
 
   container.innerHTML = events.map(ev => {
@@ -498,12 +577,12 @@ function renderEvents() {
 // ── ACTIVITY ──
 function renderActivity() {
   const container = document.getElementById('activityList');
+  const mostrarEscritorio = window.isAdmin() && window.escritorioAtivo() === 'todos';
 
-  // merge tarefas + comunicados recentes numa timeline
   const items = [
-    ...tasks.map(t => ({ type:'task', ts: t.criadaEm||0, label: t.titulo, sub: t.solicitante, estado: t.estado })),
-    ...comunicados.map(c => ({ type:'com', ts: c.criadoEm||0, label: c.titulo, sub: c.autor, tipo: c.tipo }))
-  ].sort((a,b) => b.ts - a.ts).slice(0, 8);
+    ...tasks.map(t => ({ type: 'task', ts: t.criadaEm || 0, label: t.titulo, sub: t.solicitante, estado: t.estado, escritorio: t.escritorio })),
+    ...comunicados.map(c => ({ type: 'com', ts: c.criadoEm || 0, label: c.titulo, sub: c.autor, tipo: c.tipo, escritorio: c.escritorio }))
+  ].sort((a, b) => b.ts - a.ts).slice(0, 8);
 
   if (!items.length) {
     container.innerHTML = '<div class="empty-mini">Sem actividade recente.</div>';
@@ -514,14 +593,17 @@ function renderActivity() {
     const icon = item.type === 'task' ? '📋' : '📢';
     const cls  = item.type === 'task' ? 'task' : 'com';
     const sub  = item.type === 'task'
-      ? `${escHtml(item.sub||'')} · ${ESTADO_LABEL[item.estado]||item.estado}`
-      : `Comunicado · ${escHtml(item.sub||'')}`;
+      ? `${escHtml(item.sub || '')} · ${ESTADO_LABEL[item.estado] || item.estado}`
+      : `Comunicado · ${escHtml(item.sub || '')}`;
     return `
       <div class="activity-row">
         <div class="activity-icon ${cls}">${icon}</div>
         <div class="activity-content">
           <div class="activity-text">${escHtml(item.label)}</div>
-          <div class="activity-sub">${sub}</div>
+          <div class="activity-sub">
+            ${sub}
+            ${mostrarEscritorio && item.escritorio ? ` · <span style="text-transform:capitalize">${escHtml(item.escritorio)}</span>` : ''}
+          </div>
         </div>
         <div class="activity-time">${fmtShort(item.ts)}</div>
       </div>
@@ -532,21 +614,18 @@ function renderActivity() {
 // ── UTILS ──
 function escHtml(str) {
   if (!str) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function fmtShort(ts) {
   if (!ts) return '';
   const diff = Date.now() - ts;
   if (diff < 60000)    return 'agora mesmo';
-  if (diff < 3600000)  return Math.floor(diff/60000) + ' min atrás';
-  if (diff < 86400000) return Math.floor(diff/3600000) + 'h atrás';
+  if (diff < 3600000)  return Math.floor(diff / 60000) + ' min atrás';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + 'h atrás';
   const d = new Date(ts);
-  return d.toLocaleDateString('pt-PT',{day:'2-digit',month:'short'});
+  return d.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' });
 }
-
-// ── INIT ──
-startSync();
 </script>
 </body>
 </html>

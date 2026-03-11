@@ -17,8 +17,8 @@
   --teal:#0d9488;  --teal-bg:#f0fdfa;  --teal-border:#99f6e4;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;padding:32px 20px;}
-.page{max-width:920px;margin:0 auto;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;}
+.page{max-width:920px;margin:0 auto;padding:32px 20px;}
 h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,28px);letter-spacing:-.03em;margin-bottom:4px;}
 .subtitle{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px;}
 
@@ -413,6 +413,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
 const GESTOR_PIN = '9005';
 
@@ -426,6 +427,9 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+</script>
+<script src="auth.js"></script>
+<script>
 const db  = firebase.firestore();
 const col = db.collection('admissoes');
 
@@ -546,7 +550,9 @@ async function submitProcesso() {
     prioridade,
     estado:        'aguardar',
     notas:         '',
-    criadoEm:      Date.now()
+    criadoEm:      Date.now(),
+    escritorio:    window.userProfile ? window.userProfile.escritorio : '',
+    criadoPor:     window.currentUser ? window.currentUser.uid : ''
   };
 
   if (selTipoVal === 'admissao') {
@@ -805,8 +811,45 @@ function toast(msg) {
   setTimeout(() => el.classList.remove('show'), 2800);
 }
 
-// ── INIT ──
-startSync();
+// ── INIT — aguarda autenticação ──
+document.addEventListener('authReady', ({ detail }) => {
+  window.renderNavbar('admissoes');
+  const isAdmin = window.isAdmin();
+  const escritorio = window.escritorioAtivo();
+
+  // preencher submissão com nome do utilizador logado
+  if (detail.profile && detail.profile.nome) {
+    const fSub = document.getElementById('fSubmissao');
+    if (fSub && !fSub.value) fSub.value = detail.profile.nomeCompleto || detail.profile.nome;
+  }
+
+  // Modo gestor automático para admins
+  if (isAdmin) {
+    isGestor = true;
+    const btn = document.getElementById('btnGestor');
+    if (btn) btn.classList.add('active');
+    document.querySelectorAll('.card-gestor').forEach(el => el.classList.add('show'));
+  }
+
+  startSync(escritorio);
+});
+
+function startSync(escritorio) {
+  setStatus('A ligar…', '#f59e0b');
+  let query = col.orderBy('criadoEm', 'desc');
+  if (escritorio && escritorio !== 'todos') {
+    query = query.where('escritorio', '==', escritorio);
+  }
+  query.onSnapshot(snap => {
+    processos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    render();
+    setStatus('✓ Sincronizado', '#16a34a');
+    setTimeout(() => setStatus(''), 3000);
+  }, err => {
+    console.error(err);
+    setStatus('Erro de ligação', '#dc2626');
+  });
+}
 </script>
 </body>
 </html>
