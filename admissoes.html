@@ -442,6 +442,7 @@ let filterTipo     = 'todos';
 let filterEstado   = 'activos';
 let filterPrio     = 'todos';
 const expandedIds  = new Set();
+let filtroEscritorio = '';
 
 // ── FIREBASE ──
 function setStatus(msg, color) {
@@ -551,7 +552,7 @@ async function submitProcesso() {
     estado:        'aguardar',
     notas:         '',
     criadoEm:      Date.now(),
-    escritorio:    window.userProfile ? window.userProfile.escritorio : '',
+    escritorio:    document.getElementById('fEscritorioAdm') ? document.getElementById('fEscritorioAdm').value : (window.userProfile ? window.userProfile.escritorio : ''),
     criadoPor:     window.currentUser ? window.currentUser.uid : ''
   };
 
@@ -610,6 +611,7 @@ async function deleteProcesso(id) {
 // ── FILTERS ──
 function getFiltered() {
   let out = processos;
+  if (filtroEscritorio)         out = out.filter(p => p.escritorio === filtroEscritorio);
   if (filterTipo !== 'todos')   out = out.filter(p => p.tipo === filterTipo);
   if (filterPrio !== 'todos')   out = out.filter(p => p.prioridade === filterPrio);
   if (filterEstado === 'activos') out = out.filter(p => p.estado !== 'concluido' && p.estado !== 'cancelado');
@@ -804,6 +806,11 @@ function fmtMoney(val) {
   return n.toLocaleString('pt-PT',{style:'currency',currency:'EUR'});
 }
 
+function setFiltroEscritorioAdm(val) {
+  filtroEscritorio = val;
+  renderList();
+}
+
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
@@ -817,11 +824,17 @@ document.addEventListener('authReady', ({ detail }) => {
   const isAdmin = window.isAdmin();
   const escritorio = window.escritorioAtivo();
 
+  const profile = detail.profile;
+
   // preencher submissão com nome do utilizador logado
-  if (detail.profile && detail.profile.nome) {
+  if (profile && profile.nome) {
     const fSub = document.getElementById('fSubmissao');
-    if (fSub && !fSub.value) fSub.value = detail.profile.nomeCompleto || detail.profile.nome;
+    if (fSub && !fSub.value) fSub.value = profile.nomeCompleto || profile.nome;
   }
+
+  // escritório destino por defeito
+  const fEsc = document.getElementById('fEscritorioAdm');
+  if (fEsc && profile && profile.escritorio) fEsc.value = profile.escritorio;
 
   // Modo gestor automático para admins
   if (isAdmin) {
@@ -831,15 +844,20 @@ document.addEventListener('authReady', ({ detail }) => {
     document.querySelectorAll('.card-gestor').forEach(el => el.classList.add('show'));
   }
 
-  startSync(escritorio);
+  // filtro por defeito = escritório do utilizador
+  filtroEscritorio = isAdmin
+    ? ((escritorio && escritorio !== 'todos') ? escritorio : '')
+    : (profile ? (profile.escritorio || '') : '');
+  const feEl = document.getElementById('filterEscritorioAdm');
+  if (feEl) { feEl.style.display=''; if (filtroEscritorio) feEl.value = filtroEscritorio; }
+
+  startSync();
 });
 
-function startSync(escritorio) {
+function startSync() {
   setStatus('A ligar…', '#f59e0b');
+  // carregar tudo, filtrar no cliente
   let query = col.orderBy('criadoEm', 'desc');
-  if (escritorio && escritorio !== 'todos') {
-    query = query.where('escritorio', '==', escritorio);
-  }
   query.onSnapshot(snap => {
     processos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     render();

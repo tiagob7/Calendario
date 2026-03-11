@@ -114,7 +114,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
     <h1>Comunicados Internos</h1>
     <span id="syncStatus"></span>
   </div>
-  <p class="subtitle">Avisos, informações e comunicações da equipa</p>
+  <p class="subtitle" id="pageSubtitle">A carregar…</p>
 
   <div class="stats-row" id="statsBar">
     <div style="font-size:11px;color:var(--muted);">A carregar…</div>
@@ -177,6 +177,13 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       <button class="filter-btn" data-f="todos" onclick="setFilter('todos')">Todos</button>
       <button class="filter-btn" data-f="urgente" onclick="setFilter('urgente')">Urgentes</button>
       <button class="filter-btn" data-f="arquivado" onclick="setFilter('arquivado')">Arquivados</button>
+      <select id="filterEscritorioCom" onchange="setFiltroEscritorioCom(this.value)" style="padding:5px 8px;border:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;font-size:10px;border-radius:20px;color:var(--muted);outline:none;cursor:pointer;max-width:150px;">
+        <option value="">Todos os escritórios</option>
+        <option value="quarteira">Quarteira</option>
+        <option value="albufeira">Albufeira</option>
+        <option value="lisboa">Lisboa</option>
+        <option value="porto">Porto</option>
+      </select>
       <span class="count-badge" id="countBadge"></span>
     </div>
   </div>
@@ -206,26 +213,37 @@ const db = firebase.firestore();
 let col;
 let comunicados = [], selTipoVal = 'geral', filterMode = 'activos';
 const expandedIds = new Set();
+let filtroEscritorio = '';
 const TIPO_LABEL = { geral:'Geral', urgente:'Urgente', info:'Info', aviso:'Aviso' };
 const TIPO_EMOJI = { geral:'📢', urgente:'🚨', info:'ℹ️', aviso:'⚠️' };
 
 document.addEventListener('authReady', ({ detail }) => {
   window.renderNavbar('comunicados');
-  const isAdmin = window.isAdmin();
+  const profile    = detail.profile;
+  const isAdmin    = window.isAdmin();
   const escritorio = window.escritorioAtivo();
 
-  // mostrar botão "novo comunicado" só para admin
+  // botão novo comunicado só para admin; preencher autor
   if (isAdmin) {
     document.getElementById('btnNovoCom').classList.add('show');
-    // preencher autor com nome do admin
-    if (detail.profile) document.getElementById('fAutor').value = detail.profile.nomeCompleto || detail.profile.nome || '';
+    if (profile) document.getElementById('fAutor').value = profile.nomeCompleto || profile.nome || '';
   }
 
+  // filtro por defeito = escritório do utilizador
+  const nomes = { quarteira:'Quarteira', albufeira:'Albufeira', lisboa:'Lisboa', porto:'Porto', '':'Todos os escritórios' };
+  filtroEscritorio = isAdmin
+    ? ((escritorio && escritorio !== 'todos') ? escritorio : '')
+    : (profile ? (profile.escritorio || '') : '');
+
+  // mostrar filtro de escritório para todos
+  const feEl = document.getElementById('filterEscritorioCom');
+  if (feEl) { feEl.style.display=''; if (filtroEscritorio) feEl.value = filtroEscritorio; }
+
+  document.getElementById('pageSubtitle').textContent = nomes[filtroEscritorio] || 'Todos os escritórios';
+
   col = db.collection('comunicados');
+  // carregar tudo, filtrar no cliente (para poder ver outros escritórios)
   let query = col.orderBy('criadoEm', 'desc');
-  if (escritorio && escritorio !== 'todos') {
-    query = query.where('escritorio', '==', escritorio);
-  }
 
   setStatus('A ligar…', '#f59e0b');
   query.onSnapshot(snap => {
@@ -280,6 +298,7 @@ async function deleteComunicado(id) {
 
 function getFiltered() {
   let out = comunicados;
+  if (filtroEscritorio)           out = out.filter(c => c.escritorio === filtroEscritorio);
   if (filterMode === 'activos')   out = out.filter(c => !c.arquivado);
   if (filterMode === 'urgente')   out = out.filter(c => c.tipo === 'urgente' && !c.arquivado);
   if (filterMode === 'arquivado') out = out.filter(c => c.arquivado);
@@ -349,6 +368,12 @@ function renderList() {
   });
 }
 
+function setFiltroEscritorioCom(val) {
+  filtroEscritorio = val;
+  const nomes = { quarteira:'Quarteira', albufeira:'Albufeira', lisboa:'Lisboa', porto:'Porto', '':'Todos os escritórios' };
+  document.getElementById('pageSubtitle').textContent = nomes[val] || 'Todos os escritórios';
+  renderList();
+}
 function toggleCard(id) { if(expandedIds.has(id)) expandedIds.delete(id); else expandedIds.add(id); renderList(); }
 function selTipo(t) { selTipoVal=t; document.querySelectorAll('.tipo-pill').forEach(b=>b.classList.toggle('sel',b.dataset.t===t)); }
 function escHtml(str) { if(!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
