@@ -240,8 +240,8 @@ document.addEventListener('authReady', ({ detail }) => {
   const isAdmin    = window.isAdmin();
   const escritorio = window.escritorioAtivo();
 
-  // botão novo comunicado só para admin; preencher autor
-  if (isAdmin) {
+  // botão novo comunicado para quem tem permissão; preencher autor
+  if (window.temPermissao('gerirComunicados')) {
     document.getElementById('btnNovoCom').classList.add('show');
     if (profile) document.getElementById('fAutor').value = profile.nomeCompleto || profile.nome || '';
   }
@@ -362,7 +362,7 @@ function renderUrgenteBanner() {
 function renderList() {
   const container = document.getElementById('comunicadosList');
   const filtered = getFiltered();
-  const isAdmin = window.isAdmin && window.isAdmin();
+  const canGerir = window.temPermissao && window.temPermissao('gerirComunicados');
   document.getElementById('countBadge').textContent=filtered.length+' comunicado'+(filtered.length!==1?'s':'');
   if (!filtered.length) { container.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><p>Nenhum comunicado encontrado.</p></div>'; return; }
   container.innerHTML='';
@@ -384,7 +384,7 @@ function renderList() {
           <span class="com-author"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="2.5"/><path d="M3 13c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5"/></svg>${escHtml(com.autor||'—')}</span>
           <span style="opacity:.7;">${fmtDateFull(com.criadoEm)}</span>
         </div>
-        <div class="com-gestor ${isAdmin?'show':''}">
+        <div class="com-gestor ${canGerir?'show':''}">
           <button class="arquivo-btn ${isArq?'active':''}" onclick="event.stopPropagation();toggleArquivado('${com.id}',${isArq})">${isArq?'↩ Restaurar':'📁 Arquivar'}</button>
           <button class="icon-btn del" onclick="event.stopPropagation();deleteComunicado('${com.id}')">🗑</button>
         </div>

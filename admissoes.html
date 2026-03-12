@@ -887,12 +887,21 @@ document.addEventListener('authReady', ({ detail }) => {
     if (fEsc && profile.escritorio) fEsc.value = profile.escritorio;
   }
 
-  // Admin: modo gestor automático + esconder botão PIN + mostrar filtro de escritório
-  if (isAdmin) {
+  // mostrar/esconder form de criar processo
+  const canCriarAdm = window.temPermissao('criarAdmissoes');
+  const formPanelEl = document.querySelector('.form-panel');
+  if (formPanelEl) formPanelEl.style.display = canCriarAdm ? '' : 'none';
+
+  // mostrar/esconder botão "Modo Gestor"
+  const canResolverAdm = window.temPermissao('resolverAdmissoes');
+  const btnGestor = document.getElementById('btnGestor');
+  if (btnGestor && !canResolverAdm) btnGestor.style.display = 'none';
+
+  // Modo gestor automático para quem tem permissão de resolver + admin
+  if (isAdmin || window.temPermissao('resolverAdmissoes')) {
     isGestor = true;
     const btn = document.getElementById('btnGestor');
     if (btn) {
-      // Para admin, o botão gestor deixa de usar PIN — toggle direto
       btn.classList.add('active');
       btn.onclick = function() {
         isGestor = !isGestor;

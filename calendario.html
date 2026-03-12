@@ -1058,8 +1058,8 @@ document.addEventListener('authReady', ({ detail }) => {
     }
   }
 
-  // Colaboradores não podem editar — esconder botão
-  if (!isAdmin) {
+  // Esconder botão de editar para quem não tem permissão
+  if (!window.temPermissao('editarCalendario')) {
     const editBtn = document.getElementById('editToggleBtn');
     if (editBtn) editBtn.style.display = 'none';
   }
