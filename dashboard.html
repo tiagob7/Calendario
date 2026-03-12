@@ -28,6 +28,11 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 #syncStatus{font-size:10px;color:var(--muted);letter-spacing:.05em;margin-left:auto;}
 .last-update{font-size:10px;color:var(--muted);letter-spacing:.04em;}
 
+/* ESCRITÓRIO PILLS */
+.dash-esc-pill{padding:4px 12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;border-radius:20px;cursor:pointer;text-transform:uppercase;letter-spacing:.05em;transition:all .15s;}
+.dash-esc-pill:hover{border-color:var(--accent);color:var(--accent);}
+.dash-esc-pill.ativo{background:var(--accent);border-color:var(--accent);color:#fff;}
+
 /* ESCRITORIO BADGE — mostrado no subtítulo */
 .escritorio-badge{
   display:inline-flex;align-items:center;gap:5px;
@@ -187,15 +192,8 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
     <h1>Dashboard</h1>
     <span class="last-update" id="lastUpdate"></span>
     <span id="syncStatus"></span>
-    <!-- admin: filtro de escritório -->
-    <select id="adminEscritorioSelect" style="display:none;" onchange="window.setFiltroEscritorio(this.value)"
-      style="padding:5px 10px;border:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;font-size:11px;border-radius:8px;color:var(--text);outline:none;cursor:pointer;">
-      <option value="todos">Todos os escritórios</option>
-      <option value="quarteira">Quarteira</option>
-      <option value="albufeira">Albufeira</option>
-      <option value="lisboa">Lisboa</option>
-      <option value="porto">Porto</option>
-    </select>
+    <!-- admin: filtro de escritório (pills) -->
+    <div id="adminEscritorioPills" style="display:none;gap:4px;flex-wrap:wrap;align-items:center;"></div>
     <div id="dashUserInfo" style="display:flex;align-items:center;gap:8px;margin-left:auto;"></div>
   </div>
 
@@ -350,20 +348,51 @@ document.addEventListener('authReady', ({ detail }) => {
     `;
   }
 
-  // filtro de escritório para admin
+  // filtro de escritório para admin — pills sem reload
+  const escritorio = window.escritorioAtivo();
+
   if (isAdmin) {
-    const sel = document.getElementById('adminEscritorioSelect');
-    if (sel) {
-      sel.style.display = '';
-      sel.style.cssText = 'padding:5px 10px;border:1px solid var(--border);background:var(--surface2);font-family:DM Mono,monospace;font-size:11px;border-radius:8px;color:var(--text);outline:none;cursor:pointer;';
-      const escritorio = window.escritorioAtivo();
-      if (escritorio) sel.value = escritorio;
+    const pillsWrap = document.getElementById('adminEscritorioPills');
+    if (pillsWrap) {
+      pillsWrap.style.display = 'flex';
+      const opcoes = [
+        { val: 'todos',     label: 'Todos' },
+        { val: 'quarteira', label: 'Quarteira' },
+        { val: 'albufeira', label: 'Albufeira' },
+        { val: 'lisboa',    label: 'Lisboa' },
+        { val: 'porto',     label: 'Porto' },
+      ];
+      opcoes.forEach(({ val, label }) => {
+        const btn = document.createElement('button');
+        btn.dataset.e = val;
+        btn.textContent = label;
+        const ativo = (val === escritorio) || (val === 'todos' && (!escritorio || escritorio === 'todos'));
+        btn.className = 'dash-esc-pill' + (ativo ? ' ativo' : '');
+        btn.onclick = () => switchEscritorioDash(val);
+        pillsWrap.appendChild(btn);
+      });
     }
   }
 
-  // Subtítulo com escritório ativo
-  const escritorio = window.escritorioAtivo();
-  const labelEscritorio = escritorio === 'todos'
+  updateSubtitle(escritorio);
+  startSync(escritorio);
+});
+
+// ── TROCAR ESCRITÓRIO (admin, sem reload) ──
+function switchEscritorioDash(val) {
+  sessionStorage.setItem('filtroEscritorio', val);
+
+  // Atualizar pills
+  document.querySelectorAll('.dash-esc-pill').forEach(b => {
+    b.classList.toggle('ativo', b.dataset.e === val);
+  });
+
+  updateSubtitle(val);
+  startSync(val);
+}
+
+function updateSubtitle(escritorio) {
+  const label = !escritorio || escritorio === 'todos'
     ? 'Todos os escritórios'
     : escritorio.charAt(0).toUpperCase() + escritorio.slice(1);
 
@@ -371,12 +400,10 @@ document.addEventListener('authReady', ({ detail }) => {
     Visão geral — tarefas · comunicados · calendário &nbsp;
     <span class="escritorio-badge">
       <span class="escritorio-dot"></span>
-      ${labelEscritorio}
+      ${label}
     </span>
   `;
-
-  startSync(escritorio);
-});
+}
 
 // ── LISTENERS COM FILTRO POR ESCRITÓRIO ──
 function startSync(escritorio) {
