@@ -326,6 +326,7 @@ async function submitTarefa() {
 
   const profile     = window.userProfile;
   const solicitante = profile ? (profile.nomeCompleto || profile.nome || profile.email) : '—';
+  const escritorioOrigem = profile && profile.escritorio ? profile.escritorio : '';
 
   const maxOrdem = tasks.length ? Math.max(...tasks.map(t => t.ordemChegada || 0)) : 0;
   try {
@@ -334,6 +335,7 @@ async function submitTarefa() {
       prioridade: selPrioVal, estado: 'aguardar', notas: '',
       criadaEm: Date.now(), ordemChegada: maxOrdem + 1,
       escritorio: destino,
+      escritorioOrigem,
       criadoPor: window.currentUser ? window.currentUser.uid : ''
     });
     document.getElementById('fTitulo').value    = '';

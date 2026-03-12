@@ -593,6 +593,9 @@ async function submitProcesso() {
     escritorio:    (document.getElementById('fEscritorioAdm') ? document.getElementById('fEscritorioAdm').value : null)
                    || (window.userProfile ? window.userProfile.escritorio : null)
                    || '',
+    escritorioOrigem: window.userProfile && window.userProfile.escritorio
+                      ? window.userProfile.escritorio
+                      : '',
     criadoPor:     window.currentUser ? window.currentUser.uid : ''
   };
 

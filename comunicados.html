@@ -53,6 +53,11 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .tipo-pill[data-t="info"].sel{background:var(--purple-bg);border-color:var(--purple);color:var(--purple);}
 .tipo-pill[data-t="aviso"].sel{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
 .tipo-pill:not(.sel):hover{border-color:#aaa;color:var(--text);}
+.esc-pill-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.esc-pill{padding:5px 10px;border:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;font-size:10px;border-radius:999px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;transition:all .15s;}
+.esc-pill.sel{background:var(--surface);border-color:var(--accent);color:var(--accent);}
+.esc-pill-todos.sel{background:var(--accent);color:#fff;border-color:var(--accent);}
+.field-hint{font-size:9px;color:#9ca3af;margin-top:4px;}
 .btn{border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;text-transform:uppercase;letter-spacing:.09em;transition:all .15s;padding:10px 18px;}
 .btn:hover{opacity:.82;}
 .btn-primary{background:var(--text);color:#fff;}
@@ -163,6 +168,17 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
           <option>Direcção</option>
         </select>
       </div>
+      <div class="full">
+        <label class="field-label">Escritórios destino</label>
+        <div class="esc-pill-row" id="escDestRow">
+          <button type="button" class="esc-pill esc-pill-todos sel" data-e="todos" onclick="toggleEscDestino('todos', this)">Todos</button>
+          <button type="button" class="esc-pill" data-e="quarteira" onclick="toggleEscDestino('quarteira', this)">Quarteira</button>
+          <button type="button" class="esc-pill" data-e="albufeira" onclick="toggleEscDestino('albufeira', this)">Albufeira</button>
+          <button type="button" class="esc-pill" data-e="lisboa" onclick="toggleEscDestino('lisboa', this)">Lisboa</button>
+          <button type="button" class="esc-pill" data-e="porto" onclick="toggleEscDestino('porto', this)">Porto</button>
+        </div>
+        <div class="field-hint">Se não escolheres nada, considera-se apenas o teu escritório. "Todos" torna o comunicado visível em todos os escritórios.</div>
+      </div>
     </div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
       <button class="btn btn-secondary" onclick="toggleForm()">Cancelar</button>
@@ -214,6 +230,7 @@ let col;
 let comunicados = [], selTipoVal = 'geral', filterMode = 'activos';
 const expandedIds = new Set();
 let filtroEscritorio = '';
+let escDestinosSel = ['todos'];
 const TIPO_LABEL = { geral:'Geral', urgente:'Urgente', info:'Info', aviso:'Aviso' };
 const TIPO_EMOJI = { geral:'📢', urgente:'🚨', info:'ℹ️', aviso:'⚠️' };
 
@@ -270,13 +287,18 @@ async function submitComunicado() {
   const dept   = document.getElementById('fDept').value;
   if (!titulo) { toast('Preenche o título!'); return; }
   if (!texto)  { toast('Escreve a mensagem!'); return; }
+  // destinos: se ficou na opção "Todos", guardamos ['todos']; se removeram todos, cai para escritório de origem apenas
+  let destinos = escDestinosSel && escDestinosSel.length ? [...escDestinosSel] : [];
+  const escrOrigem = window.userProfile ? (window.userProfile.escritorio || '') : '';
+  if (!destinos.length && escrOrigem) destinos = [escrOrigem];
   try {
     await col.add({
       titulo, texto, autor, dept,
       tipo: selTipoVal,
       arquivado: false,
       criadoEm: Date.now(),
-      escritorio: window.userProfile ? window.userProfile.escritorio : '',
+      escritorio: escrOrigem,
+      destinosEscritorio: destinos,
       criadoPor: window.currentUser ? window.currentUser.uid : ''
     });
     document.getElementById('fTitulo').value = '';
@@ -298,7 +320,7 @@ async function deleteComunicado(id) {
 
 function getFiltered() {
   let out = comunicados;
-  if (filtroEscritorio)           out = out.filter(c => c.escritorio === filtroEscritorio);
+  if (filtroEscritorio)           out = out.filter(c => matchComunicadoEscritorio(c, filtroEscritorio));
   if (filterMode === 'activos')   out = out.filter(c => !c.arquivado);
   if (filterMode === 'urgente')   out = out.filter(c => c.tipo === 'urgente' && !c.arquivado);
   if (filterMode === 'arquivado') out = out.filter(c => c.arquivado);
@@ -310,7 +332,7 @@ function render() { renderStats(); renderUrgenteBanner(); renderList(); }
 
 function renderStats() {
   // usar apenas os comunicados do escritório ativo (respeita o filtro)
-  const base   = filtroEscritorio ? comunicados.filter(c => c.escritorio === filtroEscritorio) : comunicados;
+  const base   = filtroEscritorio ? comunicados.filter(c => matchComunicadoEscritorio(c, filtroEscritorio)) : comunicados;
   const total  = base.filter(c=>!c.arquivado).length;
   const gerais = base.filter(c=>c.tipo==='geral'&&!c.arquivado).length;
   const urg    = base.filter(c=>c.tipo==='urgente'&&!c.arquivado).length;
@@ -326,7 +348,7 @@ function renderStats() {
 
 function renderUrgenteBanner() {
   const banner = document.getElementById('urgenteBanner');
-  const base   = filtroEscritorio ? comunicados.filter(c => c.escritorio === filtroEscritorio) : comunicados;
+  const base   = filtroEscritorio ? comunicados.filter(c => matchComunicadoEscritorio(c, filtroEscritorio)) : comunicados;
   const urgentes = base.filter(c=>c.tipo==='urgente'&&!c.arquivado);
   if (!urgentes.length) { banner.style.display='none'; return; }
   banner.style.display='flex'; banner.style.flexDirection='column'; banner.style.gap='8px';
@@ -383,6 +405,42 @@ function escHtml(str) { if(!str) return ''; return String(str).replace(/&/g,'&am
 function fmtShort(ts) { if(!ts) return ''; const diff=Date.now()-ts; if(diff<60000) return 'agora mesmo'; if(diff<3600000) return Math.floor(diff/60000)+' min atrás'; if(diff<86400000) return Math.floor(diff/3600000)+'h atrás'; const d=new Date(ts); return d.toLocaleDateString('pt-PT',{day:'2-digit',month:'short'}); }
 function fmtDateFull(ts) { if(!ts) return ''; const d=new Date(ts); return d.toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'})+' às '+d.toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}); }
 function toast(msg) { const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2800); }
+
+// Escritorios destino — multi-select
+function toggleEscDestino(code, btn) {
+  const todosBtn = document.querySelector('.esc-pill-todos');
+  if (code === 'todos') {
+    escDestinosSel = ['todos'];
+    document.querySelectorAll('.esc-pill').forEach(b => b.classList.remove('sel'));
+    if (todosBtn) todosBtn.classList.add('sel');
+    return;
+  }
+  // remover "todos" se estava activo
+  escDestinosSel = escDestinosSel.filter(e => e !== 'todos');
+  if (todosBtn) todosBtn.classList.remove('sel');
+
+  if (escDestinosSel.includes(code)) {
+    escDestinosSel = escDestinosSel.filter(e => e !== code);
+    btn.classList.remove('sel');
+  } else {
+    escDestinosSel.push(code);
+    btn.classList.add('sel');
+  }
+
+  // se voltar a ficar vazio, deixa tudo para a origem (tratado no submit)
+}
+
+// helper de correspondência para filtros
+function matchComunicadoEscritorio(c, esc) {
+  if (!esc) return true;
+  const orig = c.escritorio || '';
+  const dests = c.destinosEscritorio || null;
+  if (dests && Array.isArray(dests) && dests.length) {
+    if (dests.includes('todos')) return true;
+    return dests.includes(esc);
+  }
+  return orig === esc;
+}
 </script>
 </body>
 </html>

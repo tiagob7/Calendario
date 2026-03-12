@@ -524,7 +524,11 @@ function renderAll() {
 // ── URGENTE BANNER ──
 function renderUrgenteBanner() {
   const banner   = document.getElementById('urgenteBanner');
-  const urgentes = comunicados.filter(c => c.tipo === 'urgente' && !c.arquivado);
+  const urgentes = comunicados.filter(c =>
+    c.tipo === 'urgente' &&
+    !c.arquivado &&
+    matchComunicadoEscritorioDash(c, escritorioAtivoDash)
+  );
   if (!urgentes.length) { banner.style.display = 'none'; return; }
   banner.style.display = 'block';
   banner.innerHTML = urgentes.slice(0, 2).map(u => `
@@ -535,11 +539,35 @@ function renderUrgenteBanner() {
   `).join('');
 }
 
+// ── Helpers de filtro por escritório ──
+function matchEscritorioDoc(doc, escritorio) {
+  if (!escritorio || escritorio === 'todos') return true;
+  const dest = doc.escritorio || '';
+  const orig = doc.escritorioOrigem || '';
+  return dest === escritorio || orig === escritorio;
+}
+
+function matchComunicadoEscritorioDash(c, esc) {
+  if (!esc || esc === 'todos') return true;
+  const dests = c.destinosEscritorio || null;
+  if (dests && Array.isArray(dests) && dests.length) {
+    if (dests.includes('todos')) return true;
+    return dests.includes(esc);
+  }
+  return c.escritorio === esc;
+}
+
 // ── KPIs ──
 function renderKPIs() {
-  const filtT = (escritorioAtivoDash && escritorioAtivoDash !== 'todos') ? tasks.filter(t => t.escritorio === escritorioAtivoDash) : tasks;
-  const filtC = (escritorioAtivoDash && escritorioAtivoDash !== 'todos') ? comunicados.filter(c => c.escritorio === escritorioAtivoDash) : comunicados;
-  const filtA = (escritorioAtivoDash && escritorioAtivoDash !== 'todos') ? admissoes.filter(a => a.escritorio === escritorioAtivoDash) : admissoes;
+  const filtT = (escritorioAtivoDash && escritorioAtivoDash !== 'todos')
+    ? tasks.filter(t => matchEscritorioDoc(t, escritorioAtivoDash))
+    : tasks;
+  const filtC = (escritorioAtivoDash && escritorioAtivoDash !== 'todos')
+    ? comunicados.filter(c => matchComunicadoEscritorioDash(c, escritorioAtivoDash))
+    : comunicados;
+  const filtA = (escritorioAtivoDash && escritorioAtivoDash !== 'todos')
+    ? admissoes.filter(a => matchEscritorioDoc(a, escritorioAtivoDash))
+    : admissoes;
   const activas    = filtT.filter(t => t.estado !== 'concluido' && t.estado !== 'cancelado');
   const urgentes   = activas.filter(t => t.prioridade === 'urgente');
   const progresso  = activas.filter(t => t.estado === 'progresso');
@@ -596,7 +624,7 @@ function renderTasks() {
   const isAdmin = window.isAdmin();
   const mostrarEscritorio = isAdmin && (!escritorioAtivoDash || escritorioAtivoDash === 'todos');
   const filtradas = (escritorioAtivoDash && escritorioAtivoDash !== 'todos')
-    ? tasks.filter(t => t.escritorio === escritorioAtivoDash)
+    ? tasks.filter(t => matchEscritorioDoc(t, escritorioAtivoDash))
     : tasks;
 
   const activas = filtradas
@@ -641,7 +669,7 @@ function renderAdmissoes() {
   const container = document.getElementById('admList');
   const mostrarEscritorio = window.isAdmin() && (!escritorioAtivoDash || escritorioAtivoDash === 'todos');
   const filtradas = (escritorioAtivoDash && escritorioAtivoDash !== 'todos')
-    ? admissoes.filter(a => a.escritorio === escritorioAtivoDash)
+    ? admissoes.filter(a => matchEscritorioDoc(a, escritorioAtivoDash))
     : admissoes;
   const recentes = filtradas
     .filter(a => a.estado !== 'concluido' && a.estado !== 'cancelado')
@@ -670,7 +698,7 @@ function renderComunicados() {
   const container = document.getElementById('comList');
   const mostrarEscritorio = window.isAdmin() && (!escritorioAtivoDash || escritorioAtivoDash === 'todos');
   const filtradas = (escritorioAtivoDash && escritorioAtivoDash !== 'todos')
-    ? comunicados.filter(c => c.escritorio === escritorioAtivoDash)
+    ? comunicados.filter(c => matchComunicadoEscritorioDash(c, escritorioAtivoDash))
     : comunicados;
   const recentes = filtradas.filter(c => !c.arquivado).slice(0, 6);
 
@@ -752,8 +780,12 @@ function renderEvents() {
 function renderActivity() {
   const container = document.getElementById('activityList');
   const mostrarEscritorio = window.isAdmin() && (!escritorioAtivoDash || escritorioAtivoDash === 'todos');
-  const filtT = (escritorioAtivoDash && escritorioAtivoDash !== 'todos') ? tasks.filter(t => t.escritorio === escritorioAtivoDash) : tasks;
-  const filtC = (escritorioAtivoDash && escritorioAtivoDash !== 'todos') ? comunicados.filter(c => c.escritorio === escritorioAtivoDash) : comunicados;
+  const filtT = (escritorioAtivoDash && escritorioAtivoDash !== 'todos')
+    ? tasks.filter(t => matchEscritorioDoc(t, escritorioAtivoDash))
+    : tasks;
+  const filtC = (escritorioAtivoDash && escritorioAtivoDash !== 'todos')
+    ? comunicados.filter(c => matchComunicadoEscritorioDash(c, escritorioAtivoDash))
+    : comunicados;
 
   const items = [
     ...filtT.map(t => ({ type: 'task', ts: t.criadaEm || 0, label: t.titulo, sub: t.solicitante, estado: t.estado, escritorio: t.escritorio })),
