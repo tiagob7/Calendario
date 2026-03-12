@@ -405,68 +405,79 @@ function updateSubtitle(escritorio) {
   `;
 }
 
-// ── LISTENERS COM FILTRO POR ESCRITÓRIO ──
-function startSync(escritorio) {
-  // Cancelar listeners anteriores (útil quando admin muda de filtro)
-  unsubFns.forEach(fn => fn());
-  unsubFns = [];
-  loadedFlags = { tasks: false, com: false, cal: false };
+// ── ESCRITÓRIO ATIVO (atualizado sem reload) ──
+let escritorioAtivoDash = '';
 
+// ── LISTENERS — carregam tudo, filtro feito no cliente ──
+function startSync(escritorio) {
+  escritorioAtivoDash = escritorio || '';
+
+  // Se já temos listeners ativos, re-renderizar (filtro no cliente)
+  // Mas o calendário é especial — tem um doc por escritório, precisa de re-subscrever
+  if (unsubFns.length > 0) {
+    // Re-subscrever calendário se mudou de escritório
+    const calEscNovo = (escritorioAtivoDash && escritorioAtivoDash !== 'todos') ? escritorioAtivoDash : 'quarteira';
+    if (window._dashCalEsc !== calEscNovo) {
+      window._dashCalEsc = calEscNovo;
+      if (window._dashCalUnsub) window._dashCalUnsub();
+      const newDocId = 'calendario_' + calEscNovo;
+      window._dashCalUnsub = db.collection('calendarios').doc(newDocId).onSnapshot(snap => {
+        calData = snap.exists ? snap.data() : null;
+        renderCalMini();
+        renderEvents();
+      }, err => { console.error('cal:', err); });
+    }
+    renderAll();
+    return;
+  }
+
+  // Primeira vez: criar listeners sem .where no servidor (evita índices compostos)
+  loadedFlags = { tasks: false, com: false, cal: false, adm: false };
   setStatus('A ligar…', '#f59e0b');
 
-  const filtrarPorEscritorio = (query) => {
-    // Se admin e "todos" → sem filtro; senão filtra pelo escritório
-    if (escritorio && escritorio !== 'todos') {
-      return query.where('escritorio', '==', escritorio);
-    }
-    return query;
-  };
-
   // ── Tarefas ──
-  const qTarefas = filtrarPorEscritorio(
-    db.collection('tarefas_todo').orderBy('ordemChegada', 'asc')
-  );
-  const unsubTarefas = qTarefas.onSnapshot(snap => {
-    tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    loadedFlags.tasks = true;
-    checkAllLoaded();
-  }, err => { console.error('tasks:', err); setStatus('Erro', '#dc2626'); });
+  const unsubTarefas = db.collection('tarefas_todo')
+    .orderBy('ordemChegada', 'asc')
+    .onSnapshot(snap => {
+      tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      loadedFlags.tasks = true;
+      checkAllLoaded();
+    }, err => { console.error('tasks:', err); setStatus('Erro', '#dc2626'); });
   unsubFns.push(unsubTarefas);
 
   // ── Comunicados ──
-  const qCom = filtrarPorEscritorio(
-    db.collection('comunicados').orderBy('criadoEm', 'desc')
-  );
-  const unsubCom = qCom.onSnapshot(snap => {
-    comunicados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    loadedFlags.com = true;
-    checkAllLoaded();
-  }, err => { console.error('com:', err); });
+  const unsubCom = db.collection('comunicados')
+    .orderBy('criadoEm', 'desc')
+    .onSnapshot(snap => {
+      comunicados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      loadedFlags.com = true;
+      checkAllLoaded();
+    }, err => { console.error('com:', err); loadedFlags.com = true; checkAllLoaded(); });
   unsubFns.push(unsubCom);
 
   // ── Admissões ──
-  const qAdm = filtrarPorEscritorio(
-    db.collection('admissoes').orderBy('criadoEm', 'desc')
-  );
-  const unsubAdm = qAdm.onSnapshot(snap => {
-    admissoes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    loadedFlags.adm = true;
-    checkAllLoaded();
-  }, err => { console.error('adm:', err); loadedFlags.adm = true; checkAllLoaded(); });
+  const unsubAdm = db.collection('admissoes')
+    .orderBy('criadoEm', 'desc')
+    .onSnapshot(snap => {
+      admissoes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      loadedFlags.adm = true;
+      checkAllLoaded();
+    }, err => { console.error('adm:', err); loadedFlags.adm = true; checkAllLoaded(); });
   unsubFns.push(unsubAdm);
 
-  // ── Calendário ──
-  // Usa o doc do escritório ativo; admin com "todos" usa o primeiro escritório disponível
-  const calDocId = (escritorio && escritorio !== 'todos')
-    ? 'calendario_' + escritorio
-    : 'calendario_quarteira'; // fallback para admin sem filtro
+  // ── Calendário — carrega o doc do escritório ativo ──
+  // Re-subscreve quando o escritório muda
+  const calEsc = (escritorioAtivoDash && escritorioAtivoDash !== 'todos')
+    ? escritorioAtivoDash : 'quarteira';
+  const calDocId = 'calendario_' + calEsc;
 
-  const unsubCal = db.collection('calendarios').doc(calDocId).onSnapshot(snap => {
+  window._dashCalEsc = calEsc;
+  window._dashCalUnsub = db.collection('calendarios').doc(calDocId).onSnapshot(snap => {
     calData = snap.exists ? snap.data() : null;
     loadedFlags.cal = true;
     checkAllLoaded();
   }, err => { console.error('cal:', err); loadedFlags.cal = true; checkAllLoaded(); });
-  unsubFns.push(unsubCal);
+  unsubFns.push(window._dashCalUnsub);
 }
 
 // ── CHECK LOADED ──
@@ -513,13 +524,16 @@ function renderUrgenteBanner() {
 
 // ── KPIs ──
 function renderKPIs() {
-  const activas    = tasks.filter(t => t.estado !== 'concluido' && t.estado !== 'cancelado');
+  const filtT = (escritorioAtivoDash && escritorioAtivoDash !== 'todos') ? tasks.filter(t => t.escritorio === escritorioAtivoDash) : tasks;
+  const filtC = (escritorioAtivoDash && escritorioAtivoDash !== 'todos') ? comunicados.filter(c => c.escritorio === escritorioAtivoDash) : comunicados;
+  const filtA = (escritorioAtivoDash && escritorioAtivoDash !== 'todos') ? admissoes.filter(a => a.escritorio === escritorioAtivoDash) : admissoes;
+  const activas    = filtT.filter(t => t.estado !== 'concluido' && t.estado !== 'cancelado');
   const urgentes   = activas.filter(t => t.prioridade === 'urgente');
   const progresso  = activas.filter(t => t.estado === 'progresso');
-  const concluidas = tasks.filter(t => t.estado === 'concluido');
+  const concluidas = filtT.filter(t => t.estado === 'concluido');
   const pendentes  = activas.filter(t => t.estado === 'pendente');
-  const comAtivos     = comunicados.filter(c => !c.arquivado);
-  const admPendentes  = admissoes.filter(a => a.estado !== 'concluido' && a.estado !== 'cancelado');
+  const comAtivos     = filtC.filter(c => !c.arquivado);
+  const admPendentes  = filtA.filter(a => a.estado !== 'concluido' && a.estado !== 'cancelado');
 
   document.getElementById('kpiRow').innerHTML = `
     <div class="kpi-card k-total">
@@ -566,9 +580,13 @@ const PRIO_ORDER   = { urgente: 0, normal: 1, baixa: 2 };
 
 function renderTasks() {
   const container = document.getElementById('tasksList');
-  const mostrarEscritorio = window.isAdmin() && window.escritorioAtivo() === 'todos';
+  const isAdmin = window.isAdmin();
+  const mostrarEscritorio = isAdmin && (!escritorioAtivoDash || escritorioAtivoDash === 'todos');
+  const filtradas = (escritorioAtivoDash && escritorioAtivoDash !== 'todos')
+    ? tasks.filter(t => t.escritorio === escritorioAtivoDash)
+    : tasks;
 
-  const activas = tasks
+  const activas = filtradas
     .filter(t => t.estado !== 'concluido' && t.estado !== 'cancelado')
     .sort((a, b) => {
       const pd = (PRIO_ORDER[a.prioridade] ?? 1) - (PRIO_ORDER[b.prioridade] ?? 1);
@@ -594,8 +612,8 @@ function renderTasks() {
   `).join('');
 
   // progress bar
-  const total      = tasks.filter(t => t.estado !== 'cancelado').length;
-  const concluidas = tasks.filter(t => t.estado === 'concluido').length;
+  const total      = filtradas.filter(t => t.estado !== 'cancelado').length;
+  const concluidas = filtradas.filter(t => t.estado === 'concluido').length;
   if (total > 0) {
     const pct = Math.round(concluidas / total * 100);
     document.getElementById('progressWrap').style.display = 'block';
@@ -608,8 +626,11 @@ function renderTasks() {
 // ── ADMISSÕES ──
 function renderAdmissoes() {
   const container = document.getElementById('admList');
-  const mostrarEscritorio = window.isAdmin() && window.escritorioAtivo() === 'todos';
-  const recentes = admissoes
+  const mostrarEscritorio = window.isAdmin() && (!escritorioAtivoDash || escritorioAtivoDash === 'todos');
+  const filtradas = (escritorioAtivoDash && escritorioAtivoDash !== 'todos')
+    ? admissoes.filter(a => a.escritorio === escritorioAtivoDash)
+    : admissoes;
+  const recentes = filtradas
     .filter(a => a.estado !== 'concluido' && a.estado !== 'cancelado')
     .slice(0, 8);
 
@@ -634,8 +655,11 @@ const TIPO_LABEL = { geral: 'Geral', urgente: 'Urgente', info: 'Info', aviso: 'A
 
 function renderComunicados() {
   const container = document.getElementById('comList');
-  const mostrarEscritorio = window.isAdmin() && window.escritorioAtivo() === 'todos';
-  const recentes = comunicados.filter(c => !c.arquivado).slice(0, 6);
+  const mostrarEscritorio = window.isAdmin() && (!escritorioAtivoDash || escritorioAtivoDash === 'todos');
+  const filtradas = (escritorioAtivoDash && escritorioAtivoDash !== 'todos')
+    ? comunicados.filter(c => c.escritorio === escritorioAtivoDash)
+    : comunicados;
+  const recentes = filtradas.filter(c => !c.arquivado).slice(0, 6);
 
   if (!recentes.length) {
     container.innerHTML = '<div class="empty-mini">Sem comunicados activos.</div>';
@@ -714,11 +738,13 @@ function renderEvents() {
 // ── ACTIVITY ──
 function renderActivity() {
   const container = document.getElementById('activityList');
-  const mostrarEscritorio = window.isAdmin() && window.escritorioAtivo() === 'todos';
+  const mostrarEscritorio = window.isAdmin() && (!escritorioAtivoDash || escritorioAtivoDash === 'todos');
+  const filtT = (escritorioAtivoDash && escritorioAtivoDash !== 'todos') ? tasks.filter(t => t.escritorio === escritorioAtivoDash) : tasks;
+  const filtC = (escritorioAtivoDash && escritorioAtivoDash !== 'todos') ? comunicados.filter(c => c.escritorio === escritorioAtivoDash) : comunicados;
 
   const items = [
-    ...tasks.map(t => ({ type: 'task', ts: t.criadaEm || 0, label: t.titulo, sub: t.solicitante, estado: t.estado, escritorio: t.escritorio })),
-    ...comunicados.map(c => ({ type: 'com', ts: c.criadoEm || 0, label: c.titulo, sub: c.autor, tipo: c.tipo, escritorio: c.escritorio }))
+    ...filtT.map(t => ({ type: 'task', ts: t.criadaEm || 0, label: t.titulo, sub: t.solicitante, estado: t.estado, escritorio: t.escritorio })),
+    ...filtC.map(c => ({ type: 'com', ts: c.criadoEm || 0, label: c.titulo, sub: c.autor, tipo: c.tipo, escritorio: c.escritorio }))
   ].sort((a, b) => b.ts - a.ts).slice(0, 8);
 
   if (!items.length) {
