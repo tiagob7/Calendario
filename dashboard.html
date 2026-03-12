@@ -165,11 +165,8 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 @media(max-width:640px){.com-grid{grid-template-columns:1fr;}}
 
 /* admissões rows */
-.adm-row{display:grid;grid-template-columns:10px 1fr 88px 72px;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:11px;cursor:default;}
+.adm-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:11px;cursor:default;}
 .adm-row:last-child{border-bottom:none;}
-.adm-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.adm-meta{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right;}
-.adm-tipo-tag{justify-self:end;}
 
 /* TOOLTIPS (tarefa + admissão) */
 #admTooltip,#taskTooltip{
