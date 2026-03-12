@@ -442,7 +442,15 @@ function startSync(escritorio) {
       tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       loadedFlags.tasks = true;
       checkAllLoaded();
-    }, err => { console.error('tasks:', err); setStatus('Erro', '#dc2626'); });
+    }, err => {
+      console.error('tasks:', err);
+      // Fallback sem orderBy (evita bloqueio se o índice falhar)
+      db.collection('tarefas_todo').get().then(snap => {
+        tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        loadedFlags.tasks = true;
+        checkAllLoaded();
+      }).catch(() => { loadedFlags.tasks = true; checkAllLoaded(); });
+    });
   unsubFns.push(unsubTarefas);
 
   // ── Comunicados ──

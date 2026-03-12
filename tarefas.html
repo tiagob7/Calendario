@@ -291,15 +291,23 @@ document.addEventListener('authReady', ({ detail }) => {
 
   // carregar tudo (filtro é feito no cliente para permitir ver outros escritórios)
   col = db.collection('tarefas_todo');
-  let query = col.orderBy('ordemChegada', 'asc');
 
   setStatus('A ligar…', '#f59e0b');
-  query.onSnapshot(snap => {
+  col.orderBy('ordemChegada', 'asc').onSnapshot(snap => {
     tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     render();
     setStatus('✓ Sincronizado', '#16a34a');
     setTimeout(() => setStatus(''), 3000);
-  }, err => { console.error(err); setStatus('Erro', '#dc2626'); });
+  }, err => {
+    console.error('tarefas (orderBy):', err);
+    // Fallback sem orderBy — evita página em branco se o índice falhar
+    col.onSnapshot(snap => {
+      tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      render();
+      setStatus('✓ Sincronizado', '#16a34a');
+      setTimeout(() => setStatus(''), 3000);
+    }, err2 => { console.error('tarefas fallback:', err2); setStatus('Erro de ligação', '#dc2626'); });
+  });
 });
 
 function setStatus(msg, color) {
