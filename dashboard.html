@@ -81,7 +81,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .panel-link:hover{opacity:1;}
 
 /* TAREFAS */
-.task-row{display:grid;grid-template-columns:10px 1fr 88px 80px;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:11px;cursor:default;}
+.task-row{display:grid;grid-template-columns:10px 1fr 88px 100px;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:11px;cursor:default;}
 .task-row:last-child{border-bottom:none;}
 .task-prio-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 .task-prio-dot.urgente{background:var(--red);}
@@ -89,7 +89,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .task-prio-dot.baixa{background:var(--green);}
 .task-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .task-person{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right;}
-.estado-pill{font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:2px 7px;border-radius:10px;font-weight:500;flex-shrink:0;justify-self:end;}
+.estado-pill{font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:2px 7px;border-radius:10px;font-weight:500;flex-shrink:0;justify-self:end;white-space:nowrap;}
 .estado-pill.aguardar{background:var(--bg);color:var(--muted);border:1px solid var(--border);}
 .estado-pill.progresso{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);}
 .estado-pill.concluido{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
