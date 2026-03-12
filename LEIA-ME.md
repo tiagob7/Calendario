@@ -8,18 +8,16 @@ Não cries subpastas — tudo na raiz.
 ```
 Calendario/               ← pasta raiz do teu repositório GitHub
 │
-├── auth.js               ← ⭐ NOVO — módulo de autenticação partilhado
-├── login.html            ← ⭐ NOVO — página de login/registo
+├── auth.js               ← módulo de autenticação partilhado
+├── firebase-init.js      ← configuração partilhada do Firebase
+├── login.html            ← página de login/registo
 │
-├── dashboard.html        ← ✅ ATUALIZADO — filtra por escritório
-├── tarefas.html          ← ✅ ATUALIZADO — filtra por escritório
-├── comunicados.html      ← ✅ ATUALIZADO — filtra por escritório
-├── admissoes.html        ← ✅ ATUALIZADO — filtra por escritório
-│
-├── calendario_albufeira.html   ← por atualizar (fase seguinte)
-├── calendario_lisboa.html      ← por atualizar (fase seguinte)
-├── calendario_porto.html       ← por atualizar (fase seguinte)
-└── calendario_quarteira.html   ← por atualizar (fase seguinte)
+├── dashboard.html        ← painel geral (filtra por escritório)
+├── tarefas.html          ← gestão de tarefas (filtra por escritório)
+├── comunicados.html      ← comunicados internos (filtra por escritório)
+├── admissoes.html        ← admissões e cessações (filtra por escritório)
+├── calendario.html       ← calendário unificado de carga de trabalho
+└── source/               ← ficheiros antigos / de referência
 ```
 
 ---
