@@ -35,21 +35,27 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .edit-toggle-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
 .edit-toggle-btn svg{width:12px;height:12px;flex-shrink:0;}
 
-.days-row{display:grid;grid-template-columns:repeat(30,1fr);gap:2px;margin-bottom:11px;}
-.day-num{text-align:center;font-size:10px;color:var(--muted);padding:1px 0;}
+.days-row{display:grid;grid-template-columns:repeat(var(--num-days,30),1fr);gap:2px;margin-bottom:11px;}
+.day-num{text-align:center;font-size:10px;color:var(--muted);padding:1px 0;display:flex;flex-direction:column;align-items:center;gap:1px;}
+.day-num .wd{font-size:8px;text-transform:uppercase;letter-spacing:.03em;line-height:1;}
+.day-num .dn{font-size:10px;line-height:1;}
+.day-num.weekend .wd,.day-num.weekend .dn{color:#a855f7;}
 
 .track-section{margin-bottom:5px;}
 .track-name{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px;}
-.track{display:grid;grid-template-columns:repeat(30,1fr);gap:2px;height:20px;}
+.track{display:grid;grid-template-columns:repeat(var(--num-days,30),1fr);gap:2px;height:20px;}
 .seg{height:100%;border-radius:3px;cursor:pointer;transition:transform .12s,box-shadow .12s;outline:2px solid transparent;outline-offset:2px;}
 .seg:hover{transform:scaleY(1.5);box-shadow:0 2px 8px rgba(0,0,0,.15);}
 .seg.sel{outline:2px solid var(--accent);transform:scaleY(1.5);}
+.seg.weekend{filter:brightness(.88) saturate(.7);}
+.ev-cell.weekend{background:rgba(139,92,246,.06);border-radius:3px;}
+.day-num.weekend{background:rgba(139,92,246,.06);border-radius:3px;}
 
 .divider{border:none;border-top:1px solid var(--border);margin:18px 0;}
 
 /* TIMELINE EVENTS */
 .ev-title{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:7px;}
-.ev-grid{display:grid;grid-template-columns:repeat(30,1fr);gap:2px;min-height:80px;}
+.ev-grid{display:grid;grid-template-columns:repeat(var(--num-days,30),1fr);gap:2px;min-height:80px;}
 .ev-cell{display:flex;flex-direction:column;align-items:center;position:relative;}
 .ev-dot{width:5px;height:5px;border-radius:50%;margin-bottom:3px;flex-shrink:0;}
 .ev-text{font-size:8px;writing-mode:vertical-rl;transform:rotate(180deg);color:var(--muted);white-space:nowrap;line-height:1.2;max-height:80px;overflow:hidden;}
@@ -233,8 +239,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
         <div class="divider"></div>
         <label class="field-label">Aplicar a intervalo</label>
         <div class="range-row">
-          <div><label class="field-label">De</label><input type="number" class="form-input" id="rFrom" min="1" max="30" value="1"></div>
-          <div><label class="field-label">Até</label><input type="number" class="form-input" id="rTo" min="1" max="30" value="5"></div>
+          <div><label class="field-label">De</label><input type="number" class="form-input" id="rFrom" min="1" max="31" value="1"></div>
+          <div><label class="field-label">Até</label><input type="number" class="form-input" id="rTo" min="1" max="31" value="5"></div>
         </div>
         <button class="btn btn-secondary" onclick="applyRange()">Aplicar intervalo</button>
         <p class="hint">cinza = pouco trabalho · cor intensa = muito trabalho</p>
@@ -249,13 +255,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
           <button class="type-btn" id="typeRange" onclick="setEvType('range')">Intervalo</button>
         </div>
         <div id="evSingleFields">
-          <label class="field-label">Dia (1–30)</label>
-          <input type="number" class="form-input" id="evDay" min="1" max="30" placeholder="ex: 10" style="margin-bottom:10px;">
+          <label class="field-label">Dia (1–31)</label>
+          <input type="number" class="form-input" id="evDay" min="1" max="31" placeholder="ex: 10" style="margin-bottom:10px;">
         </div>
         <div id="evRangeFields" style="display:none;">
           <div class="range-row" style="margin-bottom:10px;">
-            <div><label class="field-label">De</label><input type="number" class="form-input" id="evFrom" min="1" max="30" placeholder="1"></div>
-            <div><label class="field-label">Até</label><input type="number" class="form-input" id="evTo" min="1" max="30" placeholder="5"></div>
+            <div><label class="field-label">De</label><input type="number" class="form-input" id="evFrom" min="1" max="31" placeholder="1"></div>
+            <div><label class="field-label">Até</label><input type="number" class="form-input" id="evTo" min="1" max="31" placeholder="5"></div>
           </div>
         </div>
         <label class="field-label">Departamento</label>
@@ -290,11 +296,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       <button class="type-btn active" id="editTypeSingle" onclick="setEditEvType('single')">Dia único</button>
       <button class="type-btn" id="editTypeRange" onclick="setEditEvType('range')">Intervalo</button>
     </div>
-    <div id="editSingleFields"><label class="field-label">Dia (1–30)</label><input type="number" class="form-input" id="editDay" min="1" max="30" style="margin-bottom:10px;"></div>
+    <div id="editSingleFields"><label class="field-label">Dia (1–31)</label><input type="number" class="form-input" id="editDay" min="1" max="31" style="margin-bottom:10px;"></div>
     <div id="editRangeFields" style="display:none;">
       <div class="range-row" style="margin-bottom:10px;">
-        <div><label class="field-label">De</label><input type="number" class="form-input" id="editFrom" min="1" max="30"></div>
-        <div><label class="field-label">Até</label><input type="number" class="form-input" id="editTo" min="1" max="30"></div>
+        <div><label class="field-label">De</label><input type="number" class="form-input" id="editFrom" min="1" max="31"></div>
+        <div><label class="field-label">Até</label><input type="number" class="form-input" id="editTo" min="1" max="31"></div>
       </div>
     </div>
     <label class="field-label">Departamento</label>
@@ -337,6 +343,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <script src="firebase-init.js"></script>
 <script src="auth.js"></script>
 <script>
+// ── Número de dias do mês ativo ──
+function numDias() { return new Date(_calAno, _calMes, 0).getDate(); }
+function diaSemana(d) { return new Date(_calAno, _calMes - 1, d).getDay(); } // 0=Dom,6=Sab
+function isWeekend(d) { const wd = diaSemana(d); return wd === 0 || wd === 6; }
+const WD_LABELS = ["D","S","T","Q","Q","S","S"];
+function atualizarCssNumDias() { document.documentElement.style.setProperty("--num-days", numDias()); }
+
 // ═══════════════════════════════════════════════
 // DATA
 // ═══════════════════════════════════════════════
@@ -392,6 +405,7 @@ function segColor(dept, val) {
 // RENDER
 // ═══════════════════════════════════════════════
 function render() {
+  atualizarCssNumDias();
   buildLegend();
   buildDaysRow();
   buildTracks();
@@ -434,10 +448,11 @@ function buildLegend() {
 function buildDaysRow() {
   const dr = document.getElementById('daysRow');
   dr.innerHTML = '';
-  for (let d=1;d<=30;d++) {
+  for (let d=1;d<=numDias();d++) {
+    const weekend = isWeekend(d);
     const el = document.createElement('div');
-    el.className = 'day-num';
-    el.textContent = d;
+    el.className = 'day-num' + (weekend ? ' weekend' : '');
+    el.innerHTML = '<span class="wd">' + WD_LABELS[diaSemana(d)] + '</span><span class="dn">' + d + '</span>';
     dr.appendChild(el);
   }
 }
@@ -453,10 +468,11 @@ function buildTracks() {
     nameEl.textContent = dept.name;
     const track = document.createElement('div');
     track.className = 'track';
-    for (let d=1;d<=30;d++) {
+    for (let d=1;d<=numDias();d++) {
       const seg = document.createElement('div');
       const val = dept.data[d-1];
-      seg.className = 'seg' + (selDay===d && selDeptId===dept.id ? ' sel' : '');
+      const wknd = isWeekend(d);
+      seg.className = 'seg' + (wknd ? ' weekend' : '') + (selDay===d && selDeptId===dept.id ? ' sel' : '');
       seg.style.background = segColor(dept, val);
       seg.addEventListener('click', e => {
         e.stopPropagation();
@@ -490,9 +506,9 @@ function buildEvGrid() {
   const grid = document.getElementById('evGrid');
   grid.innerHTML = '';
   const pinned = events.filter(ev => ev.pinned);
-  for (let d=1;d<=30;d++) {
+  for (let d=1;d<=numDias();d++) {
     const cell = document.createElement('div');
-    cell.className = 'ev-cell';
+    cell.className = 'ev-cell' + (isWeekend(d) ? ' weekend' : '');
     pinned.filter(ev => ev.dayFrom===d && ev.dayTo===d).forEach(ev => {
       const dept = getDept(ev.deptId);
       const dot = document.createElement('div');
@@ -572,7 +588,7 @@ function buildDeptSelList() {
 function buildDayMiniGrid() {
   const g = document.getElementById('dayMiniGrid');
   g.innerHTML = '';
-  for (let d=1;d<=30;d++) {
+  for (let d=1;d<=numDias();d++) {
     const b = document.createElement('button');
     b.className = 'dmb'+(d===selDay?' active':'');
     b.textContent = d;
@@ -740,7 +756,7 @@ function applyRange() {
   const from = parseInt(document.getElementById('rFrom').value);
   const to   = parseInt(document.getElementById('rTo').value);
   const v    = parseInt(document.getElementById('slider').value);
-  if (isNaN(from)||isNaN(to)||from<1||to>30||from>to) { alert('Intervalo inválido.'); return; }
+  if (isNaN(from)||isNaN(to)||from<1||to>numDias()||from>to) { alert('Intervalo inválido.'); return; }
   const dept = getDept(selDeptId);
   if (dept) { for(let d=from;d<=to;d++) dept.data[d-1]=v; render(); }
 }
@@ -767,11 +783,11 @@ function addEvent() {
   let dayFrom, dayTo;
   if (evType==='single') {
     dayFrom = dayTo = parseInt(document.getElementById('evDay').value);
-    if (!dayFrom||dayFrom<1||dayFrom>30) { alert('Dia inválido.'); return; }
+    if (!dayFrom||dayFrom<1||dayFrom>numDias()) { alert('Dia inválido.'); return; }
   } else {
     dayFrom = parseInt(document.getElementById('evFrom').value);
     dayTo   = parseInt(document.getElementById('evTo').value);
-    if (isNaN(dayFrom)||isNaN(dayTo)||dayFrom<1||dayTo>30||dayFrom>dayTo) { alert('Intervalo inválido.'); return; }
+    if (isNaN(dayFrom)||isNaN(dayTo)||dayFrom<1||dayTo>numDias()||dayFrom>dayTo) { alert('Intervalo inválido.'); return; }
   }
   if (!label) { alert('Preencha a descrição.'); return; }
   events.push({dayFrom, dayTo, label, deptId, pinned:newPin});
@@ -824,11 +840,11 @@ function saveEditEvent() {
   let dayFrom, dayTo;
   if (editEvType==='single') {
     dayFrom = dayTo = parseInt(document.getElementById('editDay').value);
-    if (!dayFrom||dayFrom<1||dayFrom>30) { alert('Dia inválido.'); return; }
+    if (!dayFrom||dayFrom<1||dayFrom>numDias()) { alert('Dia inválido.'); return; }
   } else {
     dayFrom = parseInt(document.getElementById('editFrom').value);
     dayTo   = parseInt(document.getElementById('editTo').value);
-    if (isNaN(dayFrom)||isNaN(dayTo)||dayFrom<1||dayTo>30||dayFrom>dayTo) { alert('Intervalo inválido.'); return; }
+    if (isNaN(dayFrom)||isNaN(dayTo)||dayFrom<1||dayTo>numDias()||dayFrom>dayTo) { alert('Intervalo inválido.'); return; }
   }
   events[editEvIdx] = {dayFrom, dayTo, label, deptId, pinned:editEvPin};
   closeModal('editModal');
@@ -896,7 +912,7 @@ function saveDept() {
       id: genId(),
       name,
       colors: [...editDeptColors],
-      data: Array(30).fill(0)
+      data: Array(31).fill(0)
     });
   } else {
     departments[editDeptIdx].name   = name;
@@ -994,7 +1010,9 @@ function startRealtimeSync() {
     if (!snap.exists) { saveToFirebase(); return; }
     const data = snap.data();
     if (!isSaving) {
-      if (data.departments && data.departments.length) departments = data.departments;
+      if (data.departments && data.departments.length) {
+        departments = data.departments.map(d => ({ ...d, data: d.data.length < 31 ? [...d.data, ...Array(31 - d.data.length).fill(0)] : d.data }));
+      }
       if (data.events) events = data.events;
       if (!departments.find(d => d.id === selDeptId)) selDeptId = departments[0]?.id || '';
       render();
@@ -1154,6 +1172,7 @@ function loadCalendario(escritorio) {
   CALENDAR_ID = calDocId(escritorio, _calAno, _calMes);
   docRef = db.collection('calendarios').doc(CALENDAR_ID);
 
+  atualizarCssNumDias();
   startRealtimeSync();
 }
 
