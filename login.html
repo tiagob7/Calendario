@@ -378,21 +378,15 @@ body::before{
         <label class="field-label">Email</label>
         <input class="field-input" type="email" id="regEmail" placeholder="nome@empresa.pt" autocomplete="email"/>
       </div>
-      <div class="field-grid">
-        <div class="field">
-          <label class="field-label">Escritório</label>
-          <select class="field-select" id="regEscritorio">
-            <option value="">Selecionar…</option>
-            <option value="lisboa">Lisboa</option>
-            <option value="porto">Porto</option>
-            <option value="albufeira">Albufeira</option>
-            <option value="quarteira">Quarteira</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="field-label">Função</label>
-          <input class="field-input" type="text" id="regFuncao" placeholder="Ex: Gestor RH"/>
-        </div>
+      <div class="field">
+        <label class="field-label">Escritório</label>
+        <select class="field-select" id="regEscritorio">
+          <option value="">Selecionar…</option>
+          <option value="lisboa">Lisboa</option>
+          <option value="porto">Porto</option>
+          <option value="albufeira">Albufeira</option>
+          <option value="quarteira">Quarteira</option>
+        </select>
       </div>
       <div class="field">
         <label class="field-label">Password</label>
@@ -484,7 +478,6 @@ async function doRegister() {
   const apelido   = document.getElementById('regApelido').value.trim();
   const email     = document.getElementById('regEmail').value.trim();
   const escritorio= document.getElementById('regEscritorio').value;
-  const funcao    = document.getElementById('regFuncao').value.trim();
   const password  = document.getElementById('regPassword').value;
 
   if (!nome || !email || !escritorio || !password) {
@@ -511,7 +504,7 @@ async function doRegister() {
       nomeCompleto: nome + ' ' + apelido,
       email,
       escritorio,
-      funcao: funcao || '',
+      funcao: '',
       role: 'colaborador',       // por defeito — Admin pode alterar depois
       ativo: true,
       criadoEm: Date.now(),

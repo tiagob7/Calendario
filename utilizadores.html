@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestão de Utilizadores</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@600;700;800&display=swap');
+
+::root {
+  --bg:#f4f4f6; --surface:#fff; --surface2:#f7f7f9; --border:#e2e2e8;
+  --text:#1a1a22; --muted:#8888a0; --accent:#2563eb;
+  --red:#dc2626; --green:#16a34a;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;}
+.page{max-width:980px;margin:0 auto;padding:32px 20px;}
+h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,28px);letter-spacing:-.03em;margin-bottom:4px;}
+.subtitle{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px;}
+.header-top{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;flex-wrap:wrap;}
+.header-top h1{margin-bottom:0;}
+#syncStatus{font-size:10px;color:var(--muted);letter-spacing:.05em;margin-left:auto;}
+
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.badge-me{font-size:10px;color:var(--muted);}
+.legend{display:flex;gap:8px;font-size:10px;color:var(--muted);flex-wrap:wrap;}
+.legend span{display:flex;align-items:center;gap:4px;}
+.dot{width:8px;height:8px;border-radius:50%;}
+.dot-admin{background:#1d4ed8;}
+.dot-colab{background:#9ca3af;}
+
+.filter-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.filter-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;}
+.filter-select{padding:5px 8px;border:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;font-size:10px;border-radius:20px;color:var(--muted);outline:none;cursor:pointer;}
+.count-badge{margin-left:auto;font-size:10px;color:var(--muted);white-space:nowrap;}
+
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.06);overflow:hidden;}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+thead{background:var(--surface2);}
+th,td{padding:9px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:middle;}
+th{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
+tbody tr:nth-child(even){background:#fafafa;}
+tbody tr.me-row{background:#eff6ff;}
+tbody tr.me-row td{border-bottom-color:#bfdbfe;}
+.name-cell{font-family:'Manrope',sans-serif;font-weight:600;font-size:12px;}
+.email-cell{font-size:10px;color:var(--muted);}
+.chip-role{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:9px;text-transform:uppercase;letter-spacing:.07em;border:1px solid transparent;}
+.chip-admin{background:#eff6ff;color:#2563eb;border-color:#bfdbfe;}
+.chip-colab{background:#f4f4f6;color:#6b7280;border-color:#e5e7eb;}
+.chip-ativo{background:#ecfdf3;color:#166534;border:1px solid #bbf7d0;font-size:9px;padding:2px 6px;border-radius:999px;}
+.chip-inativo{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;font-size:9px;padding:2px 6px;border-radius:999px;}
+
+.small{font-size:9px;color:#9ca3af;}
+.select-small{padding:4px 6px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;font-size:10px;outline:none;cursor:pointer;}
+.toggle{position:relative;width:30px;height:16px;border-radius:999px;background:#e5e7eb;cursor:pointer;transition:background .15s;}
+.toggle-thumb{position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:1px;left:1px;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .15s;}
+.toggle.on{background:#16a34a;}
+.toggle.on .toggle-thumb{left:15px;}
+
+.empty{padding:32px 16px;text-align:center;font-size:11px;color:var(--muted);}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;font-size:11px;padding:10px 20px;border-radius:20px;opacity:0;transition:all .25s;pointer-events:none;z-index:600;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="header-top">
+    <h1>Gestão de Utilizadores</h1>
+    <span id="syncStatus"></span>
+  </div>
+  <p class="subtitle">Apenas administradores podem aceder a esta área</p>
+
+  <div class="toolbar">
+    <span class="badge-me" id="meInfo"></span>
+    <div class="legend">
+      <span><span class="dot dot-admin"></span>Admin</span>
+      <span><span class="dot dot-colab"></span>Colaborador</span>
+    </div>
+  </div>
+
+  <div class="filter-row">
+    <span class="filter-label">Filtrar:</span>
+    <select class="filter-select" id="roleFilter" onchange="setRoleFilter(this.value)">
+      <option value="">Todos os perfis</option>
+      <option value="admin">Só admins</option>
+      <option value="colaborador">Só colaboradores</option>
+    </select>
+    <select class="filter-select" id="escritorioFilter" onchange="setEscritorioFilter(this.value)">
+      <option value="">Todos os escritórios</option>
+      <option value="quarteira">Quarteira</option>
+      <option value="albufeira">Albufeira</option>
+      <option value="lisboa">Lisboa</option>
+      <option value="porto">Porto</option>
+    </select>
+    <span class="count-badge" id="countBadge"></span>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Utilizador</th>
+          <th>Escritório</th>
+          <th>Perfil</th>
+          <th>Estado</th>
+          <th>Último acesso</th>
+        </tr>
+      </thead>
+      <tbody id="usersTbody">
+        <tr><td colspan="5" class="empty">A carregar utilizadores…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-init.js"></script>
+<script src="auth.js"></script>
+<script>
+const db = firebase.firestore();
+
+let users = [];
+let roleFilter = '';
+let escritorioFilter = '';
+
+function setStatus(msg, color) {
+  const el = document.getElementById('syncStatus');
+  if (el) { el.textContent = msg; el.style.color = color || 'var(--muted)'; }
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDateShort(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return d.toLocaleDateString('pt-PT',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+function setRoleFilter(v) {
+  roleFilter = v || '';
+  renderUsers();
+}
+
+function setEscritorioFilter(v) {
+  escritorioFilter = v || '';
+  renderUsers();
+}
+
+function filteredUsers() {
+  let list = users;
+  if (roleFilter)       list = list.filter(u => u.role === roleFilter);
+  if (escritorioFilter) list = list.filter(u => u.escritorio === escritorioFilter);
+  return list;
+}
+
+async function updateUser(uid, patch) {
+  try {
+    await db.collection('utilizadores').doc(uid).update(patch);
+    toast('Alterações guardadas.');
+  } catch (e) {
+    console.error(e);
+    toast('Erro ao guardar alterações.');
+  }
+}
+
+function renderUsers() {
+  const tbody = document.getElementById('usersTbody');
+  const meUid = window.currentUser ? window.currentUser.uid : null;
+  const list = filteredUsers().sort((a,b) => {
+    const na = (a.nomeCompleto || a.nome || a.email || '').toLowerCase();
+    const nb = (b.nomeCompleto || b.nome || b.email || '').toLowerCase();
+    return na.localeCompare(nb,'pt-PT');
+  });
+
+  document.getElementById('countBadge').textContent =
+    list.length + ' utilizador' + (list.length !== 1 ? 'es' : '');
+
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhum utilizador encontrado.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  list.forEach(u => {
+    const tr = document.createElement('tr');
+    if (u.uid === meUid) tr.classList.add('me-row');
+
+    const nome = u.nomeCompleto || u.nome || '';
+    const email = u.email || '';
+    const escritorio = u.escritorio || '';
+    const role = u.role || 'colaborador';
+    const ativo = u.ativo !== false;
+
+    tr.innerHTML = `
+      <td>
+        <div class="name-cell">${escHtml(nome || email)}</div>
+        <div class="email-cell">${escHtml(email)}</div>
+      </td>
+      <td>
+        <select class="select-small" onchange="updateUser('${u.uid}', { escritorio: this.value })">
+          <option value="">—</option>
+          <option value="quarteira" ${escritorio==='quarteira'?'selected':''}>Quarteira</option>
+          <option value="albufeira" ${escritorio==='albufeira'?'selected':''}>Albufeira</option>
+          <option value="lisboa"    ${escritorio==='lisboa'?'selected':''}>Lisboa</option>
+          <option value="porto"     ${escritorio==='porto'?'selected':''}>Porto</option>
+        </select>
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="chip-role ${role==='admin'?'chip-admin':'chip-colab'}">
+            ${role==='admin'?'Admin':'Colaborador'}
+          </span>
+          <select class="select-small" onchange="updateUser('${u.uid}', { role: this.value })">
+            <option value="colaborador" ${role==='colaborador'?'selected':''}>Colaborador</option>
+            <option value="admin"       ${role==='admin'?'selected':''}>Admin</option>
+          </select>
+        </div>
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="toggle ${ativo?'on':''}" onclick="const on=!${ativo};updateUser('${u.uid}', { ativo: !${ativo} })">
+            <div class="toggle-thumb"></div>
+          </div>
+          <span class="${ativo?'chip-ativo':'chip-inativo'}">${ativo?'Ativo':'Inativo'}</span>
+        </div>
+      </td>
+      <td>
+        <div>${fmtDateShort(u.ultimoAcesso)}</div>
+      </td>
+    `;
+
+    // corrigir toggle para pegar estado atual ao clicar
+    const toggle = tr.querySelector('.toggle');
+    toggle.onclick = () => {
+      const nowOn = toggle.classList.contains('on');
+      const novo = !nowOn;
+      toggle.classList.toggle('on', novo);
+      updateUser(u.uid, { ativo: novo });
+    };
+
+    tbody.appendChild(tr);
+  });
+}
+
+document.addEventListener('authReady', ({ detail }) => {
+  // proteger rota — só admin
+  if (!window.isAdmin || !window.isAdmin()) {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  window.renderNavbar('dashboard');
+
+  const profile = detail.profile;
+  const me = profile ? (profile.nomeCompleto || profile.nome || profile.email || '') : '';
+  const meInfo = document.getElementById('meInfo');
+  if (meInfo) meInfo.textContent = 'Sessão iniciada como Admin: ' + me;
+
+  setStatus('A ligar…', '#f59e0b');
+
+  db.collection('utilizadores').onSnapshot(snap => {
+    users = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+    renderUsers();
+    setStatus('✓ Sincronizado', '#16a34a');
+    setTimeout(() => setStatus(''), 3000);
+  }, err => {
+    console.error(err);
+    setStatus('Erro ao carregar', '#dc2626');
+  });
+});
+</script>
+</body>
+</html>
+
