@@ -150,6 +150,27 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .progress-bar-bg{background:var(--border);border-radius:4px;height:6px;overflow:hidden;}
 .progress-bar-fill{height:100%;border-radius:4px;background:var(--accent);transition:width .4s;}
 
+
+/* KPI admissões */
+.kpi-card.k-adm::before{background:#7c3aed;}
+.kpi-card.k-adm .kpi-val{color:#7c3aed;}
+
+/* comunicados full-width em 2 colunas */
+.com-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 20px;}
+@media(max-width:640px){.com-grid{grid-template-columns:1fr;}}
+
+/* admissões rows */
+.adm-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:11px;}
+.adm-row:last-child{border-bottom:none;}
+.adm-tipo-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.adm-tipo-dot.admissao{background:var(--green);}
+.adm-tipo-dot.cessacao{background:var(--amber);}
+.adm-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.adm-meta{font-size:10px;color:var(--muted);white-space:nowrap;}
+.adm-tipo-tag{font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:2px 7px;border-radius:10px;font-weight:500;flex-shrink:0;}
+.adm-tipo-tag.admissao{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.adm-tipo-tag.cessacao{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
+
 /* EMPTY / LOADING */
 .empty-mini{text-align:center;padding:20px;color:var(--muted);font-size:11px;}
 @keyframes pulse{0%,100%{opacity:.4;}50%{opacity:1;}}
@@ -220,13 +241,22 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       </div>
     </div>
 
-    <!-- COMUNICADOS RECENTES -->
+    <!-- ADMISSÕES RECENTES -->
     <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">👤 Processos de admissão</span>
+        <a class="panel-link" href="admissoes.html">Ver todos →</a>
+      </div>
+      <div id="admList"><div class="loading">A carregar…</div></div>
+    </div>
+
+    <!-- COMUNICADOS RECENTES — full width -->
+    <div class="panel full">
       <div class="panel-header">
         <span class="panel-title">📢 Comunicados recentes</span>
         <a class="panel-link" href="comunicados.html">Ver todos →</a>
       </div>
-      <div id="comList"><div class="loading">A carregar…</div></div>
+      <div id="comList" class="com-grid"><div class="loading">A carregar…</div></div>
     </div>
 
     <!-- CALENDÁRIO MINI -->
@@ -283,8 +313,9 @@ const db = firebase.firestore();
 // ── STATE ──
 let tasks       = [];
 let comunicados = [];
+let admissoes   = [];
 let calData     = null;
-let loadedFlags = { tasks: false, com: false, cal: false };
+let loadedFlags = { tasks: false, com: false, cal: false, adm: false };
 let unsubFns    = []; // para cancelar listeners ao mudar filtro
 
 // ── AGUARDAR AUTH ──
@@ -350,6 +381,17 @@ function startSync(escritorio) {
   }, err => { console.error('com:', err); });
   unsubFns.push(unsubCom);
 
+  // ── Admissões ──
+  const qAdm = filtrarPorEscritorio(
+    db.collection('admissoes').orderBy('criadoEm', 'desc')
+  );
+  const unsubAdm = qAdm.onSnapshot(snap => {
+    admissoes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    loadedFlags.adm = true;
+    checkAllLoaded();
+  }, err => { console.error('adm:', err); loadedFlags.adm = true; checkAllLoaded(); });
+  unsubFns.push(unsubAdm);
+
   // ── Calendário ──
   // Usa o doc do escritório ativo; admin com "todos" usa o primeiro escritório disponível
   const calDocId = (escritorio && escritorio !== 'todos')
@@ -366,7 +408,7 @@ function startSync(escritorio) {
 
 // ── CHECK LOADED ──
 function checkAllLoaded() {
-  if (!loadedFlags.tasks || !loadedFlags.com || !loadedFlags.cal) return;
+  if (!loadedFlags.tasks || !loadedFlags.com || !loadedFlags.cal || !loadedFlags.adm) return;
   renderAll();
   setStatus('✓ Sincronizado', '#16a34a');
   setTimeout(() => setStatus(''), 3000);
@@ -388,6 +430,7 @@ function renderAll() {
   renderComunicados();
   renderCalMini();
   renderEvents();
+  renderAdmissoes();
   renderActivity();
 }
 
@@ -412,7 +455,8 @@ function renderKPIs() {
   const progresso  = activas.filter(t => t.estado === 'progresso');
   const concluidas = tasks.filter(t => t.estado === 'concluido');
   const pendentes  = activas.filter(t => t.estado === 'pendente');
-  const comAtivos  = comunicados.filter(c => !c.arquivado);
+  const comAtivos     = comunicados.filter(c => !c.arquivado);
+  const admPendentes  = admissoes.filter(a => a.estado !== 'concluido' && a.estado !== 'cancelado');
 
   document.getElementById('kpiRow').innerHTML = `
     <div class="kpi-card k-total">
@@ -444,6 +488,11 @@ function renderKPIs() {
       <div class="kpi-val">${comAtivos.length}</div>
       <div class="kpi-lbl">Comunicados</div>
       <div class="kpi-sub">activos</div>
+    </div>
+    <div class="kpi-card k-adm">
+      <div class="kpi-val">${admPendentes.length}</div>
+      <div class="kpi-lbl">Admissões</div>
+      <div class="kpi-sub">em processamento</div>
     </div>
   `;
 }
@@ -490,6 +539,31 @@ function renderTasks() {
     document.getElementById('progressPct').textContent = pct + '%';
     document.getElementById('progressBar').style.width  = pct + '%';
   }
+}
+
+
+// ── ADMISSÕES ──
+function renderAdmissoes() {
+  const container = document.getElementById('admList');
+  const mostrarEscritorio = window.isAdmin() && window.escritorioAtivo() === 'todos';
+  const recentes = admissoes
+    .filter(a => a.estado !== 'concluido' && a.estado !== 'cancelado')
+    .slice(0, 8);
+
+  if (!recentes.length) {
+    container.innerHTML = '<div class="empty-mini">Sem processos em curso.</div>';
+    return;
+  }
+
+  container.innerHTML = recentes.map(a => `
+    <div class="adm-row">
+      <div class="adm-tipo-dot ${a.tipo || 'admissao'}"></div>
+      <div class="adm-name">${escHtml(a.nome || '—')}</div>
+      <div class="adm-meta">${escHtml(a.submetidoPor || a.empresa || '')}</div>
+      ${mostrarEscritorio && a.escritorio ? `<span class="escritorio-tag">${escHtml(a.escritorio)}</span>` : ''}
+      <span class="adm-tipo-tag ${a.tipo || 'admissao'}">${a.tipo === 'cessacao' ? 'Cessação' : 'Admissão'}</span>
+    </div>
+  `).join('');
 }
 
 // ── COMUNICADOS ──
