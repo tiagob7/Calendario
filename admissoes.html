@@ -744,7 +744,7 @@ function renderList() {
         <div class="card-num ${proc.prioridade}">#${idx+1}</div>
         <div class="card-info">
           <div class="card-nome${isDone?' done':''}">${escHtml(proc.nome)}</div>
-          <div class="card-empresa">${escHtml(proc.empresa)}</div>
+          <div class="card-empresa">${escHtml(proc.empresa||'—')}${proc.categoria ? ' <span style="color:var(--border);margin:0 2px">·</span> <span style="color:var(--muted)">' + escHtml(proc.categoria) + '</span>' : ''}</div>
         </div>
         <div class="card-date">${fmtDate(dataKey)}</div>
         <span class="tipo-badge ${proc.tipo}">${TIPO_LABEL[proc.tipo]||proc.tipo}</span>
