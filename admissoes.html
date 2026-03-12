@@ -96,6 +96,11 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 
 .divider{border:none;border-top:1px solid var(--border);margin:18px 0;}
 
+.user-info-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;}
+.user-info-avatar{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;font-family:'Manrope',sans-serif;}
+.user-info-name{font-size:11px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.user-info-role{font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:2px 7px;border-radius:8px;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);white-space:nowrap;}
+.user-info-role.colab{background:var(--gray-bg);color:var(--muted);border-color:var(--gray-border);}
 .btn{border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;text-transform:uppercase;letter-spacing:.09em;transition:all .15s;padding:10px 18px;}
 .btn:hover{opacity:.82;}
 .btn-primary{background:var(--text);color:#fff;}
@@ -262,32 +267,44 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       </div>
     </div>
 
-    <!-- DADOS GERAIS -->
-    <div class="section-label">Dados do colaborador</div>
+    <!-- SUBMETIDO POR (automático) + ESCRITÓRIO DESTINO -->
+    <div class="section-label">Submetido por</div>
     <div class="form-grid">
       <div>
-        <label class="field-label">Quem submeteu <span class="req">*</span></label>
-        <input type="text" class="form-input" id="fSubmissao" placeholder="ex: Ana Silva" maxlength="60" autocomplete="off">
+        <label class="field-label">Utilizador</label>
+        <div class="user-info-row">
+          <div class="user-info-avatar" id="userAvatar">?</div>
+          <span class="user-info-name" id="userName">A carregar…</span>
+          <span class="user-info-role colab" id="userRole">—</span>
+        </div>
       </div>
+      <div>
+        <label class="field-label">Escritório que trata</label>
+        <select class="form-select" id="fEscritorioAdm">
+          <option value="quarteira">Quarteira</option>
+          <option value="albufeira">Albufeira</option>
+          <option value="lisboa">Lisboa</option>
+          <option value="porto">Porto</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- DADOS DO COLABORADOR -->
+    <div class="section-label">Dados do colaborador</div>
+    <div class="form-grid">
       <div>
         <label class="field-label">Nº Colaborador</label>
         <input type="text" class="form-input" id="fNumero" placeholder="ex: 00142" maxlength="20" autocomplete="off">
       </div>
       <div>
-        <label class="field-label">Nome completo <span class="req">*</span></label>
-        <input type="text" class="form-input" id="fNome" placeholder="ex: João Ferreira" maxlength="100" autocomplete="off">
-      </div>
-      <div>
         <label class="field-label">NIF</label>
         <input type="text" class="form-input" id="fNif" placeholder="ex: 123456789" maxlength="20" autocomplete="off">
       </div>
-      <div>
-        <label class="field-label">Empresa Utilizadora <span class="req">*</span></label>
-        <input type="text" class="form-input" id="fEmpresa" placeholder="ex: Empresa X, Lda" maxlength="100" autocomplete="off">
-      </div>
-      <div>
-        <label class="field-label">Categoria Profissional</label>
-        <input type="text" class="form-input" id="fCategoria" placeholder="ex: Técnico de Contabilidade" maxlength="100" autocomplete="off">
+      <div class="full">
+        <label class="field-label">Nome completo <span class="req">*</span></label>
+        <input type="text" class="form-input" id="fNome" placeholder="ex: João Ferreira" maxlength="100" autocomplete="off">
       </div>
     </div>
 
@@ -295,6 +312,18 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 
     <!-- CAMPOS ADMISSÃO -->
     <div id="blocoCamposAdmissao">
+      <div class="section-label">Empresa e categoria</div>
+      <div class="form-grid">
+        <div>
+          <label class="field-label">Empresa Utilizadora <span class="req">*</span></label>
+          <input type="text" class="form-input" id="fEmpresa" placeholder="ex: Empresa X, Lda" maxlength="100" autocomplete="off">
+        </div>
+        <div>
+          <label class="field-label">Categoria Profissional</label>
+          <input type="text" class="form-input" id="fCategoria" placeholder="ex: Técnico de Contabilidade" maxlength="100" autocomplete="off">
+        </div>
+      </div>
+      <div class="divider"></div>
       <div class="section-label">Condições contratuais</div>
       <div class="form-grid">
         <div class="full">
@@ -347,13 +376,8 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
           <label class="field-label">Motivo da saída</label>
           <select class="form-select" id="fMotivo">
             <option value="">— Seleccionar —</option>
-            <option value="Rescisão por acordo">Rescisão por acordo</option>
+            <option value="Rescisão por iniciativa do trabalhador">Rescisão por iniciativa do trabalhador</option>
             <option value="Caducidade do contrato">Caducidade do contrato</option>
-            <option value="Despedimento colectivo">Despedimento colectivo</option>
-            <option value="Despedimento por justa causa">Despedimento por justa causa</option>
-            <option value="Reforma">Reforma</option>
-            <option value="Demissão voluntária">Demissão voluntária</option>
-            <option value="Outro">Outro</option>
           </select>
         </div>
       </div>
@@ -519,13 +543,18 @@ function selPagamento(p) {
 
 // ── SUBMIT ──
 async function submitProcesso() {
-  const submetidoPor = document.getElementById('fSubmissao').value.trim();
+  const profile     = window.userProfile;
+  const submetidoPor = profile ? (profile.nomeCompleto || profile.nome || profile.email) : '—';
   const nome         = document.getElementById('fNome').value.trim();
-  const empresa      = document.getElementById('fEmpresa').value.trim();
 
-  if (!submetidoPor) { toast('Indica quem submete o pedido!'); return; }
-  if (!nome)         { toast('Preenche o nome do colaborador!'); return; }
-  if (!empresa)      { toast('Preenche a empresa utilizadora!'); return; }
+  if (!nome) { toast('Preenche o nome do colaborador!'); return; }
+
+  // empresa só é obrigatória na admissão
+  let empresa = '';
+  if (selTipoVal === 'admissao') {
+    empresa = document.getElementById('fEmpresa') ? document.getElementById('fEmpresa').value.trim() : '';
+    if (!empresa) { toast('Preenche a empresa utilizadora!'); return; }
+  }
 
   let dataRef = '';
   let prioridade = 'baixa';
@@ -578,7 +607,7 @@ async function submitProcesso() {
 }
 
 function resetForm() {
-  ['fSubmissao','fNumero','fNome','fNif','fEmpresa','fCategoria',
+  ['fNumero','fNome','fNif','fEmpresa','fCategoria',
    'fValorBase','fValorHora','fValorMes','fDataEntrada','fDataSaida'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
@@ -826,15 +855,22 @@ document.addEventListener('authReady', ({ detail }) => {
 
   const profile = detail.profile;
 
-  // preencher submissão com nome do utilizador logado
-  if (profile && profile.nome) {
-    const fSub = document.getElementById('fSubmissao');
-    if (fSub && !fSub.value) fSub.value = profile.nomeCompleto || profile.nome;
+  // preencher info do utilizador no form (automático)
+  if (profile) {
+    const nome = profile.nomeCompleto || profile.nome || profile.email || '?';
+    const avatarEl = document.getElementById('userAvatar');
+    const nameEl   = document.getElementById('userName');
+    const roleEl   = document.getElementById('userRole');
+    if (avatarEl) avatarEl.textContent = nome.charAt(0).toUpperCase();
+    if (nameEl)   nameEl.textContent   = nome;
+    if (roleEl) {
+      roleEl.textContent = isAdmin ? 'Admin' : 'Colaborador';
+      roleEl.className   = 'user-info-role' + (isAdmin ? '' : ' colab');
+    }
+    // escritório destino por defeito = escritório do utilizador
+    const fEsc = document.getElementById('fEscritorioAdm');
+    if (fEsc && profile.escritorio) fEsc.value = profile.escritorio;
   }
-
-  // escritório destino por defeito
-  const fEsc = document.getElementById('fEscritorioAdm');
-  if (fEsc && profile && profile.escritorio) fEsc.value = profile.escritorio;
 
   // Modo gestor automático para admins
   if (isAdmin) {
