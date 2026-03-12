@@ -1007,7 +1007,14 @@ async function saveToFirebase() {
 function startRealtimeSync() {
   setStatus('A ligar…', '#f59e0b');
   const unsubscribe = docRef.onSnapshot((snap) => {
-    if (!snap.exists) { saveToFirebase(); return; }
+    if (!snap.exists) {
+      // Documento novo — resetar para estado limpo (sem copiar dados do mês anterior)
+      departments = departments.map(d => ({ ...d, data: Array(31).fill(0) }));
+      events = [];
+      render();
+      saveToFirebase();
+      return;
+    }
     const data = snap.data();
     if (!isSaving) {
       if (data.departments && data.departments.length) {
@@ -1172,7 +1179,13 @@ function loadCalendario(escritorio) {
   CALENDAR_ID = calDocId(escritorio, _calAno, _calMes);
   docRef = db.collection('calendarios').doc(CALENDAR_ID);
 
+  // Limpar estado imediatamente para não mostrar dados do mês anterior enquanto carrega
+  departments = departments.map(d => ({ ...d, data: Array(31).fill(0) }));
+  events = [];
+  selDay = null;
+
   atualizarCssNumDias();
+  render();
   startRealtimeSync();
 }
 
