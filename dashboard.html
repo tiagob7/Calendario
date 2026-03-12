@@ -451,7 +451,7 @@ function startSync(escritorio) {
     if (window._dashCalEsc !== calEscNovo) {
       window._dashCalEsc = calEscNovo;
       if (window._dashCalUnsub) window._dashCalUnsub();
-      const newDocId = 'calendario_' + calEscNovo;
+      const _dNow2 = new Date(); const newDocId = 'calendario_' + calEscNovo + '_' + _dNow2.getFullYear() + '_' + String(_dNow2.getMonth()+1).padStart(2,'0');
       window._dashCalUnsub = db.collection('calendarios').doc(newDocId).onSnapshot(snap => {
         calData = snap.exists ? snap.data() : null;
         renderCalMini();
@@ -508,7 +508,7 @@ function startSync(escritorio) {
   // Re-subscreve quando o escritório muda
   const calEsc = (escritorioAtivoDash && escritorioAtivoDash !== 'todos')
     ? escritorioAtivoDash : 'quarteira';
-  const calDocId = 'calendario_' + calEsc;
+  const _dNow = new Date(); const calDocId = 'calendario_' + calEsc + '_' + _dNow.getFullYear() + '_' + String(_dNow.getMonth()+1).padStart(2,'0');
 
   window._dashCalEsc = calEsc;
   window._dashCalUnsub = db.collection('calendarios').doc(calDocId).onSnapshot(snap => {

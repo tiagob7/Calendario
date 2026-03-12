@@ -1025,38 +1025,102 @@ buildDeptCards = function() {
   });
 };
 
+// ── Estado de navegação mês/ano ──
+const _now = new Date();
+let _calAno = _now.getFullYear();
+let _calMes = _now.getMonth() + 1; // 1–12
+let _calEscritorio = 'quarteira';
+const NOMES_ESC = { quarteira:'Quarteira', albufeira:'Albufeira', lisboa:'Lisboa', porto:'Porto', geral:'Geral' };
+const NOMES_MES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function calDocId(esc, ano, mes) {
+  return 'calendario_' + esc + '_' + ano + '_' + String(mes).padStart(2,'0');
+}
+
+// ── Injetar estilos partilhados (escritório + mês) ──
+function injetarEstilosNav() {
+  if (document.getElementById('escBtnStyle')) return;
+  const st = document.createElement('style');
+  st.id = 'escBtnStyle';
+  st.textContent = `
+    .esc-btn{padding:5px 14px;border:1px solid var(--border);background:transparent;font-family:'DM Mono',monospace;font-size:10px;border-radius:20px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;transition:all .15s;}
+    .esc-btn:hover{border-color:var(--accent);color:var(--accent);}
+    .esc-btn.esc-active{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .mes-nav{display:flex;align-items:center;gap:6px;}
+    .mes-nav-btn{width:26px;height:26px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'DM Mono',monospace;font-size:13px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0;}
+    .mes-nav-btn:hover{border-color:var(--accent);color:var(--accent);}
+    .mes-label{font-family:'Manrope',sans-serif;font-weight:700;font-size:13px;color:var(--text);min-width:130px;text-align:center;letter-spacing:-.01em;}
+    .mes-label .ano{font-size:10px;color:var(--muted);font-weight:500;font-family:'DM Mono',monospace;margin-left:4px;}
+    .mes-hoje-btn{padding:4px 10px;border:1px solid var(--border);background:transparent;font-family:'DM Mono',monospace;font-size:9px;border-radius:20px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;transition:all .15s;}
+    .mes-hoje-btn:hover{border-color:var(--accent);color:var(--accent);}
+    .cal-nav-wrap{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;row-gap:10px;}
+    .cal-nav-sep{width:1px;height:20px;background:var(--border);}
+  `;
+  document.head.appendChild(st);
+}
+
+function injetarNavCalendario(isAdmin) {
+  injetarEstilosNav();
+
+  const now = new Date();
+  const eHoje = (_calAno === now.getFullYear() && _calMes === now.getMonth()+1);
+
+  let escHtml = '';
+  if (isAdmin) {
+    escHtml = `
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);">Escritório:</span>
+      ${['quarteira','albufeira','lisboa','porto'].map(e =>
+        `<button class="esc-btn${_calEscritorio===e?' esc-active':''}" data-e="${e}" onclick="switchEscritorio('${e}')">${NOMES_ESC[e]}</button>`
+      ).join('')}
+      <div class="cal-nav-sep"></div>
+    `;
+  }
+
+  const navHtml = `
+    <div id="calNavWrap" class="cal-nav-wrap">
+      ${escHtml}
+      <div class="mes-nav">
+        <button class="mes-nav-btn" onclick="navMes(-1)" title="Mês anterior">&#8249;</button>
+        <div class="mes-label">${NOMES_MES[_calMes-1]}<span class="ano">${_calAno}</span></div>
+        <button class="mes-nav-btn" onclick="navMes(1)" title="Mês seguinte">&#8250;</button>
+      </div>
+      ${!eHoje ? `<button class="mes-hoje-btn" onclick="irParaHoje()">Hoje</button>` : ''}
+    </div>`;
+
+  const existing = document.getElementById('calNavWrap');
+  if (existing) {
+    existing.outerHTML = navHtml;
+  } else {
+    document.querySelector('.page').insertAdjacentHTML('afterbegin', navHtml);
+  }
+}
+
+function navMes(delta) {
+  _calMes += delta;
+  if (_calMes > 12) { _calMes = 1;  _calAno++; }
+  if (_calMes < 1)  { _calMes = 12; _calAno--; }
+  if (window._calUnsubscribe) window._calUnsubscribe();
+  injetarNavCalendario(window.isAdmin());
+  loadCalendario(_calEscritorio);
+}
+
+function irParaHoje() {
+  const now = new Date();
+  _calAno = now.getFullYear();
+  _calMes = now.getMonth() + 1;
+  if (window._calUnsubscribe) window._calUnsubscribe();
+  injetarNavCalendario(window.isAdmin());
+  loadCalendario(_calEscritorio);
+}
+
 // INIT - aguarda autenticacao
 document.addEventListener('authReady', ({ detail }) => {
   window.renderNavbar('calendario');
 
-  const isAdmin    = window.isAdmin();
-  let escritorio   = window.escritorioAtivo() || 'geral';
-  const nomes      = { quarteira:'Quarteira', albufeira:'Albufeira', lisboa:'Lisboa', porto:'Porto', geral:'Geral' };
-
-  // Se admin com 'todos', forçar para o primeiro escritório por defeito
-  // e injetar seletor no topo da página
-  if (isAdmin) {
-    if (!escritorio || escritorio === 'todos') escritorio = 'quarteira';
-
-    // Injetar seletor de escritório para admin
-    const selectorHtml = `
-      <div id="adminCalSelector" style="display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
-        <span style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);">Escritório:</span>
-        <button class="esc-btn${escritorio==='quarteira'?' esc-active':''}" data-e="quarteira" onclick="switchEscritorio('quarteira')">Quarteira</button>
-        <button class="esc-btn${escritorio==='albufeira'?' esc-active':''}" data-e="albufeira" onclick="switchEscritorio('albufeira')">Albufeira</button>
-        <button class="esc-btn${escritorio==='lisboa'?' esc-active':''}" data-e="lisboa" onclick="switchEscritorio('lisboa')">Lisboa</button>
-        <button class="esc-btn${escritorio==='porto'?' esc-active':''}" data-e="porto" onclick="switchEscritorio('porto')">Porto</button>
-      </div>`;
-    document.querySelector('.page').insertAdjacentHTML('afterbegin', selectorHtml);
-
-    // Estilos para os botões do seletor
-    if (!document.getElementById('escBtnStyle')) {
-      const st = document.createElement('style');
-      st.id = 'escBtnStyle';
-      st.textContent = `.esc-btn{padding:5px 14px;border:1px solid var(--border);background:transparent;font-family:'DM Mono',monospace;font-size:10px;border-radius:20px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;transition:all .15s;} .esc-btn:hover{border-color:var(--accent);color:var(--accent);} .esc-btn.esc-active{background:var(--accent);border-color:var(--accent);color:#fff;}`;
-      document.head.appendChild(st);
-    }
-  }
+  const isAdmin = window.isAdmin();
+  let escritorio = window.escritorioAtivo() || 'geral';
+  if (!escritorio || escritorio === 'todos') escritorio = 'quarteira';
+  _calEscritorio = escritorio;
 
   // Esconder botão de editar para quem não tem permissão
   if (!window.temPermissao('editarCalendario')) {
@@ -1064,26 +1128,30 @@ document.addEventListener('authReady', ({ detail }) => {
     if (editBtn) editBtn.style.display = 'none';
   }
 
-  loadCalendario(escritorio, nomes);
+  injetarNavCalendario(isAdmin);
+  loadCalendario(_calEscritorio);
 });
 
 function switchEscritorio(esc) {
-  // Atualizar botões ativos
+  _calEscritorio = esc;
   document.querySelectorAll('.esc-btn').forEach(b => {
     b.classList.toggle('esc-active', b.dataset.e === esc);
   });
-  // Parar listener anterior se existir
   if (window._calUnsubscribe) window._calUnsubscribe();
-  loadCalendario(esc, { quarteira:'Quarteira', albufeira:'Albufeira', lisboa:'Lisboa', porto:'Porto', geral:'Geral' });
+  loadCalendario(esc);
 }
 
-function loadCalendario(escritorio, nomes) {
-  const nomeEscritorio = nomes[escritorio] || escritorio;
+function loadCalendario(escritorio) {
+  _calEscritorio = escritorio;
+  const nomeEscritorio = NOMES_ESC[escritorio] || escritorio;
+  const nomeMes = NOMES_MES[_calMes - 1];
 
-  document.getElementById('pageTitle') && (document.getElementById('pageTitle').textContent = 'Calendário — ' + nomeEscritorio);
-  document.getElementById('pageSubtitle').textContent = 'Escritório de ' + nomeEscritorio;
+  const titleEl = document.getElementById('pageTitle');
+  if (titleEl) titleEl.textContent = 'Calendário — ' + nomeEscritorio;
+  document.getElementById('pageSubtitle').textContent =
+    nomeMes + ' ' + _calAno + ' · Escritório de ' + nomeEscritorio;
 
-  CALENDAR_ID = 'calendario_' + escritorio;
+  CALENDAR_ID = calDocId(escritorio, _calAno, _calMes);
   docRef = db.collection('calendarios').doc(CALENDAR_ID);
 
   startRealtimeSync();
