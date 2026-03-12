@@ -83,6 +83,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 /* TAREFAS */
 .task-row{display:grid;grid-template-columns:10px 1fr 88px 100px;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:11px;cursor:default;}
 .task-row:last-child{border-bottom:none;}
+@media(max-width:480px){.task-row{grid-template-columns:10px 1fr 96px;}.task-person{display:none;}}
 .task-prio-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 .task-prio-dot.urgente{background:var(--red);}
 .task-prio-dot.normal{background:var(--amber);}

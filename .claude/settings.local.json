@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh pr:*)",
+      "Bash(where gh:*)",
+      "Bash(winget list:*)",
+      "Bash(grep -n viewport /mnt/c/Users/Tiago/Desktop/Calendario-main/.claude/worktrees/jovial-beaver/*.html)"
+    ]
+  }
+}
