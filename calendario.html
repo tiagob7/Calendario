@@ -182,8 +182,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <body>
 
 <div class="page">
-<div class="page">
-  <h1>Calendário de Carga de Trabalho</h1>
+  <h1 id="pageTitle">Calendário de Carga de Trabalho</h1>
   <p class="subtitle" id="pageSubtitle">A carregar…</p>
 
   <div class="layout">
@@ -1001,7 +1000,7 @@ async function saveToFirebase() {
 
 function startRealtimeSync() {
   setStatus('A ligar…', '#f59e0b');
-  docRef.onSnapshot((snap) => {
+  const unsubscribe = docRef.onSnapshot((snap) => {
     if (!snap.exists) { saveToFirebase(); return; }
     const data = snap.data();
     if (!isSaving) {
@@ -1016,6 +1015,7 @@ function startRealtimeSync() {
     console.error(err);
     setStatus('Erro de ligação', '#dc2626');
   });
+  window._calUnsubscribe = unsubscribe;
 }
 
 // Patch: guardar automaticamente ao editar
@@ -1039,18 +1039,65 @@ buildDeptCards = function() {
 document.addEventListener('authReady', ({ detail }) => {
   window.renderNavbar('calendario');
 
-  const escritorio = window.escritorioAtivo() || 'geral';
-  const nomes = { quarteira:'Quarteira', albufeira:'Albufeira', lisboa:'Lisboa', porto:'Porto', todos:'Todos', geral:'Geral' };
+  const isAdmin    = window.isAdmin();
+  let escritorio   = window.escritorioAtivo() || 'geral';
+  const nomes      = { quarteira:'Quarteira', albufeira:'Albufeira', lisboa:'Lisboa', porto:'Porto', geral:'Geral' };
+
+  // Se admin com 'todos', forçar para o primeiro escritório por defeito
+  // e injetar seletor no topo da página
+  if (isAdmin) {
+    if (!escritorio || escritorio === 'todos') escritorio = 'quarteira';
+
+    // Injetar seletor de escritório para admin
+    const selectorHtml = `
+      <div id="adminCalSelector" style="display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+        <span style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);">Escritório:</span>
+        <button class="esc-btn${escritorio==='quarteira'?' esc-active':''}" data-e="quarteira" onclick="switchEscritorio('quarteira')">Quarteira</button>
+        <button class="esc-btn${escritorio==='albufeira'?' esc-active':''}" data-e="albufeira" onclick="switchEscritorio('albufeira')">Albufeira</button>
+        <button class="esc-btn${escritorio==='lisboa'?' esc-active':''}" data-e="lisboa" onclick="switchEscritorio('lisboa')">Lisboa</button>
+        <button class="esc-btn${escritorio==='porto'?' esc-active':''}" data-e="porto" onclick="switchEscritorio('porto')">Porto</button>
+      </div>`;
+    document.querySelector('.page').insertAdjacentHTML('afterbegin', selectorHtml);
+
+    // Estilos para os botões do seletor
+    if (!document.getElementById('escBtnStyle')) {
+      const st = document.createElement('style');
+      st.id = 'escBtnStyle';
+      st.textContent = `.esc-btn{padding:5px 14px;border:1px solid var(--border);background:transparent;font-family:'DM Mono',monospace;font-size:10px;border-radius:20px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;transition:all .15s;} .esc-btn:hover{border-color:var(--accent);color:var(--accent);} .esc-btn.esc-active{background:var(--accent);border-color:var(--accent);color:#fff;}`;
+      document.head.appendChild(st);
+    }
+  }
+
+  // Colaboradores não podem editar — esconder botão
+  if (!isAdmin) {
+    const editBtn = document.getElementById('editToggleBtn');
+    if (editBtn) editBtn.style.display = 'none';
+  }
+
+  loadCalendario(escritorio, nomes);
+});
+
+function switchEscritorio(esc) {
+  // Atualizar botões ativos
+  document.querySelectorAll('.esc-btn').forEach(b => {
+    b.classList.toggle('esc-active', b.dataset.e === esc);
+  });
+  // Parar listener anterior se existir
+  if (window._calUnsubscribe) window._calUnsubscribe();
+  loadCalendario(esc, { quarteira:'Quarteira', albufeira:'Albufeira', lisboa:'Lisboa', porto:'Porto', geral:'Geral' });
+}
+
+function loadCalendario(escritorio, nomes) {
   const nomeEscritorio = nomes[escritorio] || escritorio;
 
-  document.getElementById('pageTitle').textContent = 'Calendário — ' + nomeEscritorio;
+  document.getElementById('pageTitle') && (document.getElementById('pageTitle').textContent = 'Calendário — ' + nomeEscritorio);
   document.getElementById('pageSubtitle').textContent = 'Escritório de ' + nomeEscritorio;
 
   CALENDAR_ID = 'calendario_' + escritorio;
   docRef = db.collection('calendarios').doc(CALENDAR_ID);
 
   startRealtimeSync();
-});
+}
 
 </script>
 </body>

@@ -387,7 +387,6 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
     </div>
   </div>
 
-  <!-- CONTROLS -->
   <div class="controls-wrap">
     <div class="controls-row">
       <span class="ctrl-label">Tipo:</span>
@@ -410,6 +409,17 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       <button class="filter-btn" data-fp="alta" onclick="setFilterPrio('alta')">🔴 Alta</button>
       <button class="filter-btn" data-fp="media" onclick="setFilterPrio('media')">🟡 Média</button>
       <button class="filter-btn" data-fp="baixa" onclick="setFilterPrio('baixa')">🟢 Baixa</button>
+    </div>
+    <div class="controls-row" id="rowFiltroEscritorio" style="display:none;">
+      <span class="ctrl-label">Escritório:</span>
+      <select id="filterEscritorioAdm" onchange="setFiltroEscritorioAdm(this.value)"
+        style="padding:5px 8px;border:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;font-size:10px;border-radius:20px;color:var(--muted);outline:none;cursor:pointer;">
+        <option value="">Todos os escritórios</option>
+        <option value="quarteira">Quarteira</option>
+        <option value="albufeira">Albufeira</option>
+        <option value="lisboa">Lisboa</option>
+        <option value="porto">Porto</option>
+      </select>
     </div>
   </div>
 
@@ -580,7 +590,9 @@ async function submitProcesso() {
     estado:        'aguardar',
     notas:         '',
     criadoEm:      Date.now(),
-    escritorio:    document.getElementById('fEscritorioAdm') ? document.getElementById('fEscritorioAdm').value : (window.userProfile ? window.userProfile.escritorio : ''),
+    escritorio:    (document.getElementById('fEscritorioAdm') ? document.getElementById('fEscritorioAdm').value : null)
+                   || (window.userProfile ? window.userProfile.escritorio : null)
+                   || '',
     criadoPor:     window.currentUser ? window.currentUser.uid : ''
   };
 
@@ -658,12 +670,14 @@ function render() {
 }
 
 function renderStats() {
-  const activos   = processos.filter(p => p.estado !== 'concluido' && p.estado !== 'cancelado');
-  document.getElementById('statAdm').textContent  = processos.filter(p => p.tipo === 'admissao' && p.estado !== 'concluido' && p.estado !== 'cancelado').length;
-  document.getElementById('statCes').textContent  = processos.filter(p => p.tipo === 'cessacao' && p.estado !== 'concluido' && p.estado !== 'cancelado').length;
+  // usar apenas os processos do escritório ativo (respeita o filtro)
+  const base    = filtroEscritorio ? processos.filter(p => p.escritorio === filtroEscritorio) : processos;
+  const activos = base.filter(p => p.estado !== 'concluido' && p.estado !== 'cancelado');
+  document.getElementById('statAdm').textContent  = base.filter(p => p.tipo === 'admissao' && p.estado !== 'concluido' && p.estado !== 'cancelado').length;
+  document.getElementById('statCes').textContent  = base.filter(p => p.tipo === 'cessacao' && p.estado !== 'concluido' && p.estado !== 'cancelado').length;
   document.getElementById('statAlta').textContent = activos.filter(p => p.prioridade === 'alta').length;
   document.getElementById('statPend').textContent = activos.filter(p => p.estado === 'pendente').length;
-  document.getElementById('statConc').textContent = processos.filter(p => p.estado === 'concluido').length;
+  document.getElementById('statConc').textContent = base.filter(p => p.estado === 'concluido').length;
 }
 
 const ESTADO_LABEL = { aguardar:'A aguardar', pendente:'Pendente', concluido:'Concluído', cancelado:'Cancelado' };
@@ -849,10 +863,9 @@ function toast(msg) {
 // ── INIT — aguarda autenticação ──
 document.addEventListener('authReady', ({ detail }) => {
   window.renderNavbar('admissoes');
-  const isAdmin = window.isAdmin();
+  const isAdmin    = window.isAdmin();
   const escritorio = window.escritorioAtivo();
-
-  const profile = detail.profile;
+  const profile    = detail.profile;
 
   // preencher info do utilizador no form (automático)
   if (profile) {
@@ -871,20 +884,34 @@ document.addEventListener('authReady', ({ detail }) => {
     if (fEsc && profile.escritorio) fEsc.value = profile.escritorio;
   }
 
-  // Modo gestor automático para admins
+  // Admin: modo gestor automático + esconder botão PIN + mostrar filtro de escritório
   if (isAdmin) {
     isGestor = true;
     const btn = document.getElementById('btnGestor');
-    if (btn) btn.classList.add('active');
+    if (btn) {
+      // Para admin, o botão gestor deixa de usar PIN — toggle direto
+      btn.classList.add('active');
+      btn.onclick = function() {
+        isGestor = !isGestor;
+        btn.classList.toggle('active', isGestor);
+        document.querySelectorAll('.card-gestor').forEach(el => el.classList.toggle('show', isGestor));
+        toast(isGestor ? '✓ Modo gestor activado.' : 'Modo gestor desactivado.');
+      };
+    }
     document.querySelectorAll('.card-gestor').forEach(el => el.classList.add('show'));
+
+    // Mostrar seletor de escritório para admin
+    const rowEsc = document.getElementById('rowFiltroEscritorio');
+    if (rowEsc) rowEsc.style.display = '';
   }
 
-  // filtro por defeito = escritório do utilizador
+  // filtro por defeito = escritório do utilizador (com fallback seguro)
   filtroEscritorio = isAdmin
     ? ((escritorio && escritorio !== 'todos') ? escritorio : '')
     : (profile ? (profile.escritorio || '') : '');
+
   const feEl = document.getElementById('filterEscritorioAdm');
-  if (feEl) { feEl.style.display=''; if (filtroEscritorio) feEl.value = filtroEscritorio; }
+  if (feEl && filtroEscritorio) feEl.value = filtroEscritorio;
 
   startSync();
 });

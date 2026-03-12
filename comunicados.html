@@ -309,10 +309,12 @@ function setFilter(mode) { filterMode=mode; document.querySelectorAll('.filter-b
 function render() { renderStats(); renderUrgenteBanner(); renderList(); }
 
 function renderStats() {
-  const total=comunicados.filter(c=>!c.arquivado).length;
-  const gerais=comunicados.filter(c=>c.tipo==='geral'&&!c.arquivado).length;
-  const urg=comunicados.filter(c=>c.tipo==='urgente'&&!c.arquivado).length;
-  const infos=comunicados.filter(c=>(c.tipo==='info'||c.tipo==='aviso')&&!c.arquivado).length;
+  // usar apenas os comunicados do escritório ativo (respeita o filtro)
+  const base   = filtroEscritorio ? comunicados.filter(c => c.escritorio === filtroEscritorio) : comunicados;
+  const total  = base.filter(c=>!c.arquivado).length;
+  const gerais = base.filter(c=>c.tipo==='geral'&&!c.arquivado).length;
+  const urg    = base.filter(c=>c.tipo==='urgente'&&!c.arquivado).length;
+  const infos  = base.filter(c=>(c.tipo==='info'||c.tipo==='aviso')&&!c.arquivado).length;
   const btnNovo = document.getElementById('btnNovoCom');
   document.getElementById('statsBar').innerHTML = `
     <div class="stat-chip s-total"><span class="stat-val">${total}</span><span class="stat-lbl">Activos</span></div>
@@ -324,7 +326,8 @@ function renderStats() {
 
 function renderUrgenteBanner() {
   const banner = document.getElementById('urgenteBanner');
-  const urgentes = comunicados.filter(c=>c.tipo==='urgente'&&!c.arquivado);
+  const base   = filtroEscritorio ? comunicados.filter(c => c.escritorio === filtroEscritorio) : comunicados;
+  const urgentes = base.filter(c=>c.tipo==='urgente'&&!c.arquivado);
   if (!urgentes.length) { banner.style.display='none'; return; }
   banner.style.display='flex'; banner.style.flexDirection='column'; banner.style.gap='8px';
   banner.innerHTML=urgentes.map(u=>`
