@@ -102,8 +102,9 @@ window.renderNavbar = function(activePage) {
       }
       .mini-header-logout:hover { border-color:#dc2626; color:#dc2626; }
       .mini-header-logout svg { width:11px; height:11px; }
-      @media(max-width:560px) {
+      @media(max-width:480px) {
         .mini-header-user { display:none; }
+        .mini-header-role { display:none; }
         .mini-header-title { font-size:12px; }
       }
     `;

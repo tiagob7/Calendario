@@ -40,6 +40,11 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .panel-title{font-family:'Manrope',sans-serif;font-size:13px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 @media(max-width:600px){.form-grid{grid-template-columns:1fr;}}
+@media(max-width:540px){
+  .com-header{grid-template-columns:auto 1fr auto;}
+  .com-dept-tag{display:none;}
+  .com-meta{display:none;}
+}
 .form-grid .full{grid-column:1/-1;}
 .field-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;display:block;}
 .form-input,.form-select,.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:8px 10px;border-radius:6px;outline:none;transition:border-color .15s;}

@@ -72,6 +72,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 
 /* valor group */
 .valor-group{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+@media(max-width:600px){.valor-group{grid-template-columns:1fr 1fr;}}
 @media(max-width:480px){.valor-group{grid-template-columns:1fr;}}
 
 /* tipo pagamento pills */
@@ -132,7 +133,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 
 /* card header — fixed grid */
 .card-header{display:grid;grid-template-columns:auto 1fr auto auto auto auto;align-items:center;gap:8px;padding:11px 16px;cursor:pointer;user-select:none;}
-@media(max-width:680px){.card-header{grid-template-columns:auto 1fr auto auto auto;}}
+@media(max-width:768px){.card-header{grid-template-columns:auto 1fr auto auto auto;}}
 @media(max-width:480px){.card-header{grid-template-columns:auto 1fr auto auto;}}
 
 .card-num{font-size:10px;font-weight:600;white-space:nowrap;min-width:28px;}
@@ -146,7 +147,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .card-empresa{font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px;}
 
 .card-date{font-size:10px;color:var(--muted);white-space:nowrap;flex-shrink:0;}
-@media(max-width:680px){.card-date{display:none;}}
+@media(max-width:768px){.card-date{display:none;}}
 
 .tipo-badge{font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:3px 8px;border-radius:10px;font-weight:500;flex-shrink:0;white-space:nowrap;}
 .tipo-badge.admissao{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-border);}
