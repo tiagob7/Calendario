@@ -187,6 +187,16 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
     <h1>Dashboard</h1>
     <span class="last-update" id="lastUpdate"></span>
     <span id="syncStatus"></span>
+    <!-- admin: filtro de escritório -->
+    <select id="adminEscritorioSelect" style="display:none;" onchange="window.setFiltroEscritorio(this.value)"
+      style="padding:5px 10px;border:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;font-size:11px;border-radius:8px;color:var(--text);outline:none;cursor:pointer;">
+      <option value="todos">Todos os escritórios</option>
+      <option value="quarteira">Quarteira</option>
+      <option value="albufeira">Albufeira</option>
+      <option value="lisboa">Lisboa</option>
+      <option value="porto">Porto</option>
+    </select>
+    <div id="dashUserInfo" style="display:flex;align-items:center;gap:8px;margin-left:auto;"></div>
   </div>
 
   <!-- subtítulo dinâmico: mostra escritório ativo -->
@@ -322,8 +332,34 @@ let unsubFns    = []; // para cancelar listeners ao mudar filtro
 document.addEventListener('authReady', ({ detail }) => {
   const profile = detail.profile;
 
-  // Navbar
+  // mini-header não é injetado no dashboard — renderNavbar('dashboard') é no-op
   window.renderNavbar('dashboard');
+
+  // user info + logout no canto superior direito
+  const isAdmin = window.isAdmin();
+  const nome = profile ? (profile.nomeCompleto || profile.nome || '') : '';
+  const dashUser = document.getElementById('dashUserInfo');
+  if (dashUser) {
+    dashUser.innerHTML = `
+      <span style="font-size:10px;color:var(--muted);">${nome}</span>
+      <span style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:2px 8px;border-radius:10px;font-weight:500;${isAdmin ? 'background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;' : 'background:#f4f4f6;color:#8888a0;border:1px solid #e2e2e8;'}">${isAdmin ? 'Admin' : 'Colaborador'}</span>
+      <button onclick="window.logout()" style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border:1px solid var(--border);background:none;font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);border-radius:8px;cursor:pointer;" onmouseover="this.style.borderColor='#dc2626';this.style.color='#dc2626'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3M11 11l3-3-3-3M14 8H6"/></svg>
+        Sair
+      </button>
+    `;
+  }
+
+  // filtro de escritório para admin
+  if (isAdmin) {
+    const sel = document.getElementById('adminEscritorioSelect');
+    if (sel) {
+      sel.style.display = '';
+      sel.style.cssText = 'padding:5px 10px;border:1px solid var(--border);background:var(--surface2);font-family:DM Mono,monospace;font-size:11px;border-radius:8px;color:var(--text);outline:none;cursor:pointer;';
+      const escritorio = window.escritorioAtivo();
+      if (escritorio) sel.value = escritorio;
+    }
+  }
 
   // Subtítulo com escritório ativo
   const escritorio = window.escritorioAtivo();
