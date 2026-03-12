@@ -62,9 +62,14 @@ window.renderNavbar = function(activePage) {
       .mini-header {
         background:#fff; border-bottom:1px solid #e2e2e8;
         font-family:'DM Mono',monospace;
-        padding:0 20px; height:46px;
-        display:flex; align-items:center; gap:10px;
+        height:46px;
+        display:flex; align-items:stretch;
         position:sticky; top:0; z-index:500;
+      }
+      .mini-header-inner {
+        width:100%; margin:0 auto;
+        padding:0 20px;
+        display:flex; align-items:center; gap:10px;
       }
       .mini-header-back {
         display:inline-flex; align-items:center; gap:5px;
@@ -113,24 +118,30 @@ window.renderNavbar = function(activePage) {
   };
   const titulo = PAGE_TITLES[activePage] || activePage;
 
+  // Detectar max-width da .page para alinhar o mini-header com o conteúdo
+  const pageEl = document.querySelector('.page');
+  const pgMaxWidth = pageEl ? window.getComputedStyle(pageEl).maxWidth : 'none';
+
   const header = document.createElement('div');
   header.className = 'mini-header';
   header.innerHTML = `
-    <a href="dashboard.html" class="mini-header-back">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
-        <path d="M10 12L6 8l4-4"/>
-      </svg>
-      Dashboard
-    </a>
-    <div class="mini-header-title">${titulo}</div>
-    <span class="mini-header-user">${nome}</span>
-    <span class="mini-header-role ${roleClass}">${role}</span>
-    <button class="mini-header-logout" onclick="window.logout()">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3M11 11l3-3-3-3M14 8H6"/>
-      </svg>
-      Sair
-    </button>
+    <div class="mini-header-inner" style="max-width:${pgMaxWidth}">
+      <a href="dashboard.html" class="mini-header-back">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M10 12L6 8l4-4"/>
+        </svg>
+        Dashboard
+      </a>
+      <div class="mini-header-title">${titulo}</div>
+      <span class="mini-header-user">${nome}</span>
+      <span class="mini-header-role ${roleClass}">${role}</span>
+      <button class="mini-header-logout" onclick="window.logout()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3M11 11l3-3-3-3M14 8H6"/>
+        </svg>
+        Sair
+      </button>
+    </div>
   `;
   document.body.insertBefore(header, document.body.firstChild);
 };

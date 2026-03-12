@@ -20,7 +20,7 @@
 body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;}
 .page{max-width:1200px;margin:0 auto;padding:32px 20px;}
 h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,28px);letter-spacing:-.03em;margin-bottom:4px;}
-.subtitle{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px;}
+.subtitle{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px;display:flex;align-items:center;gap:10px;}
 
 /* HEADER */
 .header-top{display:flex;align-items:center;gap:16px;margin-bottom:4px;flex-wrap:wrap;}
@@ -226,13 +226,14 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
     </a>
     <!-- admin: filtro de escritório (pills) -->
     <div id="adminEscritorioPills" style="display:none;gap:4px;flex-wrap:wrap;align-items:center;"></div>
-    <div id="dashUserInfo" style="display:flex;align-items:center;gap:8px;margin-left:auto;"></div>
   </div>
 
-  <!-- subtítulo dinâmico: mostra escritório ativo -->
-  <p class="subtitle" id="subtitleRow">
-    Visão geral — tarefas · comunicados · calendário
-  </p>
+  <!-- subtítulo: escritório (esquerda) · visão geral · utilizador+sair (direita) -->
+  <div class="subtitle" id="subtitleRow">
+    <span id="escritorioBadge"></span>
+    <span style="flex:1">Visão geral</span>
+    <div id="dashUserInfo" style="display:flex;align-items:center;gap:8px;"></div>
+  </div>
 
   <!-- NAV -->
   <div class="nav-links">
@@ -424,8 +425,9 @@ function updateSubtitle(escritorio) {
     ? 'Todos os escritórios'
     : escritorio.charAt(0).toUpperCase() + escritorio.slice(1);
 
-  document.getElementById('subtitleRow').innerHTML = `
-    Visão geral — tarefas · comunicados · calendário &nbsp;
+  const badge = document.getElementById('escritorioBadge');
+  if (!badge) return;
+  badge.innerHTML = `
     <span class="escritorio-badge">
       <span class="escritorio-dot"></span>
       ${label}

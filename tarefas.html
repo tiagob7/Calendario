@@ -172,7 +172,6 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
         <label class="field-label">Criado por</label>
         <div class="user-info-row">
           <span class="user-info-name" id="userName">A carregar…</span>
-          <span class="user-info-role colab" id="userRole">—</span>
         </div>
       </div>
 
@@ -301,14 +300,9 @@ document.addEventListener('authReady', ({ detail }) => {
     const nome = profile.nomeCompleto || profile.nome || profile.email || '?';
     const userNameEl   = document.getElementById('userName');
     const userAvatarEl = document.getElementById('userAvatar');
-    const roleEl       = document.getElementById('userRole');
     const selEsc       = document.getElementById('fEscritorio');
     if (userNameEl)   userNameEl.textContent   = nome;
     if (userAvatarEl) userAvatarEl.textContent = nome.charAt(0).toUpperCase();
-    if (roleEl) {
-      roleEl.textContent = isAdmin ? 'Admin' : 'Colaborador';
-      roleEl.className   = 'user-info-role' + (isAdmin ? '' : ' colab');
-    }
     if (selEsc && profile.escritorio && ESCRITORIOS.includes(profile.escritorio)) {
       selEsc.value = profile.escritorio;
     }

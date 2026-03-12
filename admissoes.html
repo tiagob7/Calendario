@@ -291,7 +291,6 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
         <label class="field-label">Utilizador</label>
         <div class="user-info-row">
           <span class="user-info-name" id="userName">A carregar…</span>
-          <span class="user-info-role colab" id="userRole">—</span>
         </div>
       </div>
       <div>
@@ -995,13 +994,8 @@ document.addEventListener('authReady', ({ detail }) => {
     const nome = profile.nomeCompleto || profile.nome || profile.email || '?';
     const avatarEl = document.getElementById('userAvatar');
     const nameEl   = document.getElementById('userName');
-    const roleEl   = document.getElementById('userRole');
     if (avatarEl) avatarEl.textContent = nome.charAt(0).toUpperCase();
     if (nameEl)   nameEl.textContent   = nome;
-    if (roleEl) {
-      roleEl.textContent = isAdmin ? 'Admin' : 'Colaborador';
-      roleEl.className   = 'user-info-role' + (isAdmin ? '' : ' colab');
-    }
     // escritório destino por defeito = escritório do utilizador
     const fEsc = document.getElementById('fEscritorioAdm');
     if (fEsc && profile.escritorio) fEsc.value = profile.escritorio;
