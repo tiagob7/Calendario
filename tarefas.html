@@ -204,6 +204,17 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
         </div>
       </div>
     </div>
+    <div class="form-grid" style="margin-top:10px;">
+      <div class="full">
+        <label class="field-label">Anexos (opcional)</label>
+        <label class="btn-attach" onclick="void(0)">
+          📎 Adicionar ficheiros
+          <input type="file" id="fFicheiros" multiple onchange="onPendingFilesChange(this)">
+        </label>
+        <div id="pendingFilesList" style="margin-top:6px;"></div>
+        <div class="upload-status" id="formUploadStatus"></div>
+      </div>
+    </div>
     <div style="display:flex;justify-content:flex-end;margin-top:14px;">
       <button class="btn btn-primary" onclick="submitTarefa()">+ Nova Tarefa</button>
     </div>
@@ -262,6 +273,7 @@ const db = firebase.firestore();
 const storage = firebase.storage();
 let col;
 let tasks = [], selPrioVal = 'normal', sortMode = 'prio', filterMode = 'activos', filterPessoa = '';
+let pendingFiles = [];
 window._files = {};
 const expandedIds = new Set();
 const PRIO_ORDER = { urgente:0, normal:1, baixa:2 };
@@ -355,7 +367,7 @@ async function submitTarefa() {
 
   const maxOrdem = tasks.length ? Math.max(...tasks.map(t => t.ordemChegada || 0)) : 0;
   try {
-    await col.add({
+    const docRef = await col.add({
       titulo, descricao, solicitante,
       prioridade: selPrioVal, estado: 'aguardar', notas: '',
       criadaEm: Date.now(), ordemChegada: maxOrdem + 1,
@@ -363,6 +375,27 @@ async function submitTarefa() {
       escritorioOrigem,
       criadoPor: window.currentUser ? window.currentUser.uid : ''
     });
+
+    // Upload pending files
+    if (pendingFiles.length) {
+      const statusEl = document.getElementById('formUploadStatus');
+      if (statusEl) statusEl.textContent = 'A carregar anexos…';
+      const ficheiros = [];
+      for (const file of pendingFiles) {
+        const path = `tarefas/${docRef.id}/${Date.now()}_${file.name}`;
+        try {
+          const ref  = storage.ref(path);
+          const snap = await ref.put(file);
+          const url  = await snap.ref.getDownloadURL();
+          ficheiros.push({ nome: file.name, url, tamanho: file.size, criadoEm: Date.now(), path });
+        } catch(e) { console.error(e); toast('Erro ao carregar: ' + file.name); }
+      }
+      if (ficheiros.length) await docRef.update({ ficheiros });
+      if (statusEl) statusEl.textContent = '';
+    }
+
+    pendingFiles = [];
+    renderPendingFilesList();
     document.getElementById('fTitulo').value    = '';
     document.getElementById('fDescricao').value = '';
     selPrio('normal');
@@ -483,17 +516,12 @@ function renderList() {
             <button class="icon-btn del" onclick="event.stopPropagation();deleteTask('${task.id}')">🗑</button>
           </div>
         </div>
-        <div class="card-files">
+        ${(task.ficheiros && task.ficheiros.length) ? `<div class="card-files">
           <div class="files-header">
             <span class="files-lbl">📎 Anexos</span>
-            <label class="btn-attach" onclick="event.stopPropagation()">
-              + Ficheiro
-              <input type="file" multiple onchange="uploadFicheiro('${task.id}',this)">
-            </label>
           </div>
-          <div class="upload-status" id="upl-${task.id}"></div>
-          ${renderFicheiros(task.id, task.ficheiros||[], canResolve)}
-        </div>
+          ${renderFicheiros(task.id, task.ficheiros, canResolve)}
+        </div>` : ''}
       </div>`;
     container.appendChild(card);
   });
@@ -504,6 +532,34 @@ function selPrio(p) { selPrioVal=p; document.querySelectorAll('.prio-pill').forE
 function escHtml(str) { if(!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtDateFull(ts) { if(!ts) return ''; const d=new Date(ts); return d.toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'})+' às '+d.toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}); }
 function toast(msg) { const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2800); }
+
+// ── PENDING FILES (form) ──
+function onPendingFilesChange(input) {
+  Array.from(input.files).forEach(f => {
+    if (f.size > 15 * 1024 * 1024) { toast('Ficheiro demasiado grande (máx 15 MB): ' + f.name); return; }
+    pendingFiles.push(f);
+  });
+  input.value = '';
+  renderPendingFilesList();
+}
+
+function renderPendingFilesList() {
+  const container = document.getElementById('pendingFilesList');
+  if (!container) return;
+  if (!pendingFiles.length) { container.innerHTML = ''; return; }
+  container.innerHTML = pendingFiles.map((f, i) => `
+    <div class="file-item">
+      <span>📄</span>
+      <span class="file-item-name" title="${escHtml(f.name)}">${escHtml(f.name)}</span>
+      <span class="file-item-size">${fmtBytes(f.size)}</span>
+      <button class="file-item-del" onclick="removePendingFile(${i})" title="Remover">✕</button>
+    </div>`).join('');
+}
+
+function removePendingFile(i) {
+  pendingFiles.splice(i, 1);
+  renderPendingFilesList();
+}
 
 // ── FILE UPLOADS ──
 function renderFicheiros(docId, ficheiros, canDel) {
@@ -519,29 +575,6 @@ function renderFicheiros(docId, ficheiros, canDel) {
     </div>`).join('');
 }
 
-async function uploadFicheiro(docId, input) {
-  const files = Array.from(input.files);
-  if (!files.length) return;
-  const statusEl = document.getElementById('upl-' + docId);
-  if (statusEl) statusEl.textContent = 'A carregar…';
-  for (const file of files) {
-    if (file.size > 15 * 1024 * 1024) { toast('Ficheiro demasiado grande (máx 15 MB).'); continue; }
-    const path = `tarefas/${docId}/${Date.now()}_${file.name}`;
-    try {
-      const ref  = storage.ref(path);
-      const snap = await ref.put(file);
-      const url  = await snap.ref.getDownloadURL();
-      await col.doc(docId).update({
-        ficheiros: firebase.firestore.FieldValue.arrayUnion({
-          nome: file.name, url, tamanho: file.size, criadoEm: Date.now(), path
-        })
-      });
-      toast('✓ Ficheiro anexado!');
-    } catch(e) { console.error(e); toast('Erro ao carregar ficheiro.'); }
-  }
-  if (statusEl) statusEl.textContent = '';
-  input.value = '';
-}
 
 async function deleteFicheiro(docId, index) {
   const f = (window._files[docId] || [])[index];

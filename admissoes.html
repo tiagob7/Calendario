@@ -399,6 +399,15 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       </div>
     </div>
 
+    <div class="divider"></div>
+    <div class="section-label">Anexos (opcional)</div>
+    <label class="btn-attach" onclick="void(0)">
+      📎 Adicionar ficheiros
+      <input type="file" id="fFicheirosAdm" multiple onchange="onPendingFilesAdmChange(this)">
+    </label>
+    <div id="pendingFilesAdmList" style="margin-top:6px;"></div>
+    <div class="upload-status" id="formAdmUploadStatus"></div>
+
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px;">
       <button class="btn btn-primary" onclick="submitProcesso()">+ Submeter processo</button>
     </div>
@@ -496,6 +505,7 @@ let filterEstado   = 'activos';
 let filterPrio     = 'todos';
 const expandedIds  = new Set();
 let filtroEscritorio = '';
+let pendingFilesAdm = [];
 
 // ── FIREBASE ──
 function setStatus(msg, color) {
@@ -631,7 +641,28 @@ async function submitProcesso() {
   }
 
   try {
-    await col.add(doc);
+    const docRef = await col.add(doc);
+
+    // Upload pending files
+    if (pendingFilesAdm.length) {
+      const statusEl = document.getElementById('formAdmUploadStatus');
+      if (statusEl) statusEl.textContent = 'A carregar anexos…';
+      const ficheiros = [];
+      for (const file of pendingFilesAdm) {
+        const path = `admissoes/${docRef.id}/${Date.now()}_${file.name}`;
+        try {
+          const ref  = storage.ref(path);
+          const snap = await ref.put(file);
+          const url  = await snap.ref.getDownloadURL();
+          ficheiros.push({ nome: file.name, url, tamanho: file.size, criadoEm: Date.now(), path });
+        } catch(e) { console.error(e); toast('Erro ao carregar: ' + file.name); }
+      }
+      if (ficheiros.length) await docRef.update({ ficheiros });
+      if (statusEl) statusEl.textContent = '';
+    }
+
+    pendingFilesAdm = [];
+    renderPendingFilesAdmList();
     resetForm();
     toast('✓ Processo submetido!');
   } catch(e) {
@@ -651,6 +682,9 @@ function resetForm() {
   selPagamento('mes');
   document.getElementById('prioPreview').style.display = 'none';
   document.getElementById('prioPreviewCessacao').style.display = 'none';
+  // clear pending files
+  pendingFilesAdm = [];
+  renderPendingFilesAdmList();
 }
 
 // ── UPDATE (gestor) ──
@@ -797,17 +831,12 @@ function renderList() {
             <button class="icon-btn del" title="Eliminar" onclick="event.stopPropagation();deleteProcesso('${proc.id}')">🗑</button>
           </div>
         </div>
-        <div class="card-files">
+        ${(proc.ficheiros && proc.ficheiros.length) ? `<div class="card-files">
           <div class="files-header">
             <span class="files-lbl">📎 Anexos</span>
-            <label class="btn-attach" onclick="event.stopPropagation()">
-              + Ficheiro
-              <input type="file" multiple onchange="uploadFicheiro('${proc.id}',this)">
-            </label>
           </div>
-          <div class="upload-status" id="upl-${proc.id}"></div>
-          ${renderFicheiros(proc.id, proc.ficheiros||[], isGestor)}
-        </div>
+          ${renderFicheiros(proc.id, proc.ficheiros, isGestor)}
+        </div>` : ''}
       </div>
     `;
     container.appendChild(card);
@@ -887,6 +916,34 @@ function setFiltroEscritorioAdm(val) {
   renderList();
 }
 
+// ── PENDING FILES (form) ──
+function onPendingFilesAdmChange(input) {
+  Array.from(input.files).forEach(f => {
+    if (f.size > 15 * 1024 * 1024) { toast('Ficheiro demasiado grande (máx 15 MB): ' + f.name); return; }
+    pendingFilesAdm.push(f);
+  });
+  input.value = '';
+  renderPendingFilesAdmList();
+}
+
+function renderPendingFilesAdmList() {
+  const container = document.getElementById('pendingFilesAdmList');
+  if (!container) return;
+  if (!pendingFilesAdm.length) { container.innerHTML = ''; return; }
+  container.innerHTML = pendingFilesAdm.map((f, i) => `
+    <div class="file-item">
+      <span>📄</span>
+      <span class="file-item-name" title="${escHtml(f.name)}">${escHtml(f.name)}</span>
+      <span class="file-item-size">${fmtBytes(f.size)}</span>
+      <button class="file-item-del" onclick="removePendingFileAdm(${i})" title="Remover">✕</button>
+    </div>`).join('');
+}
+
+function removePendingFileAdm(i) {
+  pendingFilesAdm.splice(i, 1);
+  renderPendingFilesAdmList();
+}
+
 // ── FILE UPLOADS ──
 function renderFicheiros(docId, ficheiros, canDel) {
   window._files[docId] = ficheiros;
@@ -901,29 +958,6 @@ function renderFicheiros(docId, ficheiros, canDel) {
     </div>`).join('');
 }
 
-async function uploadFicheiro(docId, input) {
-  const files = Array.from(input.files);
-  if (!files.length) return;
-  const statusEl = document.getElementById('upl-' + docId);
-  if (statusEl) statusEl.textContent = 'A carregar…';
-  for (const file of files) {
-    if (file.size > 15 * 1024 * 1024) { toast('Ficheiro demasiado grande (máx 15 MB).'); continue; }
-    const path = `admissoes/${docId}/${Date.now()}_${file.name}`;
-    try {
-      const ref  = storage.ref(path);
-      const snap = await ref.put(file);
-      const url  = await snap.ref.getDownloadURL();
-      await col.doc(docId).update({
-        ficheiros: firebase.firestore.FieldValue.arrayUnion({
-          nome: file.name, url, tamanho: file.size, criadoEm: Date.now(), path
-        })
-      });
-      toast('✓ Ficheiro anexado!');
-    } catch(e) { console.error(e); toast('Erro ao carregar ficheiro.'); }
-  }
-  if (statusEl) statusEl.textContent = '';
-  input.value = '';
-}
 
 async function deleteFicheiro(docId, index) {
   const f = (window._files[docId] || [])[index];
