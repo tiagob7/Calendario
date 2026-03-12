@@ -18,6 +18,11 @@ window.isAdmin = function() {
   return window.userProfile && window.userProfile.role === 'admin';
 };
 
+window.temPermissao = function(perm) {
+  if (window.isAdmin()) return true;
+  return !!(window.userProfile && window.userProfile.permissoes && window.userProfile.permissoes[perm] === true);
+};
+
 window.escritorioAtivo = function() {
   if (window.isAdmin()) {
     return sessionStorage.getItem('filtroEscritorio') || 'todos';
@@ -156,7 +161,15 @@ firebase.auth().onAuthStateChanged(async (user) => {
         role: 'colaborador',
         ativo: true,
         criadoEm: Date.now(),
-        ultimoAcesso: Date.now()
+        ultimoAcesso: Date.now(),
+        permissoes: {
+          criarTarefas: false,
+          resolverTarefas: false,
+          gerirComunicados: false,
+          criarAdmissoes: false,
+          resolverAdmissoes: false,
+          editarCalendario: false
+        }
       };
       await firebase.firestore()
         .collection('utilizadores').doc(user.uid).set(basicProfile);

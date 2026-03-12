@@ -60,6 +60,20 @@ tbody tr.me-row td{border-bottom-color:#bfdbfe;}
 .empty{padding:32px 16px;text-align:center;font-size:11px;color:var(--muted);}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;font-size:11px;padding:10px 20px;border-radius:20px;opacity:0;transition:all .25s;pointer-events:none;z-index:600;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.btn-perms{padding:4px 9px;border:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;font-size:9px;border-radius:6px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;transition:all .15s;white-space:nowrap;}
+.btn-perms:hover,.btn-perms.active{border-color:var(--accent);color:var(--accent);background:#eff6ff;}
+.perms-row{display:none;background:#fafbff;border-top:1px dashed var(--border);}
+.perms-row.open{display:table-row;}
+.perms-cell{padding:12px 16px;}
+.perms-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;}
+.perms-grid{display:flex;flex-wrap:wrap;gap:8px;}
+.perm-item{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;transition:all .15s;}
+.perm-item:hover{border-color:#aaa;}
+.perm-item.on{border-color:#bfdbfe;background:#eff6ff;}
+.perm-item input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;cursor:pointer;flex-shrink:0;}
+.perm-item label{font-size:10px;color:var(--text);cursor:pointer;white-space:nowrap;}
+.perm-item.on label{color:var(--accent);}
+.perm-all-badge{font-size:10px;color:var(--muted);font-style:italic;padding:4px 0;}
 </style>
 </head>
 <body>
@@ -105,10 +119,11 @@ tbody tr.me-row td{border-bottom-color:#bfdbfe;}
           <th>Perfil</th>
           <th>Estado</th>
           <th>Último acesso</th>
+          <th>Permissões</th>
         </tr>
       </thead>
       <tbody id="usersTbody">
-        <tr><td colspan="5" class="empty">A carregar utilizadores…</td></tr>
+        <tr><td colspan="6" class="empty">A carregar utilizadores…</td></tr>
       </tbody>
     </table>
   </div>
@@ -178,6 +193,34 @@ async function updateUser(uid, patch) {
   }
 }
 
+function togglePerms(uid) {
+  const row = document.getElementById('permsRow_' + uid);
+  const btn = document.getElementById('btnPerms_' + uid);
+  if (!row) return;
+  const isOpen = row.classList.contains('open');
+  // fechar todos os outros
+  document.querySelectorAll('.perms-row.open').forEach(r => r.classList.remove('open'));
+  document.querySelectorAll('.btn-perms.active').forEach(b => b.classList.remove('active'));
+  if (!isOpen) {
+    row.classList.add('open');
+    if (btn) btn.classList.add('active');
+  }
+}
+
+async function setPermissao(uid, perm, val) {
+  const item = document.getElementById('permItem_' + uid + '_' + perm);
+  if (item) item.classList.toggle('on', val);
+  const patch = {};
+  patch['permissoes.' + perm] = val;
+  try {
+    await db.collection('utilizadores').doc(uid).update(patch);
+    toast('Permissão ' + (val ? 'activada' : 'removida') + '.');
+  } catch (e) {
+    console.error(e);
+    toast('Erro ao actualizar permissão.');
+  }
+}
+
 function renderUsers() {
   const tbody = document.getElementById('usersTbody');
   const meUid = window.currentUser ? window.currentUser.uid : null;
@@ -191,7 +234,7 @@ function renderUsers() {
     list.length + ' utilizador' + (list.length !== 1 ? 'es' : '');
 
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhum utilizador encontrado.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum utilizador encontrado.</td></tr>';
     return;
   }
 
@@ -242,6 +285,9 @@ function renderUsers() {
       <td>
         <div>${fmtDateShort(u.ultimoAcesso)}</div>
       </td>
+      <td>
+        <button class="btn-perms" id="btnPerms_${u.uid}" onclick="togglePerms('${u.uid}')">Config</button>
+      </td>
     `;
 
     // corrigir toggle para pegar estado atual ao clicar
@@ -254,6 +300,41 @@ function renderUsers() {
     };
 
     tbody.appendChild(tr);
+
+    // Linha de permissões (collapsível)
+    const perms = u.permissoes || {};
+    const trPerms = document.createElement('tr');
+    trPerms.className = 'perms-row';
+    trPerms.id = 'permsRow_' + u.uid;
+
+    const PERMS_DEF = [
+      { key: 'criarTarefas',     label: 'Criar Tarefas' },
+      { key: 'resolverTarefas',  label: 'Resolver Tarefas' },
+      { key: 'gerirComunicados', label: 'Gerir Comunicados' },
+      { key: 'criarAdmissoes',   label: 'Criar Admissões' },
+      { key: 'resolverAdmissoes',label: 'Resolver Admissões' },
+      { key: 'editarCalendario', label: 'Editar Calendário' },
+    ];
+
+    const isAdminUser = role === 'admin';
+    let innerHtml;
+    if (isAdminUser) {
+      innerHtml = `<span class="perm-all-badge">Admin — todas as permissões activas</span>`;
+    } else {
+      innerHtml = PERMS_DEF.map(p => {
+        const checked = perms[p.key] === true;
+        return `<div class="perm-item ${checked?'on':''}" id="permItem_${u.uid}_${p.key}">
+          <input type="checkbox" id="perm_${u.uid}_${p.key}" ${checked?'checked':''} onchange="setPermissao('${u.uid}','${p.key}',this.checked)">
+          <label for="perm_${u.uid}_${p.key}">${p.label}</label>
+        </div>`;
+      }).join('');
+    }
+
+    trPerms.innerHTML = `<td colspan="6" class="perms-cell">
+      <div class="perms-label">Permissões específicas</div>
+      <div class="perms-grid">${innerHtml}</div>
+    </td>`;
+    tbody.appendChild(trPerms);
   });
 }
 
