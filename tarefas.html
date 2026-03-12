@@ -262,14 +262,17 @@ document.addEventListener('authReady', ({ detail }) => {
   // preencher info do utilizador no form
   if (profile) {
     const nome = profile.nomeCompleto || profile.nome || profile.email || '?';
-    document.getElementById('userName').textContent   = nome;
-    document.getElementById('userAvatar').textContent = nome.charAt(0).toUpperCase();
-    const roleEl = document.getElementById('userRole');
-    roleEl.textContent = isAdmin ? 'Admin' : 'Colaborador';
-    roleEl.className   = 'user-info-role' + (isAdmin ? '' : ' colab');
-    // escritório destino por defeito
-    const selEsc = document.getElementById('fEscritorio');
-    if (profile.escritorio && ESCRITORIOS.includes(profile.escritorio)) {
+    const userNameEl   = document.getElementById('userName');
+    const userAvatarEl = document.getElementById('userAvatar');
+    const roleEl       = document.getElementById('userRole');
+    const selEsc       = document.getElementById('fEscritorio');
+    if (userNameEl)   userNameEl.textContent   = nome;
+    if (userAvatarEl) userAvatarEl.textContent = nome.charAt(0).toUpperCase();
+    if (roleEl) {
+      roleEl.textContent = isAdmin ? 'Admin' : 'Colaborador';
+      roleEl.className   = 'user-info-role' + (isAdmin ? '' : ' colab');
+    }
+    if (selEsc && profile.escritorio && ESCRITORIOS.includes(profile.escritorio)) {
       selEsc.value = profile.escritorio;
     }
   }
