@@ -171,8 +171,8 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .adm-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:11px;cursor:default;}
 .adm-row:last-child{border-bottom:none;}
 
-/* TOOLTIPS (tarefa + admissão) */
-#admTooltip,#taskTooltip{
+/* TOOLTIPS (tarefa + admissão + reclamação) */
+#admTooltip,#taskTooltip,#recTooltip{
   position:fixed;z-index:9999;
   background:var(--surface);color:var(--text);
   border-radius:12px;padding:13px 16px;
@@ -242,6 +242,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 <!-- Tooltips flutuantes -->
 <div id="admTooltip"></div>
 <div id="taskTooltip"></div>
+<div id="recTooltip"></div>
 
 <div class="page">
 
@@ -895,9 +896,50 @@ function bindTaskTooltips() {
   });
 }
 
+// ── TOOLTIP RECLAMAÇÕES ──
+const CANAL_LABEL_DASH = { email:'📧 Email', telefone:'📞 Telefone', mensagem:'💬 Mensagem', presencial:'🧑 Presencial' };
+
+function bindRecTooltips() {
+  const tip = document.getElementById('recTooltip');
+  if (!tip) return;
+
+  document.querySelectorAll('#recList .rec-dash-row').forEach(row => {
+    row.style.cursor = 'default';
+    row.addEventListener('mouseenter', e => {
+      const periodos = row.dataset.periodos;
+      const turnos   = row.dataset.turnos;
+      const notas    = row.dataset.notas;
+      const dataFmt  = row.dataset.data ? fmtShort(Number(row.dataset.data)) : '—';
+      tip.innerHTML = `
+        <div class="tt-row"><span class="tt-lbl">Nome</span><span class="tt-val" style="font-weight:600">${row.dataset.nome}</span></div>
+        <div class="tt-row"><span class="tt-lbl">NIF</span><span class="tt-val">${row.dataset.nif}</span></div>
+        <div class="tt-row"><span class="tt-lbl">Nº Func.</span><span class="tt-val">${row.dataset.numfunc}</span></div>
+        <div class="tt-row"><span class="tt-lbl">Categoria</span><span class="tt-val">${row.dataset.categoria}</span></div>
+        <hr class="tt-divider">
+        <div class="tt-row"><span class="tt-lbl">Empresa</span><span class="tt-val">${row.dataset.empresa}</span></div>
+        <div class="tt-row"><span class="tt-lbl">Escritório</span><span class="tt-val">${row.dataset.escritorio}</span></div>
+        <div class="tt-row"><span class="tt-lbl">Canal</span><span class="tt-val">${CANAL_LABEL_DASH[row.dataset.canal] || row.dataset.canal}</span></div>
+        <hr class="tt-divider">
+        <div class="tt-row"><span class="tt-lbl">Períodos</span><span class="tt-val">${row.dataset.resumo}</span></div>
+        ${periodos ? `<div class="tt-row"><span class="tt-lbl">Detalhe</span><span class="tt-val tt-desc">${periodos}</span></div>` : ''}
+        ${turnos   ? `<div class="tt-row"><span class="tt-lbl">Turnos</span><span class="tt-val tt-desc">${turnos}</span></div>` : ''}
+        ${notas    ? `<hr class="tt-divider"><div class="tt-val tt-desc">📝 ${notas}</div>` : ''}
+        <hr class="tt-divider">
+        <div class="tt-row"><span class="tt-lbl">Estado</span><span class="tt-val">${row.dataset.estado}</span></div>
+        <div class="tt-row"><span class="tt-lbl">Registado</span><span class="tt-val">${row.dataset.criado} · ${dataFmt}</span></div>
+      `;
+      positionTip(tip, e);
+      tip.classList.add('show');
+    });
+    row.addEventListener('mousemove', e => positionTip(tip, e));
+    row.addEventListener('mouseleave', () => tip.classList.remove('show'));
+  });
+}
+
 function positionTip(tip, e) {
   const margin = 14;
-  const tipW = 290, tipH = 180;
+  const tipW = 300;
+  const tipH = tip.offsetHeight || 220;
   let x = e.clientX + margin;
   let y = e.clientY + margin;
   if (x + tipW > window.innerWidth)  x = e.clientX - tipW - margin;
@@ -1116,13 +1158,37 @@ function renderReclamacoes() {
   container.innerHTML = mostrar.map(r => {
     const estadoCls = (r.estado || 'nova').replace(/-/g,'');
     const dotCls = r.estado === 'aguarda-proc' ? 'aguarda-proc' : estadoCls;
-    return `<div class="rec-dash-row">
+    // Construir resumo de períodos e turnos para o tooltip
+    const periodos = (r.periodos || []);
+    const periodoStr = periodos.map(p =>
+      `${p.mesNome || ''} ${p.ano}: dias ${(p.dias||[]).join(',')} — ${p.totalHoras||''}${p.totalNoturnas?' 🌙'+p.totalNoturnas:''}${p.totalFeriado?' 📅'+p.totalFeriado:''}`
+    ).join(' | ');
+    const turnosStr = periodos.flatMap(p =>
+      (p.turnos||[]).map(t => `${t.entrada||''}→${t.saida||''}${t.total?' ('+t.total+')':''}`)
+    ).join(' · ');
+    return `<div class="rec-dash-row"
+      data-nome="${escHtml(r.nome||'—')}"
+      data-nif="${escHtml(r.nif||'—')}"
+      data-numfunc="${escHtml(r.numFunc||'—')}"
+      data-categoria="${escHtml(r.categoria||'—')}"
+      data-empresa="${escHtml(r.empresa||'—')}"
+      data-escritorio="${escHtml(window.nomeEscritorio?window.nomeEscritorio(r.escritorio):(r.escritorio||'—'))}"
+      data-canal="${escHtml(r.canal||'—')}"
+      data-estado="${escHtml(REC_ESTADO_LABEL[r.estado]||r.estado||'—')}"
+      data-resumo="${escHtml(r.resumoPeriodo||'—')}"
+      data-periodos="${escHtml(periodoStr)}"
+      data-turnos="${escHtml(turnosStr)}"
+      data-notas="${escHtml(r.notas||'')}"
+      data-criado="${escHtml(r.criadoPor||'—')}"
+      data-data="${r.criadoEm||''}">
       <div class="rec-dash-dot ${dotCls}"></div>
-      <div class="rec-dash-name">${escHtml(r.nome || '—')} <span style="color:var(--muted);font-size:10px;">· ${escHtml(r.empresa || '—')}</span></div>
+      <div class="rec-dash-name">${escHtml(r.nome || '—')} <span style="color:var(--muted);font-size:10px;">· ${escHtml(r.empresa || '—')}${r.categoria ? ' · ' + escHtml(r.categoria) : ''}</span></div>
       <div class="rec-dash-meta">${escHtml(r.resumoPeriodo || '—')}</div>
       <span class="rec-kpi-chip ${r.estado === 'aguarda-proc' ? 'aguarda-proc' : estadoCls}">${REC_ESTADO_LABEL[r.estado] || r.estado}</span>
     </div>`;
   }).join('');
+
+  bindRecTooltips();
 
   if (filtradas.length > 10) {
     container.innerHTML += `<div style="padding:8px 0;font-size:10px;color:var(--muted);text-align:center;">
