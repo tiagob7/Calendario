@@ -469,7 +469,7 @@ function startSync(escritorio) {
   // Mas o calendário é especial — tem um doc por escritório, precisa de re-subscrever
   if (unsubFns.length > 0) {
     // Re-subscrever calendário se mudou de escritório
-    const calEscNovo = (escritorioAtivoDash && escritorioAtivoDash !== 'todos') ? escritorioAtivoDash : 'quarteira';
+    const calEscNovo = (escritorioAtivoDash && escritorioAtivoDash !== 'todos') ? escritorioAtivoDash : (window.getEscritoriosSync ? (window.getEscritoriosSync()[0]||{}).id : '') || 'quarteira';
     if (window._dashCalEsc !== calEscNovo) {
       window._dashCalEsc = calEscNovo;
       if (window._dashCalUnsub) window._dashCalUnsub();
@@ -529,7 +529,7 @@ function startSync(escritorio) {
   // ── Calendário — carrega o doc do escritório ativo ──
   // Re-subscreve quando o escritório muda
   const calEsc = (escritorioAtivoDash && escritorioAtivoDash !== 'todos')
-    ? escritorioAtivoDash : 'quarteira';
+    ? escritorioAtivoDash : (window.getEscritoriosSync ? (window.getEscritoriosSync()[0]||{}).id : '') || 'quarteira';
   const calDocId = dashCalDocId(calEsc);
 
   window._dashCalEsc = calEsc;

@@ -173,12 +173,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       </div>
 
       <label class="field-label" style="margin-top:14px;">Escritórios de destino</label>
-      <div class="check-wrap" id="f-escritorios">
-        <label class="ck on" onclick="toggleCk(this)"><input type="checkbox" value="quarteira" checked>Quarteira</label>
-        <label class="ck on" onclick="toggleCk(this)"><input type="checkbox" value="albufeira" checked>Albufeira</label>
-        <label class="ck on" onclick="toggleCk(this)"><input type="checkbox" value="lisboa" checked>Lisboa</label>
-        <label class="ck on" onclick="toggleCk(this)"><input type="checkbox" value="porto" checked>Porto</label>
-      </div>
+      <div class="check-wrap" id="f-escritorios"><span style="font-size:10px;color:var(--muted)">A carregar…</span></div>
 
       <label class="field-label" style="margin-top:14px;">Selecionar feriados</label>
       <div style="display:flex;gap:6px;margin-bottom:10px;">
@@ -212,12 +207,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 
       <!-- Destinos -->
       <label class="field-label">Escritórios de destino</label>
-      <div class="check-wrap" id="e-escritorios">
-        <label class="ck on" onclick="toggleCk(this)"><input type="checkbox" value="quarteira" checked>Quarteira</label>
-        <label class="ck on" onclick="toggleCk(this)"><input type="checkbox" value="albufeira" checked>Albufeira</label>
-        <label class="ck on" onclick="toggleCk(this)"><input type="checkbox" value="lisboa" checked>Lisboa</label>
-        <label class="ck on" onclick="toggleCk(this)"><input type="checkbox" value="porto" checked>Porto</label>
-      </div>
+      <div class="check-wrap" id="e-escritorios"><span style="font-size:10px;color:var(--muted)">A carregar…</span></div>
 
       <!-- Período -->
       <div class="row-3" style="margin-top:12px;">
@@ -302,12 +292,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       <div class="card-title">Apagar Eventos</div>
 
       <label class="field-label">Escritórios</label>
-      <div class="check-wrap" id="a-escritorios">
-        <label class="ck on" onclick="toggleCk(this)"><input type="checkbox" value="quarteira" checked>Quarteira</label>
-        <label class="ck on" onclick="toggleCk(this)"><input type="checkbox" value="albufeira" checked>Albufeira</label>
-        <label class="ck on" onclick="toggleCk(this)"><input type="checkbox" value="lisboa" checked>Lisboa</label>
-        <label class="ck on" onclick="toggleCk(this)"><input type="checkbox" value="porto" checked>Porto</label>
-      </div>
+      <div class="check-wrap" id="a-escritorios"><span style="font-size:10px;color:var(--muted)">A carregar…</span></div>
 
       <div class="row-3" style="margin-top:12px;">
         <div>
@@ -381,12 +366,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       <div class="row-3">
         <div>
           <label class="field-label">Escritório</label>
-          <select class="form-select" id="v-escritorio">
-            <option value="quarteira">Quarteira</option>
-            <option value="albufeira">Albufeira</option>
-            <option value="lisboa">Lisboa</option>
-            <option value="porto">Porto</option>
-          </select>
+          <select class="form-select" id="v-escritorio"><option value="">A carregar…</option></select>
         </div>
         <div>
           <label class="field-label">De (mês)</label>
@@ -424,6 +404,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-init.js"></script>
 <script src="auth.js"></script>
+<script src="config-escritorios.js"></script>
 <script>
 
 // ══════════════════════════════════════════════════════
@@ -433,7 +414,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 const NOMES_MES = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                    'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-const ESCRITORIOS_VALIDOS = (window.escritoriosValidos ? window.escritoriosValidos() : ['quarteira','albufeira','lisboa','porto']);
+// ESCRITORIOS_VALIDOS: obtido dinamicamente via window.loadEscritorios() no authReady
 
 // Feriados nacionais — estrutura base por ano
 // Para anos diferentes o Carnaval/Páscoa/Corpo de Deus mudam
@@ -511,6 +492,22 @@ document.addEventListener('authReady', () => {
 
   db = firebase.firestore();
   preencherSelects();
+
+  // Carregar escritórios dinamicamente
+  window.loadEscritorios().then(lista => {
+    const checkHtml = lista.map(e =>
+      `<label class="ck on" onclick="toggleCk(this)"><input type="checkbox" value="${e.id}" checked>${e.nome}</label>`
+    ).join('');
+    ['f-escritorios','e-escritorios','a-escritorios'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = checkHtml;
+    });
+    const vEsc = document.getElementById('v-escritorio');
+    if (vEsc) {
+      vEsc.innerHTML = lista.map(e => `<option value="${e.id}">${e.nome}</option>`).join('');
+    }
+  });
+
   renderFeriadosList(parseInt(document.getElementById('f-ano').value));
 
   // Atualizar feriados quando o ano muda

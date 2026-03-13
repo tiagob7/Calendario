@@ -1055,7 +1055,7 @@ buildDeptCards = function() {
 const _now = new Date();
 let _calAno = _now.getFullYear();
 let _calMes = _now.getMonth() + 1; // 1–12
-let _calEscritorio = 'quarteira';
+let _calEscritorio = '';
 let _ESCR_MAP = {}; // id -> {id,nome,cor,...}
 const NOMES_MES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
@@ -1156,7 +1156,7 @@ document.addEventListener('authReady', async ({ detail }) => {
   let escritorio = window.escritorioAtivo() || '';
   if (!escritorio || escritorio === 'todos') {
     const lista = window.getEscritoriosSync ? window.getEscritoriosSync() : [];
-    escritorio = (lista[0] && lista[0].id) || 'quarteira';
+    escritorio = (lista[0] && lista[0].id) || '';
   }
   _calEscritorio = escritorio;
 

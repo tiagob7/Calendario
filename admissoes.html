@@ -1394,7 +1394,7 @@ function vozSimular(texto, tipo) {
 
   // Nome próprio: 2+ palavras com maiúscula
   const nome = (texto.match(/\b([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][a-záéíóúàâêôãõç]+(?:\s+[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][a-záéíóúàâêôãõç]+)+)\b/) || [])[1] || '';
-  const esc  = ['quarteira','albufeira','lisboa','porto'].find(e => t.includes(e)) || '';
+  const esc  = window.getEscritoriosSync().map(e => e.id).find(e => t.includes(e)) || '';
   const data = (texto.match(/\b(\d{4}-\d{2}-\d{2}|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\b/) || [])[1] || '';
 
   // Número de colaborador: "número XXXX" ou "nº XXXX"

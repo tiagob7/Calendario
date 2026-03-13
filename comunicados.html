@@ -424,8 +424,9 @@ function renderList() {
 
 function setFiltroEscritorioCom(val) {
   filtroEscritorio = val;
-  const nomes = { quarteira:'Quarteira', albufeira:'Albufeira', lisboa:'Lisboa', porto:'Porto', '':'Todos os escritórios' };
-  document.getElementById('pageSubtitle').textContent = nomes[val] || 'Todos os escritórios';
+  document.getElementById('pageSubtitle').textContent = val
+    ? (window.nomeEscritorio ? window.nomeEscritorio(val) : val)
+    : 'Todos os escritórios';
   renderList();
 }
 function toggleCard(id) { if(expandedIds.has(id)) expandedIds.delete(id); else expandedIds.add(id); renderList(); }
