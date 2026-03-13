@@ -115,13 +115,15 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .tipo-tag-sm.aviso{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
 
 /* CALENDAR MINI */
-.cal-grid{display:grid;grid-template-columns:repeat(30,1fr);gap:2px;}
+.cal-day-nums{display:flex;gap:2px;margin-bottom:10px;}
+.cal-day-num{text-align:center;font-size:8px;color:var(--muted);flex:1;}
+.cal-dow-row{display:flex;gap:2px;margin-bottom:2px;}
+.cal-dow{text-align:center;font-size:8px;color:var(--muted);flex:1;font-weight:500;}
 .cal-dept-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px;margin-top:8px;}
 .cal-dept-label:first-child{margin-top:0;}
-.cal-seg{height:14px;border-radius:2px;cursor:default;transition:opacity .1s;}
+.cal-grid{display:flex;gap:2px;margin-bottom:2px;}
+.cal-seg{height:14px;border-radius:2px;cursor:default;transition:opacity .1s;flex:1;}
 .cal-seg:hover{opacity:.75;}
-.cal-day-nums{display:grid;grid-template-columns:repeat(30,1fr);gap:2px;margin-bottom:10px;}
-.cal-day-num{text-align:center;font-size:8px;color:var(--muted);}
 
 /* EVENTOS */
 .ev-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:10px;}
@@ -325,6 +327,15 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
   <!-- MAIN GRID -->
   <div class="main-grid">
 
+    <!-- COMUNICADOS RECENTES — full width, agora primeiro -->
+    <div class="panel full">
+      <div class="panel-header">
+        <span class="panel-title">📢 Comunicados recentes</span>
+        <a class="panel-link" href="comunicados.html">Ver todos →</a>
+      </div>
+      <div id="comList" class="com-grid"><div class="loading">A carregar…</div></div>
+    </div>
+
     <!-- TAREFAS ACTIVAS -->
     <div class="panel">
       <div class="panel-header">
@@ -350,13 +361,16 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       <div id="admList"><div class="loading">A carregar…</div></div>
     </div>
 
-    <!-- COMUNICADOS RECENTES — full width -->
-    <div class="panel full">
+    <!-- RECLAMAÇÕES EM ABERTO — antes do calendário -->
+    <div class="panel full" id="reclamacoesPanelWrap">
       <div class="panel-header">
-        <span class="panel-title">📢 Comunicados recentes</span>
-        <a class="panel-link" href="comunicados.html">Ver todos →</a>
+        <span class="panel-title">⚠️ Reclamações em aberto</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div id="recKpis" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+          <a class="panel-link" href="reclamacoes.html">Ver todas →</a>
+        </div>
       </div>
-      <div id="comList" class="com-grid"><div class="loading">A carregar…</div></div>
+      <div id="recList"><div class="loading">A carregar…</div></div>
     </div>
 
     <!-- CALENDÁRIO MINI -->
@@ -383,18 +397,6 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
         <span class="panel-title">⚡ Actividade recente</span>
       </div>
       <div id="activityList"><div class="loading">A carregar…</div></div>
-    </div>
-
-    <!-- RECLAMAÇÕES EM ABERTO -->
-    <div class="panel full" id="reclamacoesPanelWrap">
-      <div class="panel-header">
-        <span class="panel-title">⚠️ Reclamações em aberto</span>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div id="recKpis" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
-          <a class="panel-link" href="reclamacoes.html">Ver todas →</a>
-        </div>
-      </div>
-      <div id="recList"><div class="loading">A carregar…</div></div>
     </div>
 
   </div>
@@ -950,18 +952,41 @@ function renderCalMini() {
     return;
   }
 
+  // Descobrir o mês/ano do documento de calendário (id: "calendario_ESC_YYYY_MM")
+  // Usar calData.mes/ano se existir, caso contrário inferir do mês atual
+  const now = new Date();
+  const ano  = calData.ano  || now.getFullYear();
+  const mes  = calData.mes  != null ? calData.mes : now.getMonth(); // 0-based
+  const diasNoMes = new Date(ano, mes + 1, 0).getDate(); // 28/29/30/31
+
+  const DIAS_SEMANA_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+  // Linha de números de dia + dia da semana
+  let numHtml  = '<div class="cal-day-nums">';
+  let dowHtml  = '<div class="cal-dow-row">';
+  for (let d = 1; d <= diasNoMes; d++) {
+    const dow = new Date(ano, mes, d).getDay(); // 0=Dom … 6=Sáb
+    const isWeekend = dow === 0 || dow === 6;
+    const style = isWeekend ? 'color:#dc2626;opacity:.7;' : '';
+    numHtml += `<div class="cal-day-num" style="${style}">${d}</div>`;
+    dowHtml += `<div class="cal-dow" style="${style}">${DIAS_SEMANA_PT[dow].charAt(0)}</div>`;
+  }
+  numHtml += '</div>';
+  dowHtml += '</div>';
+
   const { departments } = calData;
-  let html = '<div class="cal-day-nums">';
-  for (let d = 1; d <= 30; d++) html += `<div class="cal-day-num">${d}</div>`;
-  html += '</div>';
+  let html = dowHtml + numHtml;
 
   departments.forEach(dept => {
     html += `<div class="cal-dept-label">${escHtml(dept.name)}</div>`;
     html += '<div class="cal-grid">';
-    for (let d = 0; d < 30; d++) {
-      const val   = dept.data ? dept.data[d] : 0;
+    for (let d = 0; d < diasNoMes; d++) {
+      const val   = dept.data ? (dept.data[d] ?? 0) : 0;
       const color = dept.colors ? dept.colors[Math.min(5, Math.max(0, val))] : '#ddd';
-      html += `<div class="cal-seg" style="background:${color}" title="Dia ${d + 1}: ${val}"></div>`;
+      const dow   = new Date(ano, mes, d + 1).getDay();
+      const isWeekend = dow === 0 || dow === 6;
+      const opacity = isWeekend && val === 0 ? 'opacity:.35;' : '';
+      html += `<div class="cal-seg" style="background:${color};${opacity}" title="${DIAS_SEMANA_PT[dow]} ${d + 1}: ${val}"></div>`;
     }
     html += '</div>';
   });
