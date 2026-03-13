@@ -255,7 +255,6 @@ const ESC_DEFAULT = [
 
 let db;
 let paineis = { Utilizadores: false, Escritorios: false };
-let utilizadoresCarregados = false;
 let escritoriosData = [];
 let utilizadoresAll = [];
 let escEditandoId = null;
@@ -307,7 +306,7 @@ function togglePainel(nome) {
     document.getElementById('panel' + nome).classList.add('open');
     document.getElementById('card'  + nome).classList.add('active');
     setTimeout(() => document.getElementById('panel' + nome).scrollIntoView({ behavior:'smooth', block:'start' }), 60);
-    if (nome === 'Utilizadores' && !utilizadoresCarregados) carregarUtilizadores();
+    if (nome === 'Utilizadores') carregarUtilizadores();
     if (nome === 'Escritorios') carregarEscritorios();
   }
 }
@@ -345,7 +344,6 @@ async function carregarUtilizadores() {
         <a href="utilizadores.html" class="btn btn-primary">Gerir utilizadores →</a>
       </div>`;
     utilizadoresAll = users;
-    utilizadoresCarregados = true;
   } catch(e) {
     body.innerHTML = `<p style="font-size:11px;color:#dc2626;text-align:center;padding:16px 0;">Erro: ${e.message}</p>`;
   }

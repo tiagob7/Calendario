@@ -429,9 +429,12 @@ body::before{
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
+// Flag para impedir redirect automático durante o registo
+let isRegistering = false;
+
 // ── SE JÁ ESTÁ LOGADO, VAI DIRETO AO DASHBOARD ──
 auth.onAuthStateChanged(user => {
-  if (user) {
+  if (user && !isRegistering) {
     window.location.href = 'dashboard.html';
   }
 });
@@ -491,13 +494,14 @@ async function doRegister() {
 
   const btn = document.getElementById('btnRegister');
   setLoading(btn, true);
+  isRegistering = true;
 
   try {
     // 1. Criar utilizador no Firebase Auth
     const cred = await auth.createUserWithEmailAndPassword(email, password);
     const uid  = cred.user.uid;
 
-    // 2. Guardar perfil no Firestore
+    // 2. Guardar perfil no Firestore (antes do redirect)
     await db.collection('utilizadores').doc(uid).set({
       nome,
       apelido,
@@ -508,16 +512,26 @@ async function doRegister() {
       role: 'colaborador',       // por defeito — Admin pode alterar depois
       ativo: true,
       criadoEm: Date.now(),
-      ultimoAcesso: Date.now()
+      ultimoAcesso: Date.now(),
+      permissoes: {
+        criarTarefas: false,
+        resolverTarefas: false,
+        gerirComunicados: false,
+        criarAdmissoes: false,
+        resolverAdmissoes: false,
+        editarCalendario: false
+      }
     });
 
     // 3. Atualizar display name no Auth
     await cred.user.updateProfile({ displayName: nome + ' ' + apelido });
 
     showSuccess('Conta criada com sucesso! A redirecionar…');
-    // onAuthStateChanged trata do redirecionamento
+    // Redirect manual após todas as escritas estarem completas
+    window.location.href = 'dashboard.html';
 
   } catch (err) {
+    isRegistering = false;
     setLoading(btn, false);
     showError(translateAuthError(err.code));
   }
