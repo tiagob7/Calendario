@@ -116,6 +116,7 @@ window.renderNavbar = function(activePage) {
     tarefas:     'Tarefas',
     comunicados: 'Comunicados',
     admissoes:   'Admissões',
+    definicoes:  'Definições',
   };
   const titulo = PAGE_TITLES[activePage] || activePage;
 
