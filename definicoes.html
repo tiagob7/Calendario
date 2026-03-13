@@ -6,121 +6,68 @@
 <title>Definições</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@600;700;800&display=swap');
-
-:root{
-  --bg:#f4f4f6;--surface:#fff;--surface2:#f7f7f9;--border:#e2e2e8;
-  --text:#1a1a22;--muted:#8888a0;--accent:#2563eb;
-}
+:root{--bg:#f4f4f6;--surface:#fff;--surface2:#f7f7f9;--border:#e2e2e8;--text:#1a1a22;--muted:#8888a0;--accent:#2563eb;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;}
 .page{max-width:860px;margin:0 auto;padding:32px 20px;}
 h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,26px);letter-spacing:-.03em;margin-bottom:4px;}
 .subtitle{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:32px;}
-
-/* CARDS GRID */
-.def-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;}
-@media(max-width:600px){.def-grid{grid-template-columns:1fr;}}
-
-.def-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px 26px;box-shadow:0 1px 6px rgba(0,0,0,.06);text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:12px;transition:all .18s;cursor:pointer;}
-.def-card:hover{border-color:var(--accent);box-shadow:0 4px 16px rgba(37,99,235,.1);transform:translateY(-1px);}
-.def-card.active{border-color:var(--accent);background:#f0f6ff;}
-
-.def-card-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.def-card-icon svg{width:20px;height:20px;}
-.def-card-icon.blue{background:#eff6ff;color:#2563eb;}
-.def-card-icon.purple{background:#f5f3ff;color:#7c3aed;}
-
-.def-card-title{font-family:'Manrope',sans-serif;font-weight:700;font-size:14px;letter-spacing:-.01em;}
-.def-card-desc{font-size:11px;color:var(--muted);line-height:1.7;}
-
-/* PANEL */
-.def-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.06);}
-.def-panel-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
-.def-panel-header h2{font-family:'Manrope',sans-serif;font-weight:700;font-size:14px;flex:1;}
-.def-panel-body{padding:24px;}
-
-/* Shared form styles */
-.field-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;display:block;}
-.form-input,.form-select{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:8px 10px;border-radius:6px;outline:none;transition:border-color .15s;}
-.form-input:focus,.form-select:focus{border-color:var(--accent);}
-.btn{padding:9px 18px;border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;text-transform:uppercase;letter-spacing:.09em;transition:all .15s;}
-.btn:hover{opacity:.82;}
-.btn:disabled{opacity:.4;cursor:not-allowed;}
+.def-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:40px;}
+@media(max-width:580px){.def-grid{grid-template-columns:1fr;}}
+.def-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px 26px;box-shadow:0 1px 6px rgba(0,0,0,.06);text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:14px;transition:all .18s;}
+.def-card:hover{border-color:var(--accent);box-shadow:0 6px 20px rgba(37,99,235,.12);transform:translateY(-2px);}
+.def-card-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;}
+.def-card-icon svg{width:22px;height:22px;}
+.blue{background:#eff6ff;color:#2563eb;}
+.purple{background:#f5f3ff;color:#7c3aed;}
+.def-card-title{font-family:'Manrope',sans-serif;font-weight:800;font-size:15px;letter-spacing:-.02em;}
+.def-card-desc{font-size:11px;color:var(--muted);line-height:1.75;}
+.def-card-link{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;margin-top:4px;}
+.def-card-link svg{width:11px;height:11px;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.06);margin-bottom:20px;display:none;}
+.panel-header{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.panel-header h2{font-family:'Manrope',sans-serif;font-weight:700;font-size:13px;flex:1;}
+.panel-body{padding:20px 22px;}
+.btn{padding:7px 14px;border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;text-transform:uppercase;letter-spacing:.08em;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:5px;}
 .btn-primary{background:var(--text);color:#fff;}
-.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
-.btn-red{background:#fde8e8;color:#a81a1a;border:1px solid #e8b4b4;}
-.btn-full{width:100%;}
-
-/* ── CALENDÁRIO ADMIN ── */
-.cal-section{margin-bottom:28px;}
-.cal-section-title{font-family:'Manrope',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
-
-.check-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:4px;}
-@media(max-width:500px){.check-grid{grid-template-columns:1fr 1fr;}}
-.check-item{display:flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:11px;background:var(--surface2);transition:all .15s;user-select:none;}
-.check-item:hover{border-color:#aaa;}
-.check-item.on{border-color:var(--accent);background:#eff6ff;color:var(--accent);}
-.check-item input{accent-color:var(--accent);pointer-events:none;}
-
-.period-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px;}
-@media(max-width:500px){.period-row{grid-template-columns:1fr 1fr;}}
-
-.event-builder{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;}
-.event-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
-.event-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;}
-.toggle-row{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:10px;cursor:pointer;user-select:none;}
-.toggle-pill{width:30px;height:17px;border-radius:9px;background:var(--border);position:relative;flex-shrink:0;transition:background .2s;}
-.toggle-pill::after{content:'';position:absolute;width:11px;height:11px;border-radius:50%;background:#fff;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
-.toggle-row.on .toggle-pill{background:var(--accent);}
-.toggle-row.on .toggle-pill::after{left:16px;}
-.toggle-label{font-size:10px;color:var(--muted);flex:1;}
-.toggle-row.on .toggle-label{color:var(--accent);}
-
-.event-list{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
-.event-pill{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:7px;font-size:10px;}
-.event-pill-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;}
-.event-pill-label{flex:1;}
-.event-pill-range{color:var(--muted);white-space:nowrap;}
-.event-pill-del{background:none;border:none;cursor:pointer;color:#ccc;font-size:13px;padding:0 2px;transition:color .1s;}
-.event-pill-del:hover{color:#a81a1a;}
-
-.progress-wrap{margin-top:14px;}
-.progress-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
-.progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s;width:0%;}
-#logWrap{margin-top:12px;display:none;}
-#log{font-size:10px;line-height:1.9;color:var(--muted);max-height:180px;overflow-y:auto;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;}
-#log .ok{color:#16a34a;}
-#log .err{color:#dc2626;}
-#log .info{color:#2563eb;}
-
-/* NOMES MES */
-.nomes-mes-badge{font-size:9px;padding:1px 7px;border-radius:10px;background:#eff6ff;color:var(--accent);border:1px solid #bfdbfe;white-space:nowrap;}
+.btn-primary:hover{opacity:.82;}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+th{text-align:left;padding:6px 10px;font-size:10px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);}
+td{padding:9px 10px;border-bottom:1px solid var(--border);}
+tr:last-child td{border-bottom:none;}
+.badge{font-size:9px;padding:2px 8px;border-radius:10px;display:inline-block;}
+.badge-admin{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;}
+.badge-colab{background:#f4f4f6;color:#8888a0;border:1px solid #e2e2e8;}
+.badge-ativo{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;}
+.badge-inativo{background:#fef2f2;color:#dc2626;border:1px solid #fecaca;}
 </style>
 </head>
 <body>
-
 <div class="page">
   <h1>Definições</h1>
   <p class="subtitle">Administração do sistema</p>
 
-  <!-- CARDS DE NAVEGAÇÃO -->
   <div class="def-grid">
-    <div class="def-card" id="cardUtilizadores" onclick="showPanel('utilizadores')">
+    <a class="def-card" href="#" onclick="toggleUtilizadores(event)">
       <div class="def-card-icon blue">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
-          <circle cx="6" cy="5" r="2.5"/>
-          <path d="M1 13c0-2.5 2-4 5-4s5 1.5 5 4"/>
-          <path d="M11 7c1.5 0 3 .8 3 3"/>
-          <circle cx="11.5" cy="4" r="1.8"/>
+          <circle cx="5.5" cy="5" r="2.5"/>
+          <path d="M1 13c0-2.5 1.8-4 4.5-4s4.5 1.5 4.5 4"/>
+          <circle cx="12" cy="4.5" r="1.8"/>
+          <path d="M10.5 8c1.5.3 3 1.3 3 3.5"/>
         </svg>
       </div>
       <div>
         <div class="def-card-title">Utilizadores</div>
-        <div class="def-card-desc">Gerir contas, roles e permissões dos colaboradores.</div>
+        <div class="def-card-desc">Gerir contas, roles e permissões de todos os colaboradores.</div>
       </div>
-    </div>
+      <span class="def-card-link">
+        Ver utilizadores
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg>
+      </span>
+    </a>
 
-    <div class="def-card" id="cardCalendario" onclick="showPanel('calendario')">
+    <a class="def-card" href="gerir-calendarios.html">
       <div class="def-card-icon purple">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
           <rect x="2" y="3" width="12" height="11" rx="1.5"/>
@@ -130,407 +77,93 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       </div>
       <div>
         <div class="def-card-title">Calendário</div>
-        <div class="def-card-desc">Publicar eventos em múltiplos escritórios e meses de uma vez.</div>
+        <div class="def-card-desc">Publicar feriados e eventos, apagar erros, consultar calendários de todos os escritórios.</div>
       </div>
-    </div>
+      <span class="def-card-link">
+        Gerir calendários
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg>
+      </span>
+    </a>
   </div>
 
-  <!-- PANEL UTILIZADORES -->
-  <div class="def-panel" id="panelUtilizadores" style="display:none;">
-    <div class="def-panel-header">
+  <div class="panel" id="panelUtilizadores">
+    <div class="panel-header">
       <div class="def-card-icon blue" style="width:30px;height:30px;">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="width:15px;height:15px;">
-          <circle cx="6" cy="5" r="2.5"/><path d="M1 13c0-2.5 2-4 5-4s5 1.5 5 4"/>
-          <path d="M11 7c1.5 0 3 .8 3 3"/><circle cx="11.5" cy="4" r="1.8"/>
+          <circle cx="5.5" cy="5" r="2.5"/><path d="M1 13c0-2.5 1.8-4 4.5-4s4.5 1.5 4.5 4"/>
+          <circle cx="12" cy="4.5" r="1.8"/><path d="M10.5 8c1.5.3 3 1.3 3 3.5"/>
         </svg>
       </div>
-      <h2>Gestão de Utilizadores</h2>
-      <a href="utilizadores.html" class="btn btn-primary" style="font-size:10px;padding:7px 14px;text-decoration:none;">
-        Abrir página completa →
-      </a>
+      <h2>Utilizadores</h2>
+      <a href="utilizadores.html" class="btn btn-primary">Gerir completo →</a>
     </div>
-    <div class="def-panel-body" id="utilizadoresPreview">
-      <p style="font-size:11px;color:var(--muted);text-align:center;padding:20px 0;">A carregar utilizadores…</p>
-    </div>
-  </div>
-
-  <!-- PANEL CALENDÁRIO ADMIN -->
-  <div class="def-panel" id="panelCalendario" style="display:none;">
-    <div class="def-panel-header">
-      <div class="def-card-icon purple" style="width:30px;height:30px;">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="width:15px;height:15px;">
-          <rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M5 1v3M11 1v3M2 7h12"/>
-        </svg>
-      </div>
-      <h2>Publicar Eventos no Calendário</h2>
-    </div>
-    <div class="def-panel-body">
-
-      <!-- ESCRITÓRIOS -->
-      <div class="cal-section">
-        <div class="cal-section-title">Escritórios de destino</div>
-        <div class="check-grid">
-          <label class="check-item on" onclick="toggleCheck(this)">
-            <input type="checkbox" value="quarteira" checked> Quarteira
-          </label>
-          <label class="check-item on" onclick="toggleCheck(this)">
-            <input type="checkbox" value="albufeira" checked> Albufeira
-          </label>
-          <label class="check-item on" onclick="toggleCheck(this)">
-            <input type="checkbox" value="lisboa" checked> Lisboa
-          </label>
-          <label class="check-item on" onclick="toggleCheck(this)">
-            <input type="checkbox" value="porto" checked> Porto
-          </label>
-        </div>
-      </div>
-
-      <!-- PERÍODO -->
-      <div class="cal-section">
-        <div class="cal-section-title">Período</div>
-        <div class="period-row">
-          <div>
-            <label class="field-label">De (mês)</label>
-            <select class="form-select" id="mesInicio">
-              <option value="1">Janeiro</option><option value="2">Fevereiro</option>
-              <option value="3" selected>Março</option><option value="4">Abril</option>
-              <option value="5">Maio</option><option value="6">Junho</option>
-              <option value="7">Julho</option><option value="8">Agosto</option>
-              <option value="9">Setembro</option><option value="10">Outubro</option>
-              <option value="11">Novembro</option><option value="12">Dezembro</option>
-            </select>
-          </div>
-          <div>
-            <label class="field-label">Até (mês)</label>
-            <select class="form-select" id="mesFim">
-              <option value="1">Janeiro</option><option value="2">Fevereiro</option>
-              <option value="3">Março</option><option value="4">Abril</option>
-              <option value="5">Maio</option><option value="6">Junho</option>
-              <option value="7">Julho</option><option value="8">Agosto</option>
-              <option value="9">Setembro</option><option value="10">Outubro</option>
-              <option value="11">Novembro</option><option value="12" selected>Dezembro</option>
-            </select>
-          </div>
-          <div>
-            <label class="field-label">Ano</label>
-            <input type="number" class="form-input" id="anoInput" value="2026" min="2024" max="2030">
-          </div>
-        </div>
-      </div>
-
-      <!-- CONSTRUTOR DE EVENTOS -->
-      <div class="cal-section">
-        <div class="cal-section-title">Eventos a publicar</div>
-
-        <!-- Lista de eventos adicionados -->
-        <div class="event-list" id="eventList">
-          <div id="emptyMsg" style="font-size:11px;color:#bbb;text-align:center;padding:10px 0;">Nenhum evento adicionado ainda.</div>
-        </div>
-
-        <!-- Formulário para adicionar evento -->
-        <div class="event-builder">
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;">Novo evento</div>
-
-          <div class="event-row">
-            <div>
-              <label class="field-label">Dia início</label>
-              <input type="number" class="form-input" id="evDiaInicio" min="1" max="31" placeholder="ex: 5">
-            </div>
-            <div>
-              <label class="field-label">Dia fim <span style="color:#bbb;">(opcional)</span></label>
-              <input type="number" class="form-input" id="evDiaFim" min="1" max="31" placeholder="= dia único">
-            </div>
-          </div>
-
-          <div style="margin-bottom:8px;">
-            <label class="field-label">Descrição do evento</label>
-            <input type="text" class="form-input" id="evLabel" placeholder="ex: Feriado Nacional, Reunião, Entrega…">
-          </div>
-
-          <div class="toggle-row" id="pinToggle" onclick="this.classList.toggle('on')">
-            <div class="toggle-pill"></div>
-            <span class="toggle-label">Fixar na linha do calendário (📌)</span>
-          </div>
-
-          <div style="margin-bottom:0;">
-            <label class="field-label">Apenas em meses específicos? <span style="color:#bbb;">(deixar vazio = todos os meses do período)</span></label>
-            <div class="check-grid" id="mesesEspecificos" style="grid-template-columns:repeat(6,1fr);gap:4px;">
-              <label class="check-item" style="flex-direction:column;gap:2px;padding:5px;" onclick="toggleCheck(this)"><input type="checkbox" value="1"> <span style="font-size:9px;">Jan</span></label>
-              <label class="check-item" style="flex-direction:column;gap:2px;padding:5px;" onclick="toggleCheck(this)"><input type="checkbox" value="2"> <span style="font-size:9px;">Fev</span></label>
-              <label class="check-item" style="flex-direction:column;gap:2px;padding:5px;" onclick="toggleCheck(this)"><input type="checkbox" value="3"> <span style="font-size:9px;">Mar</span></label>
-              <label class="check-item" style="flex-direction:column;gap:2px;padding:5px;" onclick="toggleCheck(this)"><input type="checkbox" value="4"> <span style="font-size:9px;">Abr</span></label>
-              <label class="check-item" style="flex-direction:column;gap:2px;padding:5px;" onclick="toggleCheck(this)"><input type="checkbox" value="5"> <span style="font-size:9px;">Mai</span></label>
-              <label class="check-item" style="flex-direction:column;gap:2px;padding:5px;" onclick="toggleCheck(this)"><input type="checkbox" value="6"> <span style="font-size:9px;">Jun</span></label>
-              <label class="check-item" style="flex-direction:column;gap:2px;padding:5px;" onclick="toggleCheck(this)"><input type="checkbox" value="7"> <span style="font-size:9px;">Jul</span></label>
-              <label class="check-item" style="flex-direction:column;gap:2px;padding:5px;" onclick="toggleCheck(this)"><input type="checkbox" value="8"> <span style="font-size:9px;">Ago</span></label>
-              <label class="check-item" style="flex-direction:column;gap:2px;padding:5px;" onclick="toggleCheck(this)"><input type="checkbox" value="9"> <span style="font-size:9px;">Set</span></label>
-              <label class="check-item" style="flex-direction:column;gap:2px;padding:5px;" onclick="toggleCheck(this)"><input type="checkbox" value="10"> <span style="font-size:9px;">Out</span></label>
-              <label class="check-item" style="flex-direction:column;gap:2px;padding:5px;" onclick="toggleCheck(this)"><input type="checkbox" value="11"> <span style="font-size:9px;">Nov</span></label>
-              <label class="check-item" style="flex-direction:column;gap:2px;padding:5px;" onclick="toggleCheck(this)"><input type="checkbox" value="12"> <span style="font-size:9px;">Dez</span></label>
-            </div>
-          </div>
-
-          <button class="btn btn-secondary" style="margin-top:12px;width:100%;" onclick="adicionarEvento()">+ Adicionar à lista</button>
-        </div>
-      </div>
-
-      <!-- PUBLICAR -->
-      <div class="cal-section" style="margin-bottom:0;">
-        <div class="cal-section-title">Publicar</div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="width:14px;height:14px;color:var(--muted);flex-shrink:0;">
-            <circle cx="8" cy="8" r="6"/><path d="M8 5v3.5L10 10"/>
-          </svg>
-          <span style="font-size:10px;color:var(--muted);line-height:1.6;">Os eventos são <b style="color:var(--text);">adicionados</b> aos existentes. Para substituir todos os eventos, ativa a opção abaixo.</span>
-        </div>
-        <div class="toggle-row" id="substituirToggle" onclick="this.classList.toggle('on')">
-          <div class="toggle-pill"></div>
-          <span class="toggle-label">Substituir todos os eventos existentes (apaga os atuais antes de publicar)</span>
-        </div>
-
-        <div class="progress-wrap">
-          <button class="btn btn-primary btn-full" id="btnPublicar" onclick="publicarEventos()">Publicar nos Calendários</button>
-          <div class="progress-bar" style="margin-top:10px;"><div class="progress-fill" id="progressFill"></div></div>
-        </div>
-        <div id="logWrap"><div id="log"></div></div>
-      </div>
-
+    <div class="panel-body" id="utilizadoresBody">
+      <p style="font-size:11px;color:var(--muted);text-align:center;padding:16px 0;">A carregar…</p>
     </div>
   </div>
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-init.js"></script>
 <script src="auth.js"></script>
 <script>
+document.addEventListener('authReady', () => {
+  window.renderNavbar('definicoes');
+  if (!window.isAdmin()) {
+    document.querySelector('.page').innerHTML =
+      '<div style="text-align:center;padding:80px 20px;font-size:13px;color:var(--muted);">Acesso restrito a administradores.</div>';
+  }
+});
 
-const NOMES_MES = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const ESCRITORIOS = ['quarteira','albufeira','lisboa','porto'];
+let utilizadoresCarregados = false;
+let painelAberto = false;
 
-// ── Lista de eventos a publicar (estado local) ──
-let eventosPendentes = [];
-
-// ── Mostrar/esconder painéis ──
-function showPanel(which) {
-  ['utilizadores','calendario'].forEach(p => {
-    document.getElementById('panel' + p.charAt(0).toUpperCase() + p.slice(1)).style.display = 'none';
-    document.getElementById('card'  + p.charAt(0).toUpperCase() + p.slice(1)).classList.remove('active');
-  });
-  document.getElementById('panel' + which.charAt(0).toUpperCase() + which.slice(1)).style.display = 'block';
-  document.getElementById('card'  + which.charAt(0).toUpperCase() + which.slice(1)).classList.add('active');
-
-  // Scroll suave até ao painel
-  setTimeout(() => {
-    document.getElementById('panel' + which.charAt(0).toUpperCase() + which.slice(1))
-      .scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 50);
-
-  if (which === 'utilizadores') carregarUtilizadores();
+function toggleUtilizadores(e) {
+  e.preventDefault();
+  const painel = document.getElementById('panelUtilizadores');
+  painelAberto = !painelAberto;
+  painel.style.display = painelAberto ? 'block' : 'none';
+  if (painelAberto && !utilizadoresCarregados) carregarUtilizadores();
+  if (painelAberto) setTimeout(() => painel.scrollIntoView({ behavior:'smooth', block:'start' }), 50);
 }
 
-// ── Toggle checkboxes ──
-function toggleCheck(el) {
-  el.classList.toggle('on');
-  el.querySelector('input').checked = el.classList.contains('on');
-}
-
-// ── Carregar preview de utilizadores ──
 async function carregarUtilizadores() {
-  const wrap = document.getElementById('utilizadoresPreview');
-  wrap.innerHTML = '<p style="font-size:11px;color:var(--muted);text-align:center;padding:16px 0;">A carregar…</p>';
+  const body = document.getElementById('utilizadoresBody');
   try {
     const snap = await firebase.firestore().collection('utilizadores').get();
-    const users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    if (!users.length) { wrap.innerHTML = '<p style="font-size:11px;color:var(--muted);text-align:center;padding:16px 0;">Sem utilizadores.</p>'; return; }
+    const users = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a,b) => (a.nomeCompleto||'').localeCompare(b.nomeCompleto||''));
 
-    const roleLabel = r => r === 'admin' ? '<span style="font-size:9px;padding:2px 7px;border-radius:10px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;">Admin</span>' : '<span style="font-size:9px;padding:2px 7px;border-radius:10px;background:#f4f4f6;color:#8888a0;border:1px solid #e2e2e8;">Colaborador</span>';
-    const escLabel  = e => e ? `<span style="font-size:9px;color:#8888a0;text-transform:capitalize;">${e}</span>` : '<span style="font-size:9px;color:#ccc;">—</span>';
+    if (!users.length) {
+      body.innerHTML = '<p style="font-size:11px;color:var(--muted);text-align:center;padding:16px 0;">Sem utilizadores.</p>';
+      return;
+    }
 
-    wrap.innerHTML = `
+    body.innerHTML = `
       <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;font-size:11px;">
-          <thead>
-            <tr style="border-bottom:1px solid var(--border);">
-              <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.06em;">Nome</th>
-              <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.06em;">Email</th>
-              <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.06em;">Escritório</th>
-              <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.06em;">Role</th>
-              <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.06em;">Estado</th>
-            </tr>
-          </thead>
+        <table>
+          <thead><tr><th>Nome</th><th>Email</th><th>Escritório</th><th>Role</th><th>Estado</th></tr></thead>
           <tbody>
-            ${users.map(u => `
-              <tr style="border-bottom:1px solid var(--border);">
-                <td style="padding:8px 8px;">${u.nomeCompleto || u.nome || '—'}</td>
-                <td style="padding:8px 8px;color:var(--muted);">${u.email || '—'}</td>
-                <td style="padding:8px 8px;">${escLabel(u.escritorio)}</td>
-                <td style="padding:8px 8px;">${roleLabel(u.role)}</td>
-                <td style="padding:8px 8px;">${u.ativo ? '<span style="color:#16a34a;font-size:10px;">● Ativo</span>' : '<span style="color:#dc2626;font-size:10px;">● Inativo</span>'}</td>
-              </tr>`).join('')}
+            ${users.map(u => `<tr>
+              <td>${u.nomeCompleto || u.nome || '—'}</td>
+              <td style="color:var(--muted);">${u.email || '—'}</td>
+              <td style="text-transform:capitalize;">${u.escritorio || '—'}</td>
+              <td><span class="badge ${u.role==='admin'?'badge-admin':'badge-colab'}">${u.role==='admin'?'Admin':'Colaborador'}</span></td>
+              <td><span class="badge ${u.ativo!==false?'badge-ativo':'badge-inativo'}">${u.ativo!==false?'Ativo':'Inativo'}</span></td>
+            </tr>`).join('')}
           </tbody>
         </table>
       </div>
       <div style="margin-top:14px;text-align:right;">
-        <a href="utilizadores.html" class="btn btn-secondary" style="font-size:10px;padding:7px 14px;text-decoration:none;">Gerir utilizadores →</a>
+        <a href="utilizadores.html" class="btn btn-primary">Gerir utilizadores →</a>
       </div>`;
+    utilizadoresCarregados = true;
   } catch(e) {
-    wrap.innerHTML = `<p style="font-size:11px;color:#dc2626;text-align:center;padding:16px 0;">Erro ao carregar: ${e.message}</p>`;
+    body.innerHTML = `<p style="font-size:11px;color:#dc2626;text-align:center;padding:16px 0;">Erro: ${e.message}</p>`;
   }
 }
-
-// ── Adicionar evento à lista pendente ──
-function adicionarEvento() {
-  const diaInicio = parseInt(document.getElementById('evDiaInicio').value);
-  const diaFimRaw = document.getElementById('evDiaFim').value.trim();
-  const diaFim    = diaFimRaw ? parseInt(diaFimRaw) : diaInicio;
-  const label     = document.getElementById('evLabel').value.trim();
-  const pinned    = document.getElementById('pinToggle').classList.contains('on');
-
-  if (!diaInicio || diaInicio < 1 || diaInicio > 31) { alert('Dia de início inválido (1–31).'); return; }
-  if (diaFim < diaInicio || diaFim > 31) { alert('Dia de fim inválido.'); return; }
-  if (!label) { alert('Introduz uma descrição para o evento.'); return; }
-
-  // Meses específicos selecionados
-  const mesesSel = [...document.querySelectorAll('#mesesEspecificos .check-item.on input')]
-    .map(i => parseInt(i.value));
-
-  eventosPendentes.push({ dayFrom: diaInicio, dayTo: diaFim, label, pinned, deptId: '', mesesFiltro: mesesSel });
-
-  // Limpar campos
-  document.getElementById('evDiaInicio').value = '';
-  document.getElementById('evDiaFim').value = '';
-  document.getElementById('evLabel').value = '';
-  document.getElementById('pinToggle').classList.remove('on');
-  document.querySelectorAll('#mesesEspecificos .check-item').forEach(el => {
-    el.classList.remove('on');
-    el.querySelector('input').checked = false;
-  });
-
-  renderEventList();
-}
-
-function renderEventList() {
-  const list = document.getElementById('eventList');
-  const emptyMsg = document.getElementById('emptyMsg');
-  if (!eventosPendentes.length) {
-    list.innerHTML = '<div id="emptyMsg" style="font-size:11px;color:#bbb;text-align:center;padding:10px 0;">Nenhum evento adicionado ainda.</div>';
-    return;
-  }
-  list.innerHTML = eventosPendentes.map((ev, i) => {
-    const range = ev.dayFrom === ev.dayTo ? `Dia ${ev.dayFrom}` : `Dia ${ev.dayFrom}–${ev.dayTo}`;
-    const mesesStr = ev.mesesFiltro.length
-      ? ev.mesesFiltro.map(m => NOMES_MES[m].slice(0,3)).join(', ')
-      : 'Todos os meses';
-    return `
-      <div class="event-pill">
-        <div class="event-pill-dot" style="${ev.pinned ? 'background:#a855f7' : ''}"></div>
-        <span class="event-pill-label">${ev.label}${ev.pinned ? ' 📌' : ''}</span>
-        <span class="event-pill-range">${range} · ${mesesStr}</span>
-        <button class="event-pill-del" onclick="removerEvento(${i})">×</button>
-      </div>`;
-  }).join('');
-}
-
-function removerEvento(i) {
-  eventosPendentes.splice(i, 1);
-  renderEventList();
-}
-
-// ── Log ──
-function log(msg, type = '') {
-  document.getElementById('logWrap').style.display = 'block';
-  const el = document.getElementById('log');
-  el.innerHTML += `<div class="${type}">${msg}</div>`;
-  el.scrollTop = el.scrollHeight;
-}
-function setProgress(pct) {
-  document.getElementById('progressFill').style.width = pct + '%';
-}
-
-// ── Publicar eventos ──
-async function publicarEventos() {
-  if (!eventosPendentes.length) { alert('Adiciona pelo menos um evento antes de publicar.'); return; }
-
-  const escritorios = [...document.querySelectorAll('.check-grid:first-of-type .check-item.on input')].map(i => i.value)
-    .filter(v => ESCRITORIOS.includes(v));
-  if (!escritorios.length) { alert('Seleciona pelo menos um escritório.'); return; }
-
-  const ano       = parseInt(document.getElementById('anoInput').value);
-  const mesInicio = parseInt(document.getElementById('mesInicio').value);
-  const mesFim    = parseInt(document.getElementById('mesFim').value);
-  const substituir = document.getElementById('substituirToggle').classList.contains('on');
-
-  const meses = [];
-  for (let m = mesInicio; m <= mesFim; m++) meses.push(m);
-
-  const btn = document.getElementById('btnPublicar');
-  btn.disabled = true;
-  document.getElementById('log').innerHTML = '';
-  document.getElementById('logWrap').style.display = 'none';
-
-  const db = firebase.firestore();
-  const total = escritorios.length * meses.length;
-  let done = 0;
-
-  log(`▶ A publicar — ${escritorios.length} escritório(s) × ${meses.length} mês(es)`, 'info');
-
-  for (const esc of escritorios) {
-    for (const mes of meses) {
-      const mesStr = String(mes).padStart(2, '0');
-      const docId  = `calendario_${esc}_${ano}_${mesStr}`;
-      const ref    = db.collection('calendarios').doc(docId);
-
-      // Filtrar eventos que se aplicam a este mês
-      const evDoMes = eventosPendentes
-        .filter(ev => !ev.mesesFiltro.length || ev.mesesFiltro.includes(mes))
-        .map(({ dayFrom, dayTo, label, pinned, deptId }) => ({ dayFrom, dayTo, label, pinned, deptId }));
-
-      try {
-        const snap = await ref.get();
-
-        if (snap.exists) {
-          const data = snap.data();
-          const evExistentes = substituir ? [] : (data.events || []);
-          // Evitar duplicados pelo label+dia
-          const novosUnicos = evDoMes.filter(ne =>
-            !evExistentes.some(e => e.label === ne.label && e.dayFrom === ne.dayFrom)
-          );
-          await ref.update({ events: [...evExistentes, ...novosUnicos], updatedAt: Date.now() });
-          log(`✓ ${docId} — ${novosUnicos.length} evento(s) adicionado(s)${substituir ? ' (substituição)' : ''}`, 'ok');
-        } else {
-          // Criar documento novo com estrutura padrão
-          const defaultDepts = [
-            { id:'conta',   name:'Contabilidade', colors:['#d4d4d8','#e8b4b4','#d97777','#c44040','#a81a1a','#6e0808'], data: Array(31).fill(0) },
-            { id:'payroll', name:'Payroll / RH',  colors:['#d4d4d8','#a8b8d8','#5f85c0','#2d5fa8','#163d80','#0a1f4a'], data: Array(31).fill(0) }
-          ];
-          await ref.set({ departments: defaultDepts, events: evDoMes, updatedAt: Date.now() });
-          log(`✓ ${docId} — criado com ${evDoMes.length} evento(s)`, 'ok');
-        }
-      } catch(e) {
-        log(`✗ ${docId} — ERRO: ${e.message}`, 'err');
-      }
-
-      done++;
-      setProgress(Math.round(done / total * 100));
-    }
-  }
-
-  log(`✔ Concluído! ${done} documento(s) processado(s).`, 'info');
-  btn.disabled = false;
-  btn.textContent = 'Concluído ✓';
-  setTimeout(() => { btn.textContent = 'Publicar nos Calendários'; btn.disabled = false; }, 4000);
-}
-
-// ── Auth ──
-document.addEventListener('authReady', () => {
-  window.renderNavbar('definicoes');
-  if (!window.isAdmin()) {
-    document.querySelector('.page').innerHTML = '<div style="text-align:center;padding:60px 20px;font-size:13px;color:var(--muted);">Acesso restrito a administradores.</div>';
-  }
-});
 </script>
 </body>
 </html>

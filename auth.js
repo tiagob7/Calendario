@@ -115,8 +115,9 @@ window.renderNavbar = function(activePage) {
     calendario:  'Calendário',
     tarefas:     'Tarefas',
     comunicados: 'Comunicados',
-    admissoes:   'Admissões',
-    definicoes:  'Definições',
+    admissoes:        'Admissões',
+    definicoes:       'Definições',
+    'gerir-calendarios': 'Gerir Calendários',
   };
   const titulo = PAGE_TITLES[activePage] || activePage;
 
