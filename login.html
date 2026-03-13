@@ -439,6 +439,38 @@ auth.onAuthStateChanged(user => {
   }
 });
 
+// Mensagens por query param
+(function() {
+  const p = new URLSearchParams(window.location.search).get('conta') ||
+            new URLSearchParams(window.location.search).get('email');
+  if (p === 'desativada') {
+    showError('Conta inativa. Se te registaste recentemente, aguarda aprovação do administrador. Caso contrário, contacta o administrador.');
+  } else if (p === 'naoVerificado') {
+    showInfo('Verifica o teu email antes de entrar. Clica no link que te enviámos.');
+    // Mostrar botão de reenvio
+    const btn = document.createElement('button');
+    btn.className = 'btn-primary';
+    btn.style.cssText = 'margin-top:10px;font-size:10px;padding:8px;';
+    btn.textContent = 'Reenviar email de verificação';
+    btn.onclick = async () => {
+      const email = document.getElementById('loginEmail').value.trim();
+      const pass  = document.getElementById('loginPassword').value;
+      if (!email || !pass) { showError('Introduz o teu email e password para reenviar.'); return; }
+      btn.disabled = true; btn.textContent = 'A enviar…';
+      try {
+        const c = await auth.signInWithEmailAndPassword(email, pass);
+        await c.user.sendEmailVerification();
+        await auth.signOut();
+        showSuccess('Email de verificação reenviado para ' + email);
+      } catch(e) {
+        showError('Não foi possível reenviar: ' + translateAuthError(e.code));
+      }
+      btn.disabled = false; btn.textContent = 'Reenviar email de verificação';
+    };
+    document.getElementById('alertInfo').after(btn);
+  }
+})();
+
 // ── TABS ──
 function switchTab(tab) {
   clearAlerts();
@@ -496,12 +528,22 @@ async function doRegister() {
   setLoading(btn, true);
   isRegistering = true;
 
+  let cred;
   try {
     // 1. Criar utilizador no Firebase Auth
-    const cred = await auth.createUserWithEmailAndPassword(email, password);
-    const uid  = cred.user.uid;
+    cred = await auth.createUserWithEmailAndPassword(email, password);
+  } catch (authErr) {
+    // Erros de autenticação bloqueiam o registo
+    isRegistering = false;
+    setLoading(btn, false);
+    showError(translateAuthError(authErr.code));
+    return;
+  }
 
-    // 2. Guardar perfil no Firestore (antes do redirect)
+  const uid = cred.user.uid;
+
+  try {
+    // 2. Guardar perfil no Firestore
     await db.collection('utilizadores').doc(uid).set({
       uid,
       nome,
@@ -510,8 +552,8 @@ async function doRegister() {
       email,
       escritorio,
       funcao: '',
-      role: 'colaborador',       // por defeito — Admin pode alterar depois
-      ativo: true,
+      role: 'colaborador',
+      ativo: false,          // inativa até um admin aprovar
       criadoEm: Date.now(),
       ultimoAcesso: Date.now(),
       permissoes: {
@@ -523,19 +565,25 @@ async function doRegister() {
         editarCalendario: false
       }
     });
-
     // 3. Atualizar display name no Auth
     await cred.user.updateProfile({ displayName: nome + ' ' + apelido });
-
-    showSuccess('Conta criada com sucesso! A redirecionar…');
-    // Redirect manual após todas as escritas estarem completas
-    window.location.href = 'dashboard.html';
-
-  } catch (err) {
-    isRegistering = false;
-    setLoading(btn, false);
-    showError(translateAuthError(err.code));
+  } catch (dbErr) {
+    console.error('[registo] Falha ao guardar perfil no Firestore:', dbErr.code, dbErr.message);
   }
+
+  // 4. Enviar email de verificação
+  try {
+    await cred.user.sendEmailVerification();
+  } catch (e) {
+    console.warn('[registo] Falha ao enviar email de verificação:', e.message);
+  }
+
+  // Fazer logout imediato — não pode aceder sem verificar email + aprovação admin
+  await auth.signOut();
+
+  showSuccess('Conta criada! Verifica o teu email (' + email + ') e clica no link de confirmação. Após isso, aguarda aprovação do administrador.');
+  setLoading(document.getElementById('btnRegister'), false);
+  isRegistering = false;
 }
 
 // ── FORGOT PASSWORD ──

@@ -158,6 +158,16 @@ firebase.auth().onAuthStateChanged(async (user) => {
 
   window.currentUser = user;
 
+  // Recarregar para garantir que emailVerified está atualizado
+  try { await user.reload(); } catch(e) {}
+
+  // Email não verificado — bloquear acesso
+  if (!user.emailVerified) {
+    await firebase.auth().signOut();
+    window.location.href = 'login.html?email=naoVerificado';
+    return;
+  }
+
   let snap;
   try {
     snap = await firebase.firestore()
@@ -168,6 +178,12 @@ firebase.auth().onAuthStateChanged(async (user) => {
 
   if (snap && snap.exists) {
     window.userProfile = snap.data();
+    // Conta desativada / pendente — fazer logout e redirecionar
+    if (window.userProfile.ativo === false) {
+      await firebase.auth().signOut();
+      window.location.href = 'login.html?conta=desativada';
+      return;
+    }
     // garantir que o campo uid existe no documento (retrocompatibilidade)
     if (!window.userProfile.uid) {
       firebase.firestore().collection('utilizadores').doc(user.uid)

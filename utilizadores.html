@@ -49,6 +49,7 @@ tbody tr.me-row td{border-bottom-color:#bfdbfe;}
 .chip-colab{background:#f4f4f6;color:#6b7280;border-color:#e5e7eb;}
 .chip-ativo{background:#ecfdf3;color:#166534;border:1px solid #bbf7d0;font-size:9px;padding:2px 6px;border-radius:999px;}
 .chip-inativo{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;font-size:9px;padding:2px 6px;border-radius:999px;}
+.chip-pendente{background:#fffbeb;color:#92400e;border:1px solid #fde68a;font-size:9px;padding:2px 6px;border-radius:999px;}
 
 .small{font-size:9px;color:#9ca3af;}
 .select-small{padding:4px 6px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;font-size:10px;outline:none;cursor:pointer;}
@@ -60,6 +61,23 @@ tbody tr.me-row td{border-bottom-color:#bfdbfe;}
 .empty{padding:32px 16px;text-align:center;font-size:11px;color:var(--muted);}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;font-size:11px;padding:10px 20px;border-radius:20px;opacity:0;transition:all .25s;pointer-events:none;z-index:600;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.btn-novo{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--text);color:#fff;border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.07em;cursor:pointer;transition:opacity .15s;}
+.btn-novo:hover{opacity:.82;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:800;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:420px;max-width:calc(100vw - 32px);box-shadow:0 12px 40px rgba(0,0,0,.18);}
+.modal h3{font-family:'Manrope',sans-serif;font-weight:700;font-size:15px;margin-bottom:18px;}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.field-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;display:block;}
+.field-input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border-radius:7px;outline:none;transition:border-color .15s;margin-bottom:12px;}
+.field-input:focus{border-color:var(--accent);}
+.field-select-modal{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border-radius:7px;outline:none;cursor:pointer;margin-bottom:12px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:6px;}
+.btn-cancel{padding:8px 14px;border:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;font-size:10px;border-radius:7px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;}
+.btn-save{padding:8px 16px;background:var(--text);color:#fff;border:none;font-family:'DM Mono',monospace;font-size:10px;border-radius:7px;cursor:pointer;text-transform:uppercase;letter-spacing:.07em;transition:opacity .15s;}
+.btn-save:hover{opacity:.82;}
+.btn-save:disabled{opacity:.4;cursor:not-allowed;}
+.modal-info{font-size:10px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;line-height:1.6;margin-bottom:14px;}
 .btn-perms{padding:4px 9px;border:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;font-size:9px;border-radius:6px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;transition:all .15s;white-space:nowrap;}
 .btn-perms:hover,.btn-perms.active{border-color:var(--accent);color:var(--accent);background:#eff6ff;}
 .perms-row{display:none;background:#fafbff;border-top:1px dashed var(--border);}
@@ -91,6 +109,10 @@ tbody tr.me-row td{border-bottom-color:#bfdbfe;}
       <span><span class="dot dot-admin"></span>Admin</span>
       <span><span class="dot dot-colab"></span>Colaborador</span>
     </div>
+    <button class="btn-novo" onclick="abrirModalNovo()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;"><path d="M8 2v12M2 8h12"/></svg>
+      Novo utilizador
+    </button>
   </div>
 
   <div class="filter-row">
@@ -132,6 +154,46 @@ tbody tr.me-row td{border-bottom-color:#bfdbfe;}
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- MODAL NOVO UTILIZADOR -->
+<div class="modal-overlay" id="modalNovoUser">
+  <div class="modal">
+    <h3>Novo Utilizador</h3>
+    <div class="modal-info">
+      Será criada uma conta e enviado um email ao utilizador para definir a password. A conta fica ativa imediatamente.
+    </div>
+    <div class="modal-grid">
+      <div>
+        <label class="field-label">Nome</label>
+        <input class="field-input" type="text" id="newNome" placeholder="Nome">
+      </div>
+      <div>
+        <label class="field-label">Apelido</label>
+        <input class="field-input" type="text" id="newApelido" placeholder="Apelido">
+      </div>
+    </div>
+    <label class="field-label">Email</label>
+    <input class="field-input" type="email" id="newEmail" placeholder="nome@empresa.pt">
+    <label class="field-label">Escritório</label>
+    <select class="field-select-modal" id="newEscritorio">
+      <option value="">Selecionar…</option>
+      <option value="quarteira">Quarteira</option>
+      <option value="albufeira">Albufeira</option>
+      <option value="lisboa">Lisboa</option>
+      <option value="porto">Porto</option>
+    </select>
+    <label class="field-label">Perfil</label>
+    <select class="field-select-modal" id="newRole">
+      <option value="colaborador">Colaborador</option>
+      <option value="admin">Admin</option>
+    </select>
+    <div id="modalNovoErr" style="display:none;color:var(--red);font-size:11px;margin-bottom:10px;"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="fecharModalNovo()">Cancelar</button>
+      <button class="btn-save" id="btnSalvarNovo" onclick="criarUtilizador()">Criar e enviar email</button>
+    </div>
+  </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -291,7 +353,12 @@ function renderUsers() {
           <div class="toggle ${ativo?'on':''}" onclick="const on=!${ativo};updateUser('${u.uid}', { ativo: !${ativo} })">
             <div class="toggle-thumb"></div>
           </div>
-          <span class="${ativo?'chip-ativo':'chip-inativo'}">${ativo?'Ativo':'Inativo'}</span>
+          ${ativo
+            ? '<span class="chip-ativo">Ativo</span>'
+            : (Date.now() - (u.criadoEm||0) < 7*24*60*60*1000
+                ? '<span class="chip-pendente">Pendente</span>'
+                : '<span class="chip-inativo">Inativo</span>')
+          }
         </div>
       </td>
       <td>
@@ -348,6 +415,114 @@ function renderUsers() {
     </td>`;
     tbody.appendChild(trPerms);
   });
+}
+
+// ── Modal Novo Utilizador ──
+function abrirModalNovo() {
+  document.getElementById('modalNovoUser').classList.add('open');
+  document.getElementById('newNome').value = '';
+  document.getElementById('newApelido').value = '';
+  document.getElementById('newEmail').value = '';
+  document.getElementById('newEscritorio').value = '';
+  document.getElementById('newRole').value = 'colaborador';
+  const errEl2 = document.getElementById('modalNovoErr');
+  errEl2.textContent = '';
+  errEl2.style.display = 'none';
+  document.getElementById('btnSalvarNovo').disabled = false;
+  document.getElementById('newNome').focus();
+}
+
+function fecharModalNovo() {
+  document.getElementById('modalNovoUser').classList.remove('open');
+}
+
+async function criarUtilizador() {
+  const nome      = document.getElementById('newNome').value.trim();
+  const apelido   = document.getElementById('newApelido').value.trim();
+  const email     = document.getElementById('newEmail').value.trim();
+  const escritorio= document.getElementById('newEscritorio').value;
+  const role      = document.getElementById('newRole').value;
+  const errEl     = document.getElementById('modalNovoErr');
+  const btnSalvar = document.getElementById('btnSalvarNovo');
+
+  errEl.textContent = '';
+  errEl.style.display = 'none';
+
+  if (!nome || !email) {
+    errEl.textContent = 'Nome e email são obrigatórios.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'Email inválido.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btnSalvar.disabled = true;
+  btnSalvar.textContent = 'A criar…';
+
+  const tempPassword = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2) + 'A1!';
+  const appName = 'adminCreate_' + Date.now();
+  let secondaryApp = null;
+
+  try {
+    // Criar utilizador numa instância secundária para não desligar o admin
+    secondaryApp = firebase.initializeApp(firebase.app().options, appName);
+    const secondaryAuth = secondaryApp.auth();
+
+    const cred = await secondaryAuth.createUserWithEmailAndPassword(email, tempPassword);
+    const uid = cred.user.uid;
+
+    await secondaryAuth.signOut();
+
+    const nomeCompleto = (nome + ' ' + apelido).trim();
+
+    const profile = {
+      uid,
+      email,
+      nome,
+      apelido,
+      nomeCompleto,
+      escritorio,
+      funcao: '',
+      role,
+      ativo: true,
+      criadoEm: Date.now(),
+      ultimoAcesso: Date.now(),
+      permissoes: {
+        criarTarefas: false,
+        resolverTarefas: false,
+        gerirComunicados: false,
+        criarAdmissoes: false,
+        resolverAdmissoes: false,
+        editarCalendario: false
+      }
+    };
+
+    await db.collection('utilizadores').doc(uid).set(profile);
+
+    // Enviar email de redefinição de password para o utilizador definir a sua
+    await firebase.auth().sendPasswordResetEmail(email);
+
+    fecharModalNovo();
+    alert('Conta criada com sucesso! Um email foi enviado para ' + email + ' para definir a password.');
+  } catch(err) {
+    console.error('[criarUtilizador]', err);
+    const msgs = {
+      'auth/email-already-in-use': 'Este email já está registado.',
+      'auth/invalid-email':        'Email inválido.',
+      'auth/weak-password':        'Erro interno ao gerar password temporária.',
+    };
+    errEl.textContent = msgs[err.code] || 'Erro: ' + (err.message || err.code);
+    errEl.style.display = 'block';
+    btnSalvar.disabled = false;
+    btnSalvar.textContent = 'Criar e enviar email';
+  } finally {
+    if (secondaryApp) {
+      secondaryApp.delete().catch(() => {});
+    }
+  }
 }
 
 document.addEventListener('authReady', ({ detail }) => {
