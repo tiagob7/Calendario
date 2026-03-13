@@ -254,10 +254,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       <div>
         <label class="field-label">Escritório destino</label>
         <select class="form-select" id="fEscritorio">
-          <option value="quarteira">Quarteira</option>
-          <option value="albufeira">Albufeira</option>
-          <option value="lisboa">Lisboa</option>
-          <option value="porto">Porto</option>
+          <option value="">A carregar…</option>
         </select>
       </div>
 
@@ -310,10 +307,6 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       <button class="filter-btn" data-f="concluido" onclick="setFilter('concluido')">Concluídos</button>
       <select class="filter-select" id="filterEscritorio" onchange="setFilterEscritorio(this.value)">
         <option value="">Todos os escritórios</option>
-        <option value="quarteira">Quarteira</option>
-        <option value="albufeira">Albufeira</option>
-        <option value="lisboa">Lisboa</option>
-        <option value="porto">Porto</option>
       </select>
       <select class="filter-select" id="filterPessoa" onchange="setFilterPessoa(this.value)">
         <option value="">Todos os criadores</option>
@@ -375,13 +368,30 @@ document.addEventListener('authReady', ({ detail }) => {
     const nome = profile.nomeCompleto || profile.nome || profile.email || '?';
     const userNameEl   = document.getElementById('userName');
     const userAvatarEl = document.getElementById('userAvatar');
-    const selEsc       = document.getElementById('fEscritorio');
     if (userNameEl)   userNameEl.textContent   = nome;
     if (userAvatarEl) userAvatarEl.textContent = nome.charAt(0).toUpperCase();
-    if (selEsc && profile.escritorio && ESCRITORIOS.includes(profile.escritorio)) {
-      selEsc.value = profile.escritorio;
-    }
   }
+
+  // carregar escritórios dinamicamente (do Firestore via config-escritorios.js)
+  window.loadEscritorios().then(lista => {
+    const selEsc = document.getElementById('fEscritorio');
+    const selFil = document.getElementById('filterEscritorio');
+
+    // popular select do formulário
+    if (selEsc) {
+      selEsc.innerHTML = lista.map(e => `<option value="${e.id}">${e.nome}</option>`).join('');
+      if (profile && profile.escritorio && lista.find(e => e.id === profile.escritorio)) {
+        selEsc.value = profile.escritorio;
+      }
+    }
+
+    // popular select do filtro (mantém a opção "Todos os escritórios")
+    if (selFil) {
+      selFil.innerHTML = '<option value="">Todos os escritórios</option>' +
+        lista.map(e => `<option value="${e.id}">${e.nome}</option>`).join('');
+      if (filterEscritorio) selFil.value = filterEscritorio;
+    }
+  });
 
   // subtitle
   const nomeAtivo = filterEscritorio
@@ -911,7 +921,7 @@ function vozPreencherAdmissao(d) {
 function vozSimular(texto, tipo) {
   const t = texto.toLowerCase();
   const nome = (texto.match(/\b([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][a-záéíóúàâêôãõç]+ [A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][a-záéíóúàâêôãõç]+)\b/) || [])[1] || '';
-  const esc = ['quarteira','albufeira','lisboa','porto'].find(e => t.includes(e)) || '';
+  const esc = window.getEscritoriosSync().map(e => e.id).find(e => t.includes(e)) || '';
   const data = (texto.match(/\b(\d{4}-\d{2}-\d{2}|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\b/) || [])[1] || '';
 
   if (tipo === 'tarefa') {
