@@ -318,6 +318,16 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       <span class="ctrl-label">Filtrar:</span>
       <select class="filter-select" id="filterEscritorio" onchange="render()"><option value="">Todos os escritórios</option></select>
       <select class="filter-select" id="filterEmpresa" onchange="render()"><option value="">Todas as empresas</option></select>
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <button class="btn btn-secondary btn-sm" onclick="exportarExcel()" title="Exportar para Excel" style="display:flex;align-items:center;gap:5px;">
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M5 6l2 2 2-2M7 8v4M5 10h4"/></svg>
+          Excel
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="exportarPDF()" title="Exportar para PDF" style="display:flex;align-items:center;gap:5px;">
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V6L9 2z"/><path d="M9 2v4h4"/></svg>
+          PDF
+        </button>
+      </div>
     </div>
   </div>
 
@@ -329,6 +339,9 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
 <script>
 firebase.initializeApp({
   apiKey:"AIzaSyBbTDfCCC9o5oxMSMRsvCUC50Iu6L0aqT8",
@@ -894,6 +907,188 @@ function render(){
 
 function toggleCard(id){if(expandedIds.has(id))expandedIds.delete(id);else expandedIds.add(id);render();}
 function saveEstado(id){updateEstado(id,document.getElementById('sel-'+id).value,document.getElementById('nota-'+id).value.trim());}
+// ── EXPORTAÇÃO ──
+function getListaFiltrada() {
+  const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  const feEsc = document.getElementById('filterEscritorio').value;
+  const feEmp = document.getElementById('filterEmpresa').value;
+  return recs.filter(r => {
+    const ef = feEsc || filtroEscritorio;
+    if (ef && r.escritorio !== ef) return false;
+    if (feEmp && r.empresa !== feEmp) return false;
+    if (filtroEstado === 'ativos' && !ESTADOS_ATIVOS.includes(r.estado)) return false;
+    if (filtroEstado !== 'ativos' && filtroEstado !== 'todos' && r.estado !== filtroEstado) return false;
+    if (q && !`${r.nome} ${r.nif} ${r.numFunc} ${r.empresa}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function recToRow(r) {
+  const periodos = (r.periodos || []).map(p =>
+    `${p.mesNome} ${p.ano}: dias ${(p.dias || []).join(',')} | ${p.totalHoras || ''}${p.totalNoturnas ? ' noc:' + p.totalNoturnas : ''}${p.totalFeriado ? ' fer:' + p.totalFeriado : ''}`
+  ).join('\n');
+  const turnos = (r.periodos || []).flatMap(p =>
+    (p.turnos || []).map(t => `${t.entrada || ''}→${t.saida || ''}${t.total ? ' (' + t.total + ')' : ''}`)
+  ).join(' | ');
+  return {
+    'Estado': ESTADO_LABEL[r.estado] || r.estado || '—',
+    'Nome': r.nome || '—',
+    'NIF': r.nif || '—',
+    'Nº Func.': r.numFunc || '—',
+    'Categoria': r.categoria || '—',
+    'Empresa': r.empresa || '—',
+    'Escritório': window.nomeEscritorio ? window.nomeEscritorio(r.escritorio) : (r.escritorio || '—'),
+    'Canal': CANAL_LABEL[r.canal]?.replace(/[^\w ]/g, '').trim() || r.canal || '—',
+    'Períodos': periodos,
+    'Turnos': turnos,
+    'Resumo': r.resumoPeriodo || '—',
+    'Registado por': r.criadoPor || '—',
+    'Data registo': fmtData(r.criadoEm),
+    'Notas': r.notas || '',
+  };
+}
+
+function exportarExcel() {
+  const lista = getListaFiltrada();
+  if (!lista.length) { toast('Nenhum registo para exportar.'); return; }
+  const rows = lista.map(recToRow);
+  const ws = XLSX.utils.json_to_sheet(rows);
+  // Larguras de coluna automáticas
+  const cols = Object.keys(rows[0]).map(k => ({ wch: Math.max(k.length, 16) }));
+  ws['!cols'] = cols;
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Reclamações');
+  const data = new Date();
+  const fname = `reclamacoes_${data.toISOString().slice(0,10)}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  toast('✓ Excel exportado: ' + fname);
+}
+
+function exportarPDF() {
+  const lista = getListaFiltrada();
+  if (!lista.length) { toast('Nenhum registo para exportar.'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const data = new Date();
+  const dataStr = data.toLocaleDateString('pt-PT');
+  const escritorioLabel = (() => {
+    const f = document.getElementById('filterEscritorio').value || filtroEscritorio;
+    if (!f) return 'Todos os escritórios';
+    return window.nomeEscritorio ? window.nomeEscritorio(f) : f;
+  })();
+
+  // Cabeçalho
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.text('Reclamações de Horas em Falta', 14, 16);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(130, 130, 160);
+  doc.text(`Exportado em ${dataStr} · ${escritorioLabel} · ${lista.length} registo(s)`, 14, 22);
+  doc.setTextColor(0, 0, 0);
+
+  // Tabela principal — colunas resumidas para caber em A4 landscape
+  const head = [['#','Estado','Nome','NIF','Empresa','Escritório','Períodos','Turnos','Registado por','Data']];
+  const body = lista.map((r, i) => {
+    const periodos = (r.periodos || []).map(p =>
+      `${p.mesNome?.slice(0,3) || ''} ${p.ano}: ${(p.dias || []).join(',')} (${p.totalHoras || ''})`
+    ).join('\n');
+    const turnos = (r.periodos || []).flatMap(p =>
+      (p.turnos || []).map(t => `${t.entrada || ''}→${t.saida || ''}`)
+    ).join(' ');
+    return [
+      String(i + 1).padStart(2, '0'),
+      ESTADO_LABEL[r.estado] || r.estado || '—',
+      r.nome || '—',
+      r.nif || '—',
+      r.empresa || '—',
+      window.nomeEscritorio ? window.nomeEscritorio(r.escritorio) : (r.escritorio || '—'),
+      periodos || '—',
+      turnos || '—',
+      r.criadoPor || '—',
+      fmtData(r.criadoEm),
+    ];
+  });
+
+  const estadoCores = {
+    'Nova': [240, 240, 244],
+    'Em Verificação': [255, 251, 235],
+    'Enviada à Empresa': [239, 246, 255],
+    'Confirmada': [245, 243, 255],
+    'Aguarda Processamento': [240, 253, 250],
+    'Paga': [240, 253, 244],
+    'Negada pela Empresa': [254, 242, 242],
+    'Sem Fundamento': [244, 244, 246],
+  };
+
+  doc.autoTable({
+    startY: 28,
+    head,
+    body,
+    headStyles: { fillColor: [26, 26, 34], textColor: 255, fontSize: 8, fontStyle: 'bold' },
+    bodyStyles: { fontSize: 7.5, valign: 'top' },
+    columnStyles: {
+      0: { cellWidth: 8 },
+      1: { cellWidth: 26 },
+      2: { cellWidth: 30 },
+      3: { cellWidth: 22 },
+      4: { cellWidth: 30 },
+      5: { cellWidth: 20 },
+      6: { cellWidth: 40 },
+      7: { cellWidth: 28 },
+      8: { cellWidth: 28 },
+      9: { cellWidth: 20 },
+    },
+    didParseCell(data) {
+      if (data.section === 'body' && data.column.index === 1) {
+        const cor = estadoCores[data.cell.text[0]];
+        if (cor) data.cell.styles.fillColor = cor;
+      }
+    },
+    margin: { left: 14, right: 14 },
+    styles: { overflow: 'linebreak', cellPadding: 2 },
+    alternateRowStyles: { fillColor: [247, 247, 249] },
+  });
+
+  // Notas separadas (se existirem)
+  const comNotas = lista.filter(r => r.notas);
+  if (comNotas.length) {
+    doc.addPage();
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('Notas internas', 14, 16);
+    let y = 24;
+    comNotas.forEach(r => {
+      if (y > 180) { doc.addPage(); y = 16; }
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(26, 26, 34);
+      doc.text(`${r.nome || '—'} · ${r.empresa || '—'} · ${fmtData(r.criadoEm)}`, 14, y);
+      y += 5;
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 100, 130);
+      const linhas = doc.splitTextToSize(r.notas, 250);
+      doc.text(linhas, 14, y);
+      y += linhas.length * 4.5 + 4;
+    });
+  }
+
+  // Rodapé em todas as páginas
+  const totalPages = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(150, 150, 170);
+    doc.text(`Página ${i} de ${totalPages}`, doc.internal.pageSize.width - 14, doc.internal.pageSize.height - 8, { align: 'right' });
+    doc.text('Gerado automaticamente — uso interno', 14, doc.internal.pageSize.height - 8);
+  }
+
+  const fname = `reclamacoes_${data.toISOString().slice(0,10)}.pdf`;
+  doc.save(fname);
+  toast('✓ PDF exportado: ' + fname);
+}
+
 function renderStats(lista,escFiltro){
   const f=escFiltro?lista.filter(r=>r.escritorio===escFiltro):lista;
   document.getElementById('statsBar').innerHTML=`

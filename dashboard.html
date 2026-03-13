@@ -201,6 +201,37 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .empty-mini{text-align:center;padding:20px;color:var(--muted);font-size:11px;}
 @keyframes pulse{0%,100%{opacity:.4;}50%{opacity:1;}}
 .loading{animation:pulse 1.4s infinite;font-size:11px;color:var(--muted);padding:20px;text-align:center;}
+
+/* RECLAMAÇÕES PANEL */
+.rec-dash-row{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:11px;cursor:default;}
+.rec-dash-row:last-child{border-bottom:none;}
+.rec-dash-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.rec-dash-dot.nova{background:var(--muted);}
+.rec-dash-dot.verificacao{background:var(--amber);}
+.rec-dash-dot.enviada{background:var(--blue);}
+.rec-dash-dot.confirmada{background:var(--purple);}
+.rec-dash-dot.aguarda-proc{background:#0d9488;}
+.rec-dash-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rec-dash-meta{font-size:10px;color:var(--muted);white-space:nowrap;}
+.rec-kpi-chip{padding:3px 10px;border-radius:10px;font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
+.rec-kpi-chip.nova{background:var(--bg);color:var(--muted);border:1px solid var(--border);}
+.rec-kpi-chip.verificacao{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
+.rec-kpi-chip.enviada{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);}
+.rec-kpi-chip.confirmada{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border);}
+.rec-kpi-chip.aguarda-proc{background:#f0fdfa;color:#0d9488;border:1px solid #99f6e4;}
+
+/* GLOBAL SEARCH */
+#globalSearchInput:focus{border-color:var(--accent);}
+.gsearch-item{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:8px;cursor:pointer;transition:background .1s;text-decoration:none;color:var(--text);}
+.gsearch-item:hover{background:var(--surface2);}
+.gsearch-item-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.gsearch-item-icon.task{background:var(--blue-bg);}
+.gsearch-item-icon.com{background:var(--purple-bg);}
+.gsearch-item-icon.rec{background:var(--amber-bg);}
+.gsearch-item-icon.adm{background:var(--green-bg);}
+.gsearch-item-label{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.gsearch-item-sub{font-size:9px;color:var(--muted);white-space:nowrap;}
+.gsearch-section{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:8px 9px 3px;}
 </style>
 </head>
 <body>
@@ -258,6 +289,29 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v4"/><circle cx="8" cy="11.5" r=".6" fill="currentColor"/></svg>
       Reclamações
     </a>
+    <!-- PESQUISA GLOBAL -->
+    <div style="margin-left:auto;position:relative;" id="globalSearchWrap">
+      <button onclick="toggleGlobalSearch()" id="globalSearchBtn"
+        style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:1px solid var(--border);background:var(--surface);border-radius:20px;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.07em;cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);"
+        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5l3.5 3.5"/></svg>
+        Pesquisar
+      </button>
+      <div id="globalSearchPanel" style="display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:400;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.12);width:340px;padding:14px;">
+        <input type="text" id="globalSearchInput" placeholder="Pesquisar em tarefas, comunicados, reclamações…"
+          style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:8px 12px;border-radius:8px;outline:none;margin-bottom:10px;"
+          oninput="doGlobalSearch(this.value)" autocomplete="off">
+        <div id="globalSearchResults" style="max-height:280px;overflow-y:auto;"></div>
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;">
+          <span style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);">Ir para:</span>
+          <a href="tarefas.html" style="font-size:9px;color:var(--accent);text-decoration:none;">Tarefas</a>
+          <a href="comunicados.html" style="font-size:9px;color:var(--accent);text-decoration:none;">Comunicados</a>
+          <a href="reclamacoes.html" style="font-size:9px;color:var(--accent);text-decoration:none;">Reclamações</a>
+          <a href="admissoes.html" style="font-size:9px;color:var(--accent);text-decoration:none;">Admissões</a>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- URGENTE BANNER -->
@@ -331,6 +385,18 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       <div id="activityList"><div class="loading">A carregar…</div></div>
     </div>
 
+    <!-- RECLAMAÇÕES EM ABERTO -->
+    <div class="panel full" id="reclamacoesPanelWrap">
+      <div class="panel-header">
+        <span class="panel-title">⚠️ Reclamações em aberto</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div id="recKpis" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+          <a class="panel-link" href="reclamacoes.html">Ver todas →</a>
+        </div>
+      </div>
+      <div id="recList"><div class="loading">A carregar…</div></div>
+    </div>
+
   </div>
 </div>
 
@@ -351,8 +417,9 @@ const db = firebase.firestore();
 let tasks       = [];
 let comunicados = [];
 let admissoes   = [];
+let reclamacoes = [];
 let calData     = null;
-let loadedFlags = { tasks: false, com: false, cal: false, adm: false };
+let loadedFlags = { tasks: false, com: false, cal: false, adm: false, rec: false };
 let unsubFns    = []; // para cancelar listeners ao mudar filtro
 
 // ── AGUARDAR AUTH ──
@@ -489,7 +556,7 @@ function startSync(escritorio) {
   }
 
   // Primeira vez: criar listeners sem .where no servidor (evita índices compostos)
-  loadedFlags = { tasks: false, com: false, cal: false, adm: false };
+  loadedFlags = { tasks: false, com: false, cal: false, adm: false, rec: false };
   setStatus('A ligar…', '#f59e0b');
 
   // ── Tarefas ──
@@ -543,11 +610,22 @@ function startSync(escritorio) {
     checkAllLoaded();
   }, err => { console.error('cal:', err); loadedFlags.cal = true; checkAllLoaded(); });
   unsubFns.push(window._dashCalUnsub);
+
+  // ── Reclamações ──
+  const unsubRec = db.collection('reclamacoes_horas')
+    .orderBy('criadoEm', 'desc')
+    .onSnapshot(snap => {
+      reclamacoes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      loadedFlags.rec = true;
+      checkAllLoaded();
+      renderReclamacoes(); // atualizar painel mesmo após carregamento inicial
+    }, err => { console.error('rec:', err); loadedFlags.rec = true; checkAllLoaded(); });
+  unsubFns.push(unsubRec);
 }
 
 // ── CHECK LOADED ──
 function checkAllLoaded() {
-  if (!loadedFlags.tasks || !loadedFlags.com || !loadedFlags.cal || !loadedFlags.adm) return;
+  if (!loadedFlags.tasks || !loadedFlags.com || !loadedFlags.cal || !loadedFlags.adm || !loadedFlags.rec) return;
   renderAll();
   setStatus('✓ Sincronizado', '#16a34a');
   setTimeout(() => setStatus(''), 3000);
@@ -571,6 +649,7 @@ function renderAll() {
   renderEvents();
   renderAdmissoes();
   renderActivity();
+  renderReclamacoes();
 }
 
 // ── URGENTE BANNER ──
@@ -964,6 +1043,149 @@ function renderActivity() {
 function escHtml(str) {
   if (!str) return '';
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ── RECLAMAÇÕES ──
+const ESTADOS_ATIVOS_REC = ['nova','verificacao','enviada','confirmada','aguarda-proc'];
+const REC_ESTADO_LABEL = {
+  nova:'Nova', verificacao:'Em Verificação', enviada:'Enviada à Empresa',
+  confirmada:'Confirmada', 'aguarda-proc':'Aguarda Processamento',
+  paga:'Paga', 'sem-fundamento':'Sem Fundamento', negada:'Negada'
+};
+
+function renderReclamacoes() {
+  const esc = escritorioAtivoDash;
+  const filtradas = reclamacoes.filter(r => {
+    if (esc && esc !== 'todos' && r.escritorio !== esc) return false;
+    return ESTADOS_ATIVOS_REC.includes(r.estado);
+  });
+
+  // KPI chips
+  const kpis = document.getElementById('recKpis');
+  if (kpis) {
+    const counts = {};
+    ESTADOS_ATIVOS_REC.forEach(e => { counts[e] = 0; });
+    filtradas.forEach(r => { if (counts[r.estado] !== undefined) counts[r.estado]++; });
+    const chips = ESTADOS_ATIVOS_REC.filter(e => counts[e] > 0).map(e =>
+      `<span class="rec-kpi-chip ${e}">${counts[e]} ${REC_ESTADO_LABEL[e]}</span>`
+    ).join('');
+    kpis.innerHTML = chips || '';
+  }
+
+  // Ocultar painel se sem permissão ou sem dados
+  const wrap = document.getElementById('reclamacoesPanelWrap');
+  const canSee = window.isAdmin() || window.temPermissao('criarReclamacoes');
+  if (wrap) wrap.style.display = canSee ? '' : 'none';
+
+  const container = document.getElementById('recList');
+  if (!container) return;
+
+  if (!canSee) { container.innerHTML = ''; return; }
+
+  if (!filtradas.length) {
+    container.innerHTML = '<div class="empty-mini">✓ Sem reclamações em aberto.</div>';
+    return;
+  }
+
+  const mostrar = filtradas.slice(0, 10);
+  container.innerHTML = mostrar.map(r => {
+    const estadoCls = (r.estado || 'nova').replace(/-/g,'');
+    const dotCls = r.estado === 'aguarda-proc' ? 'aguarda-proc' : estadoCls;
+    return `<div class="rec-dash-row">
+      <div class="rec-dash-dot ${dotCls}"></div>
+      <div class="rec-dash-name">${escHtml(r.nome || '—')} <span style="color:var(--muted);font-size:10px;">· ${escHtml(r.empresa || '—')}</span></div>
+      <div class="rec-dash-meta">${escHtml(r.resumoPeriodo || '—')}</div>
+      <span class="rec-kpi-chip ${r.estado === 'aguarda-proc' ? 'aguarda-proc' : estadoCls}">${REC_ESTADO_LABEL[r.estado] || r.estado}</span>
+    </div>`;
+  }).join('');
+
+  if (filtradas.length > 10) {
+    container.innerHTML += `<div style="padding:8px 0;font-size:10px;color:var(--muted);text-align:center;">
+      + ${filtradas.length - 10} mais · <a href="reclamacoes.html" style="color:var(--accent);text-decoration:none;">Ver todas</a>
+    </div>`;
+  }
+}
+
+// ── PESQUISA GLOBAL ──
+let _gsearchTimeout = null;
+
+function toggleGlobalSearch() {
+  const panel = document.getElementById('globalSearchPanel');
+  const input = document.getElementById('globalSearchInput');
+  if (!panel) return;
+  const open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  if (!open) {
+    input.focus();
+    input.select();
+  }
+}
+
+// Fechar ao clicar fora
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('globalSearchWrap');
+  if (wrap && !wrap.contains(e.target)) {
+    const panel = document.getElementById('globalSearchPanel');
+    if (panel) panel.style.display = 'none';
+  }
+});
+
+function doGlobalSearch(q) {
+  clearTimeout(_gsearchTimeout);
+  _gsearchTimeout = setTimeout(() => _execGlobalSearch(q), 180);
+}
+
+function _execGlobalSearch(q) {
+  const results = document.getElementById('globalSearchResults');
+  if (!results) return;
+  q = (q || '').toLowerCase().trim();
+  if (!q || q.length < 2) {
+    results.innerHTML = '<div style="font-size:10px;color:var(--muted);padding:8px 9px;">Escreve pelo menos 2 letras…</div>';
+    return;
+  }
+
+  const hits = [];
+
+  // Tarefas
+  tasks.filter(t => `${t.titulo} ${t.solicitante} ${t.descricao}`.toLowerCase().includes(q)).slice(0, 4).forEach(t => {
+    hits.push({ type: 'task', icon: '📋', label: t.titulo || '—', sub: t.solicitante || '', href: 'tarefas.html' });
+  });
+
+  // Comunicados
+  comunicados.filter(c => `${c.titulo} ${c.autor} ${c.conteudo}`.toLowerCase().includes(q)).slice(0, 4).forEach(c => {
+    hits.push({ type: 'com', icon: '📢', label: c.titulo || '—', sub: c.autor || '', href: 'comunicados.html' });
+  });
+
+  // Reclamações
+  reclamacoes.filter(r => `${r.nome} ${r.nif} ${r.numFunc} ${r.empresa}`.toLowerCase().includes(q)).slice(0, 4).forEach(r => {
+    hits.push({ type: 'rec', icon: '⚠️', label: r.nome || '—', sub: `${r.empresa || ''} · ${r.resumoPeriodo || ''}`, href: 'reclamacoes.html' });
+  });
+
+  // Admissões
+  admissoes.filter(a => `${a.nome} ${a.nif} ${a.empresa} ${a.funcao}`.toLowerCase().includes(q)).slice(0, 3).forEach(a => {
+    hits.push({ type: 'adm', icon: '👤', label: a.nome || '—', sub: `${a.empresa || ''} · ${a.tipo || ''}`, href: 'admissoes.html' });
+  });
+
+  if (!hits.length) {
+    results.innerHTML = '<div style="font-size:10px;color:var(--muted);padding:8px 9px;">Sem resultados.</div>';
+    return;
+  }
+
+  const sections = { task: 'Tarefas', com: 'Comunicados', rec: 'Reclamações', adm: 'Admissões' };
+  let lastType = null;
+  results.innerHTML = hits.map(h => {
+    let html = '';
+    if (h.type !== lastType) {
+      html += `<div class="gsearch-section">${sections[h.type]}</div>`;
+      lastType = h.type;
+    }
+    html += `<a class="gsearch-item" href="${h.href}">
+      <div class="gsearch-item-icon ${h.type}">${h.icon}</div>
+      <div class="gsearch-item-label">${escHtml(h.label)}</div>
+      <div class="gsearch-item-sub">${escHtml(h.sub)}</div>
+    </a>`;
+    return html;
+  }).join('');
 }
 
 function fmtShort(ts) {
