@@ -168,8 +168,8 @@ firebase.auth().onAuthStateChanged(async (user) => {
 
   if (snap && snap.exists) {
     window.userProfile = snap.data();
-    // Conta desativada / pendente — fazer logout e redirecionar
-    if (window.userProfile.ativo === false) {
+    // Conta desativada / pendente — fazer logout e redirecionar (admins nunca bloqueados)
+    if (window.userProfile.ativo === false && window.userProfile.role !== 'admin') {
       await firebase.auth().signOut();
       window.location.href = 'login.html?conta=desativada';
       return;
