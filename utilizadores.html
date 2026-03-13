@@ -177,10 +177,6 @@ tbody tr.me-row td{border-bottom-color:#bfdbfe;}
     <label class="field-label">Escritório</label>
     <select class="field-select-modal" id="newEscritorio">
       <option value="">Selecionar…</option>
-      <option value="quarteira">Quarteira</option>
-      <option value="albufeira">Albufeira</option>
-      <option value="lisboa">Lisboa</option>
-      <option value="porto">Porto</option>
     </select>
     <label class="field-label">Perfil</label>
     <select class="field-select-modal" id="newRole">
@@ -202,6 +198,7 @@ tbody tr.me-row td{border-bottom-color:#bfdbfe;}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-init.js"></script>
 <script src="auth.js"></script>
+<script src="config-escritorios.js"></script>
 <script>
 const db = firebase.firestore();
 
@@ -331,12 +328,8 @@ function renderUsers() {
         <div class="email-cell">${escHtml(email)}</div>
       </td>
       <td>
-        <select class="select-small" onchange="updateUser('${u.uid}', { escritorio: this.value })">
+        <select class="select-small" data-escritorio-select="${u.uid}" onchange="updateUser('${u.uid}', { escritorio: this.value })">
           <option value="">—</option>
-          <option value="quarteira" ${escritorio==='quarteira'?'selected':''}>Quarteira</option>
-          <option value="albufeira" ${escritorio==='albufeira'?'selected':''}>Albufeira</option>
-          <option value="lisboa"    ${escritorio==='lisboa'?'selected':''}>Lisboa</option>
-          <option value="porto"     ${escritorio==='porto'?'selected':''}>Porto</option>
         </select>
       </td>
       <td>
@@ -556,6 +549,30 @@ document.addEventListener('authReady', ({ detail }) => {
     console.error('[utilizadores] Erro no onSnapshot:', err);
     setStatus('Erro ao carregar: ' + err.code, '#dc2626');
   });
+
+  // Preencher selects de escritórios (filtro + modal novo) de forma dinâmica
+  if (window.loadEscritorios) {
+    loadEscritorios().then(lista => {
+      const filtro = document.getElementById('escritorioFilter');
+      if (filtro) {
+        filtro.innerHTML = '<option value=\"\">Todos os escritórios</option>' +
+          lista.map(e => `<option value=\"${e.id}\">${e.nome}</option>`).join('');
+      }
+      const novoEsc = document.getElementById('newEscritorio');
+      if (novoEsc) {
+        novoEsc.innerHTML = '<option value=\"\">Selecionar…</option>' +
+          lista.map(e => `<option value=\"${e.id}\">${e.nome}</option>`).join('');
+      }
+      // atualizar selects de linha já renderizados
+      document.querySelectorAll('select[data-escritorio-select]').forEach(sel => {
+        const uid = sel.getAttribute('data-escritorio-select');
+        const u   = users.find(x => x.uid === uid);
+        const atual = u && u.escritorio ? u.escritorio : '';
+        sel.innerHTML = '<option value=\"\">—</option>' +
+          lista.map(e => `<option value=\"${e.id}\" ${atual===e.id?'selected':''}>${e.nome}</option>`).join('');
+      });
+    });
+  }
 });
 </script>
 </body>

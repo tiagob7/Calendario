@@ -338,6 +338,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 <!-- Inicialização partilhada + auth module -->
 <script src="firebase-init.js"></script>
 <script src="auth.js"></script>
+<script src="config-escritorios.js"></script>
 
 <script>
 const db = firebase.firestore();
@@ -385,20 +386,30 @@ document.addEventListener('authReady', ({ detail }) => {
     const pillsWrap = document.getElementById('adminEscritorioPills');
     if (pillsWrap) {
       pillsWrap.style.display = 'flex';
-      const opcoes = [
-        { val: 'todos',     label: 'Todos' },
-        { val: 'quarteira', label: 'Quarteira' },
-        { val: 'albufeira', label: 'Albufeira' },
-        { val: 'lisboa',    label: 'Lisboa' },
-        { val: 'porto',     label: 'Porto' },
-      ];
-      opcoes.forEach(({ val, label }) => {
+      // Carregar escritórios dinâmicos a partir da configuração partilhada
+      loadEscritorios().then(lista => {
+        pillsWrap.innerHTML = '';
+        const opcoes = [
+          { val: 'todos', label: 'Todos' },
+          ...lista.map(e => ({ val: e.id, label: e.nome }))
+        ];
+        opcoes.forEach(({ val, label }) => {
+          const btn = document.createElement('button');
+          btn.dataset.e = val;
+          btn.textContent = label;
+          const ativo = (val === escritorio) || (val === 'todos' && (!escritorio || escritorio === 'todos'));
+          btn.className = 'dash-esc-pill' + (ativo ? ' ativo' : '');
+          btn.onclick = () => switchEscritorioDash(val);
+          pillsWrap.appendChild(btn);
+        });
+      }).catch(() => {
+        // fallback simples: mostrar apenas "Todos"
+        pillsWrap.innerHTML = '';
         const btn = document.createElement('button');
-        btn.dataset.e = val;
-        btn.textContent = label;
-        const ativo = (val === escritorio) || (val === 'todos' && (!escritorio || escritorio === 'todos'));
-        btn.className = 'dash-esc-pill' + (ativo ? ' ativo' : '');
-        btn.onclick = () => switchEscritorioDash(val);
+        btn.dataset.e = 'todos';
+        btn.textContent = 'Todos';
+        btn.className = 'dash-esc-pill ativo';
+        btn.onclick = () => switchEscritorioDash('todos');
         pillsWrap.appendChild(btn);
       });
     }
@@ -422,9 +433,14 @@ function switchEscritorioDash(val) {
 }
 
 function updateSubtitle(escritorio) {
-  const label = !escritorio || escritorio === 'todos'
-    ? 'Todos os escritórios'
-    : escritorio.charAt(0).toUpperCase() + escritorio.slice(1);
+  let label;
+  if (!escritorio || escritorio === 'todos') {
+    label = 'Todos os escritórios';
+  } else if (window.nomeEscritorio) {
+    label = window.nomeEscritorio(escritorio);
+  } else {
+    label = escritorio.charAt(0).toUpperCase() + escritorio.slice(1);
+  }
 
   const badge = document.getElementById('escritorioBadge');
   if (!badge) return;

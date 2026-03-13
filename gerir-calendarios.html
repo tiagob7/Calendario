@@ -433,7 +433,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 const NOMES_MES = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                    'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-const ESCRITORIOS_VALIDOS = ['quarteira','albufeira','lisboa','porto'];
+const ESCRITORIOS_VALIDOS = (window.escritoriosValidos ? window.escritoriosValidos() : ['quarteira','albufeira','lisboa','porto']);
 
 // Feriados nacionais — estrutura base por ano
 // Para anos diferentes o Carnaval/Páscoa/Corpo de Deus mudam

@@ -750,8 +750,8 @@ function extrairNome(t) {
   return m ? m[1] : null;
 }
 function extrairEscritorio(t) {
-  const escs = ['quarteira','albufeira','lisboa','porto','faro'];
-  return escs.find(e => t.toLowerCase().includes(e)) || null;
+  const base = (window.escritoriosValidos ? window.escritoriosValidos() : ['quarteira','albufeira','lisboa','porto']);
+  return base.find(e => t.toLowerCase().includes(e)) || null;
 }
 function extrairData(t) {
   const m = t.match(/\b(\d{1,2}[\/-]\d{1,2}([\/-]\d{2,4})?|\d{1,2} de \w+(\s+de \d{4})?|amanhã|segunda|terça|quarta|quinta|sexta)\b/i);

@@ -372,10 +372,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       <div>
         <label class="field-label">Escritório que trata</label>
         <select class="form-select" id="fEscritorioAdm">
-          <option value="quarteira">Quarteira</option>
-          <option value="albufeira">Albufeira</option>
-          <option value="lisboa">Lisboa</option>
-          <option value="porto">Porto</option>
+          <option value="">A carregar…</option>
         </select>
       </div>
     </div>
@@ -516,10 +513,6 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       <select id="filterEscritorioAdm" onchange="setFiltroEscritorioAdm(this.value)"
         style="padding:5px 8px;border:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;font-size:10px;border-radius:20px;color:var(--muted);outline:none;cursor:pointer;">
         <option value="">Todos os escritórios</option>
-        <option value="quarteira">Quarteira</option>
-        <option value="albufeira">Albufeira</option>
-        <option value="lisboa">Lisboa</option>
-        <option value="porto">Porto</option>
       </select>
     </div>
   </div>
@@ -564,6 +557,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 </script>
 <script src="auth.js"></script>
+<script src="config-escritorios.js"></script>
 <script>
 const db      = firebase.firestore();
 const col     = db.collection('admissoes');
@@ -1072,9 +1066,6 @@ document.addEventListener('authReady', ({ detail }) => {
     const nameEl   = document.getElementById('userName');
     if (avatarEl) avatarEl.textContent = nome.charAt(0).toUpperCase();
     if (nameEl)   nameEl.textContent   = nome;
-    // escritório destino por defeito = escritório do utilizador
-    const fEsc = document.getElementById('fEscritorioAdm');
-    if (fEsc && profile.escritorio) fEsc.value = profile.escritorio;
   }
 
   // mostrar/esconder form de criar processo
@@ -1113,7 +1104,28 @@ document.addEventListener('authReady', ({ detail }) => {
     : (profile ? (profile.escritorio || '') : '');
 
   const feEl = document.getElementById('filterEscritorioAdm');
-  if (feEl && filtroEscritorio) feEl.value = filtroEscritorio;
+
+  // preencher selects de escritório dinamicamente
+  if (window.loadEscritorios) {
+    loadEscritorios().then(lista => {
+      if (feEl) {
+        feEl.innerHTML = '<option value=\"\">Todos os escritórios</option>' +
+          lista.map(e => `<option value=\"${e.id}\">${e.nome}</option>`).join('');
+        if (filtroEscritorio) feEl.value = filtroEscritorio;
+      }
+      const fEsc = document.getElementById('fEscritorioAdm');
+      if (fEsc) {
+        fEsc.innerHTML = lista.map(e => `<option value=\"${e.id}\">${e.nome}</option>`).join('');
+        if (profile && profile.escritorio && lista.some(e => e.id === profile.escritorio)) {
+          fEsc.value = profile.escritorio;
+        }
+      }
+    }).catch(() => {
+      if (feEl && filtroEscritorio) feEl.value = filtroEscritorio;
+    });
+  } else if (feEl && filtroEscritorio) {
+    feEl.value = filtroEscritorio;
+  }
 
   startSync();
 });

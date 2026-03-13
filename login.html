@@ -382,10 +382,6 @@ body::before{
         <label class="field-label">Escritório</label>
         <select class="field-select" id="regEscritorio">
           <option value="">Selecionar…</option>
-          <option value="lisboa">Lisboa</option>
-          <option value="porto">Porto</option>
-          <option value="albufeira">Albufeira</option>
-          <option value="quarteira">Quarteira</option>
         </select>
       </div>
       <div class="field">
@@ -436,6 +432,18 @@ let isRegistering = false;
 auth.onAuthStateChanged(user => {
   if (user && !isRegistering) {
     window.location.href = 'dashboard.html';
+  }
+});
+
+// Preencher lista de escritórios no registo de forma dinâmica
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.loadEscritorios) {
+    loadEscritorios().then(lista => {
+      const sel = document.getElementById('regEscritorio');
+      if (!sel) return;
+      sel.innerHTML = '<option value=\"\">Selecionar…</option>' +
+        lista.map(e => `<option value=\"${e.id}\">${e.nome}</option>`).join('');
+    });
   }
 });
 

@@ -342,6 +342,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-init.js"></script>
 <script src="auth.js"></script>
+<script src="config-escritorios.js"></script>
 <script>
 // ── Número de dias do mês ativo ──
 function numDias() { return new Date(_calAno, _calMes, 0).getDate(); }
@@ -1055,7 +1056,7 @@ const _now = new Date();
 let _calAno = _now.getFullYear();
 let _calMes = _now.getMonth() + 1; // 1–12
 let _calEscritorio = 'quarteira';
-const NOMES_ESC = { quarteira:'Quarteira', albufeira:'Albufeira', lisboa:'Lisboa', porto:'Porto', geral:'Geral' };
+let _ESCR_MAP = {}; // id -> {id,nome,cor,...}
 const NOMES_MES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
 function calDocId(esc, ano, mes) {
@@ -1092,10 +1093,11 @@ function injetarNavCalendario(isAdmin) {
 
   let escHtml = '';
   if (isAdmin) {
+    const lista = window.getEscritoriosSync ? window.getEscritoriosSync() : [];
     escHtml = `
       <span style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);">Escritório:</span>
-      ${['quarteira','albufeira','lisboa','porto'].map(e =>
-        `<button class="esc-btn${_calEscritorio===e?' esc-active':''}" data-e="${e}" onclick="switchEscritorio('${e}')">${NOMES_ESC[e]}</button>`
+      ${lista.map(e =>
+        `<button class="esc-btn${_calEscritorio===e.id?' esc-active':''}" data-e="${e.id}" onclick="switchEscritorio('${e.id}')">${e.nome}</button>`
       ).join('')}
       <div class="cal-nav-sep"></div>
     `;
@@ -1139,12 +1141,23 @@ function irParaHoje() {
 }
 
 // INIT - aguarda autenticacao
-document.addEventListener('authReady', ({ detail }) => {
+document.addEventListener('authReady', async ({ detail }) => {
   window.renderNavbar('calendario');
 
   const isAdmin = window.isAdmin();
-  let escritorio = window.escritorioAtivo() || 'geral';
-  if (!escritorio || escritorio === 'todos') escritorio = 'quarteira';
+
+  // Carregar escritórios dinamicamente e construir mapa de nomes
+  if (window.loadEscritorios) {
+    const lista = await window.loadEscritorios();
+    _ESCR_MAP = {};
+    lista.forEach(e => { _ESCR_MAP[e.id] = e; });
+  }
+
+  let escritorio = window.escritorioAtivo() || '';
+  if (!escritorio || escritorio === 'todos') {
+    const lista = window.getEscritoriosSync ? window.getEscritoriosSync() : [];
+    escritorio = (lista[0] && lista[0].id) || 'quarteira';
+  }
   _calEscritorio = escritorio;
 
   // Esconder botão de editar para quem não tem permissão
@@ -1168,7 +1181,7 @@ function switchEscritorio(esc) {
 
 function loadCalendario(escritorio) {
   _calEscritorio = escritorio;
-  const nomeEscritorio = NOMES_ESC[escritorio] || escritorio;
+  const nomeEscritorio = (_ESCR_MAP[escritorio] && _ESCR_MAP[escritorio].nome) || escritorio;
   const nomeMes = NOMES_MES[_calMes - 1];
 
   const titleEl = document.getElementById('pageTitle');

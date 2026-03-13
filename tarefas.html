@@ -342,6 +342,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 </script>
 <script src="auth.js"></script>
+<script src="config-escritorios.js"></script>
 <script>
 const db = firebase.firestore();
 const storage = firebase.storage();
@@ -355,7 +356,6 @@ const ESTADO_ORDER = { progresso:0, aguardar:1, pendente:2, cancelado:3, conclui
 const ESTADO_LABEL = { aguardar:'A aguardar', progresso:'Em progresso', concluido:'Concluído', cancelado:'Cancelado', pendente:'Pendente' };
 const PRIO_LABEL = { urgente:'Urgente', normal:'Normal', baixa:'Baixa' };
 
-const ESCRITORIOS = ['quarteira','albufeira','lisboa','porto'];
 let filterEscritorio = '';
 
 document.addEventListener('authReady', ({ detail }) => {
@@ -384,8 +384,9 @@ document.addEventListener('authReady', ({ detail }) => {
   }
 
   // subtitle
-  const nomes = { quarteira:'Quarteira', albufeira:'Albufeira', lisboa:'Lisboa', porto:'Porto', todos:'Todos', '':'Todos os escritórios' };
-  const nomeAtivo = nomes[filterEscritorio] || (filterEscritorio ? filterEscritorio : 'Todos os escritórios');
+  const nomeAtivo = filterEscritorio
+    ? (window.nomeEscritorio ? window.nomeEscritorio(filterEscritorio) : filterEscritorio)
+    : 'Todos os escritórios';
   document.getElementById('pageSubtitle').textContent = nomeAtivo;
 
   // filtro escritório: por defeito = escritório do utilizador (para todos)
@@ -396,7 +397,7 @@ document.addEventListener('authReady', ({ detail }) => {
   } else {
     filterEscritorio = profile ? (profile.escritorio || '') : '';
   }
-  if (filterEscritorio) fe.value = filterEscritorio;
+  if (filterEscritorio && fe) fe.value = filterEscritorio;
 
   // carregar tudo (filtro é feito no cliente para permitir ver outros escritórios)
   col = db.collection('tarefas_todo');
@@ -514,8 +515,10 @@ function setFilter(mode) { filterMode=mode; document.querySelectorAll('.filter-b
 function setFilterPessoa(val) { filterPessoa=val; renderList(); }
 function setFilterEscritorio(val) {
   filterEscritorio = val;
-  const nomes = { quarteira:'Quarteira', albufeira:'Albufeira', lisboa:'Lisboa', porto:'Porto', '':'Todos os escritórios' };
-  document.getElementById('pageSubtitle').textContent = nomes[val] || val;
+  const nome = val
+    ? (window.nomeEscritorio ? window.nomeEscritorio(val) : val)
+    : 'Todos os escritórios';
+  document.getElementById('pageSubtitle').textContent = nome;
   renderList();
 }
 

@@ -176,11 +176,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       <div class="full">
         <label class="field-label">Escritórios destino</label>
         <div class="esc-pill-row" id="escDestRow">
-          <button type="button" class="esc-pill esc-pill-todos sel" data-e="todos" onclick="toggleEscDestino('todos', this)">Todos</button>
-          <button type="button" class="esc-pill" data-e="quarteira" onclick="toggleEscDestino('quarteira', this)">Quarteira</button>
-          <button type="button" class="esc-pill" data-e="albufeira" onclick="toggleEscDestino('albufeira', this)">Albufeira</button>
-          <button type="button" class="esc-pill" data-e="lisboa" onclick="toggleEscDestino('lisboa', this)">Lisboa</button>
-          <button type="button" class="esc-pill" data-e="porto" onclick="toggleEscDestino('porto', this)">Porto</button>
+          <!-- preenchido dinamicamente via config-escritorios.js -->
         </div>
         <div class="field-hint">Se não escolheres nada, considera-se apenas o teu escritório. "Todos" torna o comunicado visível em todos os escritórios.</div>
       </div>
@@ -200,10 +196,6 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
       <button class="filter-btn" data-f="arquivado" onclick="setFilter('arquivado')">Arquivados</button>
       <select id="filterEscritorioCom" onchange="setFiltroEscritorioCom(this.value)" style="padding:5px 8px;border:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;font-size:10px;border-radius:20px;color:var(--muted);outline:none;cursor:pointer;max-width:150px;">
         <option value="">Todos os escritórios</option>
-        <option value="quarteira">Quarteira</option>
-        <option value="albufeira">Albufeira</option>
-        <option value="lisboa">Lisboa</option>
-        <option value="porto">Porto</option>
       </select>
       <span class="count-badge" id="countBadge"></span>
     </div>
@@ -229,6 +221,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 </script>
 <script src="auth.js"></script>
+<script src="config-escritorios.js"></script>
 <script>
 const db = firebase.firestore();
 let col;
@@ -252,16 +245,47 @@ document.addEventListener('authReady', ({ detail }) => {
   }
 
   // filtro por defeito = escritório do utilizador
-  const nomes = { quarteira:'Quarteira', albufeira:'Albufeira', lisboa:'Lisboa', porto:'Porto', '':'Todos os escritórios' };
   filtroEscritorio = isAdmin
     ? ((escritorio && escritorio !== 'todos') ? escritorio : '')
     : (profile ? (profile.escritorio || '') : '');
 
-  // mostrar filtro de escritório para todos
+  // mostrar filtro de escritório para todos e preencher dinamicamente
   const feEl = document.getElementById('filterEscritorioCom');
-  if (feEl) { feEl.style.display=''; if (filtroEscritorio) feEl.value = filtroEscritorio; }
+  if (feEl) {
+    feEl.style.display = '';
+    loadEscritorios().then(lista => {
+      feEl.innerHTML = '<option value=\"\">Todos os escritórios</option>' +
+        lista.map(e => `<option value=\"${e.id}\">${e.nome}</option>`).join('');
+      if (filtroEscritorio) feEl.value = filtroEscritorio;
 
-  document.getElementById('pageSubtitle').textContent = nomes[filtroEscritorio] || 'Todos os escritórios';
+      // preencher pills de destinos no formulário
+      const row = document.getElementById('escDestRow');
+      if (row) {
+        row.innerHTML = '';
+        const btnTodos = document.createElement('button');
+        btnTodos.type = 'button';
+        btnTodos.className = 'esc-pill esc-pill-todos sel';
+        btnTodos.dataset.e = 'todos';
+        btnTodos.textContent = 'Todos';
+        btnTodos.onclick = function() { toggleEscDestino('todos', this); };
+        row.appendChild(btnTodos);
+        lista.forEach(e => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'esc-pill';
+          b.dataset.e = e.id;
+          b.textContent = e.nome;
+          b.onclick = function() { toggleEscDestino(e.id, this); };
+          row.appendChild(b);
+        });
+      }
+    }).catch(() => {
+      if (filtroEscritorio) feEl.value = filtroEscritorio;
+    });
+  }
+
+  document.getElementById('pageSubtitle').textContent =
+    filtroEscritorio ? (window.nomeEscritorio ? window.nomeEscritorio(filtroEscritorio) : filtroEscritorio) : 'Todos os escritórios';
 
   col = db.collection('comunicados');
   // carregar tudo, filtrar no cliente (para poder ver outros escritórios)
