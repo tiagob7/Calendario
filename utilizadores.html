@@ -107,6 +107,8 @@ tbody tr.me-row td{border-bottom-color:#bfdbfe;}
       <option value="lisboa">Lisboa</option>
       <option value="porto">Porto</option>
     </select>
+    <input type="text" class="filter-select" id="searchInput" placeholder="Pesquisar nome ou email…"
+      oninput="setSearch(this.value)" style="min-width:180px;border-radius:20px;">
     <span class="count-badge" id="countBadge"></span>
   </div>
 
@@ -142,6 +144,7 @@ const db = firebase.firestore();
 let users = [];
 let roleFilter = '';
 let escritorioFilter = '';
+let searchFilter = '';
 
 function setStatus(msg, color) {
   const el = document.getElementById('syncStatus');
@@ -176,10 +179,19 @@ function setEscritorioFilter(v) {
   renderUsers();
 }
 
+function setSearch(v) {
+  searchFilter = (v || '').toLowerCase().trim();
+  renderUsers();
+}
+
 function filteredUsers() {
   let list = users;
   if (roleFilter)       list = list.filter(u => u.role === roleFilter);
   if (escritorioFilter) list = list.filter(u => u.escritorio === escritorioFilter);
+  if (searchFilter)     list = list.filter(u =>
+    (u.nomeCompleto || u.nome || '').toLowerCase().includes(searchFilter) ||
+    (u.email || '').toLowerCase().includes(searchFilter)
+  );
   return list;
 }
 
@@ -356,12 +368,13 @@ document.addEventListener('authReady', ({ detail }) => {
 
   db.collection('utilizadores').onSnapshot(snap => {
     users = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+    console.log('[utilizadores] Total de documentos no Firestore:', users.length, users.map(u => u.email));
     renderUsers();
-    setStatus('✓ Sincronizado', '#16a34a');
-    setTimeout(() => setStatus(''), 3000);
+    setStatus('✓ Sincronizado — ' + users.length + ' doc(s) no Firestore', '#16a34a');
+    setTimeout(() => setStatus(''), 5000);
   }, err => {
-    console.error(err);
-    setStatus('Erro ao carregar', '#dc2626');
+    console.error('[utilizadores] Erro no onSnapshot:', err);
+    setStatus('Erro ao carregar: ' + err.code, '#dc2626');
   });
 });
 </script>

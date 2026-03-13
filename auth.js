@@ -158,44 +158,56 @@ firebase.auth().onAuthStateChanged(async (user) => {
 
   window.currentUser = user;
 
+  let snap;
   try {
-    const snap = await firebase.firestore()
+    snap = await firebase.firestore()
       .collection('utilizadores').doc(user.uid).get();
+  } catch(readErr) {
+    console.error('[auth] Falha ao LER perfil do Firestore (verifica as regras de segurança):', readErr.code, readErr.message);
+  }
 
-    if (snap.exists) {
-      window.userProfile = snap.data();
-    } else {
-      const basicProfile = {
-        email: user.email,
-        nome: user.displayName || user.email.split('@')[0],
-        apelido: '',
-        nomeCompleto: user.displayName || user.email.split('@')[0],
-        escritorio: '',
-        funcao: '',
-        role: 'colaborador',
-        ativo: true,
-        criadoEm: Date.now(),
-        ultimoAcesso: Date.now(),
-        permissoes: {
-          criarTarefas: false,
-          resolverTarefas: false,
-          gerirComunicados: false,
-          criarAdmissoes: false,
-          resolverAdmissoes: false,
-          editarCalendario: false
-        }
-      };
+  if (snap && snap.exists) {
+    window.userProfile = snap.data();
+    // garantir que o campo uid existe no documento (retrocompatibilidade)
+    if (!window.userProfile.uid) {
+      firebase.firestore().collection('utilizadores').doc(user.uid)
+        .update({ uid: user.uid }).catch(() => {});
+    }
+  } else {
+    const basicProfile = {
+      uid: user.uid,
+      email: user.email,
+      nome: user.displayName || user.email.split('@')[0],
+      apelido: '',
+      nomeCompleto: user.displayName || user.email.split('@')[0],
+      escritorio: '',
+      funcao: '',
+      role: 'colaborador',
+      ativo: true,
+      criadoEm: Date.now(),
+      ultimoAcesso: Date.now(),
+      permissoes: {
+        criarTarefas: false,
+        resolverTarefas: false,
+        gerirComunicados: false,
+        criarAdmissoes: false,
+        resolverAdmissoes: false,
+        editarCalendario: false
+      }
+    };
+    try {
       await firebase.firestore()
         .collection('utilizadores').doc(user.uid).set(basicProfile);
+      console.log('[auth] Perfil criado no Firestore para:', user.email);
+      window.userProfile = basicProfile;
+    } catch(writeErr) {
+      console.error('[auth] Falha ao CRIAR perfil no Firestore (verifica as regras de segurança):', writeErr.code, writeErr.message);
       window.userProfile = basicProfile;
     }
-
-    firebase.firestore().collection('utilizadores').doc(user.uid)
-      .update({ ultimoAcesso: Date.now() }).catch(() => {});
-
-  } catch(e) {
-    console.error('Erro ao carregar perfil:', e);
   }
+
+  firebase.firestore().collection('utilizadores').doc(user.uid)
+    .update({ ultimoAcesso: Date.now() }).catch(() => {});
 
   const ov = document.getElementById('authOverlay');
   if (ov) ov.remove();

@@ -503,6 +503,7 @@ async function doRegister() {
 
     // 2. Guardar perfil no Firestore (antes do redirect)
     await db.collection('utilizadores').doc(uid).set({
+      uid,
       nome,
       apelido,
       nomeCompleto: nome + ' ' + apelido,
