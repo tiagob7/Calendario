@@ -118,6 +118,7 @@ window.renderNavbar = function(activePage) {
     admissoes:        'Admissões',
     definicoes:       'Definições',
     'gerir-calendarios': 'Gerir Calendários',
+    reclamacoes:      'Reclamações de Horas',
   };
   const titulo = PAGE_TITLES[activePage] || activePage;
 
@@ -198,7 +199,8 @@ firebase.auth().onAuthStateChanged(async (user) => {
         gerirComunicados: false,
         criarAdmissoes: false,
         resolverAdmissoes: false,
-        editarCalendario: false
+        editarCalendario: false,
+        criarReclamacoes: false
       }
     };
     try {

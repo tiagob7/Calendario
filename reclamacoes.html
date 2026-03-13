@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reclamações de Horas</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@600;700;800&display=swap');
+
+:root {
+  --bg:#f4f4f6; --surface:#fff; --surface2:#f7f7f9; --border:#e2e2e8;
+  --text:#1a1a22; --muted:#8888a0; --accent:#2563eb;
+  --green:#16a34a;  --green-bg:#f0fdf4;  --green-border:#bbf7d0;
+  --blue:#2563eb;   --blue-bg:#eff6ff;   --blue-border:#bfdbfe;
+  --red:#dc2626;    --red-bg:#fef2f2;    --red-border:#fecaca;
+  --amber:#d97706;  --amber-bg:#fffbeb;  --amber-border:#fde68a;
+  --purple:#7c3aed; --purple-bg:#f5f3ff; --purple-border:#ddd6fe;
+  --teal:#0d9488;   --teal-bg:#f0fdfa;   --teal-border:#99f6e4;
+  --gray-bg:#f4f4f6; --gray-border:#e2e2e8;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;}
+.page{max-width:920px;margin:0 auto;padding:32px 20px;}
+h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,28px);letter-spacing:-.03em;margin-bottom:4px;}
+.subtitle{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px;}
+.header-top{display:flex;align-items:baseline;gap:16px;margin-bottom:4px;flex-wrap:wrap;}
+.header-top h1{margin-bottom:0;}
+#syncStatus{font-size:10px;color:var(--muted);letter-spacing:.05em;margin-left:auto;}
+
+/* STATS */
+.stats-row{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
+.stat-chip{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;display:flex;flex-direction:column;gap:1px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.stat-val{font-family:'Manrope',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.03em;}
+.stat-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);}
+.stat-chip.s-total .stat-val{color:var(--text);}
+.stat-chip.s-aberto .stat-val{color:var(--amber);}
+.stat-chip.s-enviado .stat-val{color:var(--blue);}
+.stat-chip.s-confirmado .stat-val{color:var(--purple);}
+.stat-chip.s-pago .stat-val{color:var(--green);}
+.stat-chip.s-negado .stat-val{color:var(--red);}
+
+/* FORM PANEL */
+.form-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px 28px;margin-bottom:22px;box-shadow:0 1px 6px rgba(0,0,0,.06);}
+.panel-title{font-family:'Manrope',sans-serif;font-size:13px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:640px){.form-grid{grid-template-columns:1fr;}}
+.form-grid .full{grid-column:1/-1;}
+.form-grid .thirds{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+@media(max-width:640px){.form-grid .thirds{grid-template-columns:1fr;}}
+.field-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;display:block;}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:8px 10px;border-radius:6px;outline:none;transition:border-color .15s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-input::placeholder,.form-textarea::placeholder{color:#bbb;}
+.form-textarea{resize:vertical;min-height:56px;line-height:1.6;}
+.req{color:var(--red);margin-left:2px;}
+.divider{border:none;border-top:1px solid var(--border);margin:16px 0;}
+.section-label{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.user-info-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;}
+.user-info-name{font-size:11px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* CANAL PILLS */
+.canal-row{display:flex;gap:6px;flex-wrap:wrap;}
+.canal-pill{padding:6px 12px;border:1px solid var(--border);background:transparent;font-family:'DM Mono',monospace;font-size:10px;border-radius:6px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;transition:all .15s;text-align:center;}
+.canal-pill.sel{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);}
+.canal-pill:not(.sel):hover{border-color:#aaa;color:var(--text);}
+
+/* BTN */
+.btn{border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;text-transform:uppercase;letter-spacing:.09em;transition:all .15s;padding:10px 18px;}
+.btn:hover{opacity:.82;}
+.btn-primary{background:var(--text);color:#fff;}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-sm{padding:5px 11px;font-size:10px;}
+
+/* SEARCH + CONTROLS */
+.search-bar{display:flex;gap:8px;margin-bottom:12px;align-items:center;}
+.search-input{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:8px 12px;border-radius:8px;outline:none;transition:border-color .15s;}
+.search-input:focus{border-color:var(--accent);}
+.search-input::placeholder{color:#bbb;}
+.controls-wrap{margin-bottom:16px;}
+.controls-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.controls-row+.controls-row{margin-top:8px;}
+.ctrl-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;min-width:52px;}
+.filter-btn{padding:5px 11px;border:1px solid var(--border);background:transparent;font-family:'DM Mono',monospace;font-size:10px;border-radius:20px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;transition:all .15s;white-space:nowrap;}
+.filter-btn.active{background:var(--surface2);border-color:#888;color:var(--text);}
+.filter-btn:hover{border-color:#aaa;}
+.filter-select{padding:5px 8px;border:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;font-size:10px;border-radius:20px;color:var(--muted);outline:none;cursor:pointer;max-width:160px;}
+.count-badge{margin-left:auto;font-size:10px;color:var(--muted);white-space:nowrap;}
+
+/* CARDS */
+.cards-list{display:flex;flex-direction:column;gap:6px;}
+.rec-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.05);transition:box-shadow .15s;position:relative;overflow:hidden;}
+.rec-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.09);}
+.rec-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:12px 0 0 12px;}
+.rec-card.estado-nova::before{background:var(--gray-border);}
+.rec-card.estado-verificacao::before{background:var(--amber);}
+.rec-card.estado-enviada::before{background:var(--blue);}
+.rec-card.estado-confirmada::before{background:var(--purple);}
+.rec-card.estado-aguarda-proc::before{background:var(--teal);}
+.rec-card.estado-paga::before{background:var(--green);}
+.rec-card.estado-sem-fundamento::before{background:var(--muted);}
+.rec-card.estado-negada::before{background:var(--red);}
+.rec-card.estado-paga{opacity:.72;}
+.rec-card.estado-sem-fundamento{opacity:.6;}
+.rec-card.estado-negada{opacity:.6;}
+
+.card-header{display:grid;grid-template-columns:auto 1fr auto auto auto;align-items:center;gap:8px;padding:11px 16px;cursor:pointer;user-select:none;}
+@media(max-width:600px){.card-header{grid-template-columns:auto 1fr auto auto;}}
+.card-num{font-size:10px;font-weight:600;color:var(--muted);white-space:nowrap;min-width:28px;}
+.card-info{min-width:0;}
+.card-nome{font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.card-sub{font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px;}
+.card-date{font-size:10px;color:var(--muted);white-space:nowrap;}
+@media(max-width:600px){.card-date{display:none;}}
+.chevron{width:14px;height:14px;color:var(--muted);flex-shrink:0;transition:transform .2s;justify-self:end;}
+.chevron.open{transform:rotate(180deg);}
+
+/* ESTADO PILL */
+.estado-pill{font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:3px 9px;border-radius:10px;font-weight:500;flex-shrink:0;white-space:nowrap;}
+.estado-pill.nova{background:var(--gray-bg);color:var(--muted);border:1px solid var(--gray-border);}
+.estado-pill.verificacao{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
+.estado-pill.enviada{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);}
+.estado-pill.confirmada{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border);}
+.estado-pill.aguarda-proc{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-border);}
+.estado-pill.paga{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.estado-pill.sem-fundamento{background:var(--gray-bg);color:var(--muted);border:1px solid var(--gray-border);}
+.estado-pill.negada{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+
+/* CANAL TAG */
+.canal-tag{font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:3px 8px;border-radius:10px;font-weight:500;flex-shrink:0;white-space:nowrap;background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+
+/* CARD BODY */
+.card-body{display:none;padding:0 16px 16px 16px;border-top:1px solid var(--border);}
+.card-body.open{display:block;}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:14px;}
+.detail-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;}
+.detail-item-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;}
+.detail-item-val{font-size:11px;font-weight:500;color:var(--text);word-break:break-word;}
+.card-footer-row{display:flex;align-items:center;gap:10px;font-size:10px;color:var(--muted);flex-wrap:wrap;margin-top:12px;}
+.detail-meta{display:flex;align-items:center;gap:4px;}
+.detail-meta svg{width:11px;height:11px;opacity:.5;}
+.card-notas{margin-top:10px;font-size:10px;color:var(--muted);background:var(--surface2);border:1px dashed var(--border);border-radius:6px;padding:8px 11px;line-height:1.6;}
+.card-notas-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#bbb;margin-bottom:3px;}
+
+/* HISTÓRICO */
+.card-historico{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.historico-label{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px;}
+.historico-list{display:flex;flex-direction:column;gap:0;}
+.historico-item{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--surface2);}
+.historico-item:last-child{border-bottom:none;}
+.historico-dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;margin-top:3px;}
+.historico-dot.nova{background:var(--muted);}
+.historico-dot.verificacao{background:var(--amber);}
+.historico-dot.enviada{background:var(--blue);}
+.historico-dot.confirmada{background:var(--purple);}
+.historico-dot.aguarda-proc{background:var(--teal);}
+.historico-dot.paga{background:var(--green);}
+.historico-dot.sem-fundamento{background:var(--muted);}
+.historico-dot.negada{background:var(--red);}
+.historico-content{flex:1;min-width:0;}
+.historico-estado{font-size:10px;font-weight:500;color:var(--text);}
+.historico-nota{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.5;}
+.historico-meta{font-size:9px;color:#bbb;margin-top:2px;}
+
+/* GESTOR CONTROLS */
+.card-gestor{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.card-gestor.show{display:block;}
+.card-gestor-row{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;}
+.estado-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:6px 8px;border-radius:6px;outline:none;cursor:pointer;flex-shrink:0;}
+.notas-input{flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:6px 8px;border-radius:6px;outline:none;resize:none;transition:border-color .15s;}
+.notas-input:focus{border-color:var(--accent);}
+.icon-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:4px;color:#bbb;transition:color .1s;}
+.icon-btn.del:hover{color:var(--red);}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted);}
+.empty-state svg{width:36px;height:36px;opacity:.3;margin-bottom:12px;}
+.empty-state p{font-size:12px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;font-size:11px;padding:10px 20px;border-radius:20px;opacity:0;transition:all .25s;pointer-events:none;z-index:600;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="header-top">
+    <h1>Reclamações de Horas</h1>
+    <span id="syncStatus"></span>
+  </div>
+  <p class="subtitle" id="pageSubtitle">A carregar…</p>
+
+  <!-- STATS -->
+  <div class="stats-row" id="statsBar">
+    <div style="font-size:11px;color:var(--muted)">A carregar…</div>
+  </div>
+
+  <!-- FORM -->
+  <div class="form-panel" id="formPanel" style="display:none">
+    <div class="panel-title">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v4l2.5 1.5"/></svg>
+      Nova Reclamação
+    </div>
+
+    <div class="section-label">Dados do trabalhador temporário</div>
+    <div class="form-grid">
+      <div>
+        <label class="field-label">Nº de funcionário</label>
+        <input type="text" class="form-input" id="fNumFunc" placeholder="ex: 12345" autocomplete="off">
+      </div>
+      <div>
+        <label class="field-label">NIF<span class="req">*</span></label>
+        <input type="text" class="form-input" id="fNif" placeholder="ex: 123456789" maxlength="9" autocomplete="off">
+      </div>
+      <div class="full">
+        <label class="field-label">Nome completo<span class="req">*</span></label>
+        <input type="text" class="form-input" id="fNome" placeholder="ex: João Silva" autocomplete="off">
+      </div>
+      <div>
+        <label class="field-label">Categoria profissional</label>
+        <input type="text" class="form-input" id="fCategoria" placeholder="ex: Operador de armazém" autocomplete="off">
+      </div>
+      <div>
+        <label class="field-label">Empresa utilizadora<span class="req">*</span></label>
+        <input type="text" class="form-input" id="fEmpresa" placeholder="ex: Empresa ABC Lda" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="section-label">Período reclamado</div>
+    <div class="form-grid">
+      <div>
+        <label class="field-label">Dia(s) em falta<span class="req">*</span></label>
+        <input type="text" class="form-input" id="fDias" placeholder="ex: 3, 4 e 5 de Janeiro" autocomplete="off">
+      </div>
+      <div>
+        <label class="field-label">Mês / Período<span class="req">*</span></label>
+        <input type="text" class="form-input" id="fPeriodo" placeholder="ex: Janeiro 2025" autocomplete="off">
+      </div>
+      <div class="thirds">
+        <div>
+          <label class="field-label">Hora entrada</label>
+          <input type="time" class="form-input" id="fHoraEntrada">
+        </div>
+        <div>
+          <label class="field-label">Hora saída</label>
+          <input type="time" class="form-input" id="fHoraSaida">
+        </div>
+        <div>
+          <label class="field-label">Escritório</label>
+          <select class="form-select" id="fEscritorio">
+            <option value="">A carregar…</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="section-label">Entrada da reclamação</div>
+    <div class="form-grid">
+      <div class="full">
+        <label class="field-label">Canal de entrada<span class="req">*</span></label>
+        <div class="canal-row">
+          <button class="canal-pill sel" data-c="email" onclick="selCanal('email')">📧 Email</button>
+          <button class="canal-pill" data-c="telefone" onclick="selCanal('telefone')">📞 Telefone</button>
+          <button class="canal-pill" data-c="mensagem" onclick="selCanal('mensagem')">💬 Mensagem</button>
+          <button class="canal-pill" data-c="presencial" onclick="selCanal('presencial')">🧑 Presencial</button>
+        </div>
+      </div>
+      <div class="full">
+        <label class="field-label">Notas internas</label>
+        <textarea class="form-textarea" id="fNotas" placeholder="ex: Trabalhador diz que fez turno extra na sexta, não registado no ponto…"></textarea>
+      </div>
+      <div>
+        <label class="field-label">Registado por</label>
+        <div class="user-info-row">
+          <span class="user-info-name" id="userName">A carregar…</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+      <button class="btn btn-secondary" onclick="limparForm()">Limpar</button>
+      <button class="btn btn-primary" onclick="submitReclamacao()">+ Registar Reclamação</button>
+    </div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-bar">
+    <input type="text" class="search-input" id="searchInput" placeholder="Pesquisar por nome, NIF ou nº de funcionário…" oninput="render()">
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls-wrap">
+    <div class="controls-row">
+      <span class="ctrl-label">Estado:</span>
+      <button class="filter-btn active" data-f="ativos" onclick="setFiltro('ativos')">Ativos</button>
+      <button class="filter-btn" data-f="todos" onclick="setFiltro('todos')">Todos</button>
+      <button class="filter-btn" data-f="nova" onclick="setFiltro('nova')">Novas</button>
+      <button class="filter-btn" data-f="enviada" onclick="setFiltro('enviada')">Enviadas</button>
+      <button class="filter-btn" data-f="confirmada" onclick="setFiltro('confirmada')">Confirmadas</button>
+      <button class="filter-btn" data-f="paga" onclick="setFiltro('paga')">Pagas</button>
+      <button class="filter-btn" data-f="negada" onclick="setFiltro('negada')">Negadas</button>
+      <span class="count-badge" id="countBadge"></span>
+    </div>
+    <div class="controls-row">
+      <span class="ctrl-label">Filtrar:</span>
+      <select class="filter-select" id="filterEscritorio" onchange="render()">
+        <option value="">Todos os escritórios</option>
+      </select>
+      <select class="filter-select" id="filterEmpresa" onchange="render()">
+        <option value="">Todas as empresas</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="cards-list" id="cardsList"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBbTDfCCC9o5oxMSMRsvCUC50Iu6L0aqT8",
+  authDomain: "calendario-trabalho-39a6c.firebaseapp.com",
+  projectId: "calendario-trabalho-39a6c",
+  storageBucket: "calendario-trabalho-39a6c.firebasestorage.app",
+  messagingSenderId: "596069405321",
+  appId: "1:596069405321:web:275bb9da220206d3da6c58"
+};
+firebase.initializeApp(firebaseConfig);
+</script>
+<script src="auth.js"></script>
+<script src="config-escritorios.js"></script>
+<script>
+const db = firebase.firestore();
+const col = db.collection('reclamacoes_horas');
+
+let recs = [];
+let filtroEstado = 'ativos';
+let filtroEscritorio = '';
+let selCanalVal = 'email';
+const expandedIds = new Set();
+
+const ESTADO_LABEL = {
+  nova:            'Nova',
+  verificacao:     'Em Verificação',
+  enviada:         'Enviada à Empresa',
+  confirmada:      'Confirmada',
+  'aguarda-proc':  'Aguarda Processamento',
+  paga:            'Paga',
+  'sem-fundamento':'Sem Fundamento',
+  negada:          'Negada pela Empresa',
+};
+
+const CANAL_LABEL = {
+  email: '📧 Email', telefone: '📞 Telefone',
+  mensagem: '💬 Mensagem', presencial: '🧑 Presencial',
+};
+
+const ESTADOS_ATIVOS = ['nova','verificacao','enviada','confirmada','aguarda-proc'];
+const ESTADOS_ARQUIVO = ['paga','sem-fundamento','negada'];
+
+// ── Auth ──
+document.addEventListener('authReady', ({ detail }) => {
+  window.renderNavbar('reclamacoes');
+
+  const profile  = detail.profile;
+  const isAdmin  = window.isAdmin();
+  const canCreate = window.temPermissao('criarReclamacoes');
+
+  // nome do utilizador no form
+  if (profile) {
+    const nome = profile.nomeCompleto || profile.nome || profile.email || '?';
+    document.getElementById('userName').textContent = nome;
+  }
+
+  // mostrar form apenas a quem tem permissão
+  if (canCreate) document.getElementById('formPanel').style.display = '';
+
+  // filtro de escritório por defeito
+  filtroEscritorio = isAdmin ? '' : (profile ? (profile.escritorio || '') : '');
+
+  // carregar escritórios
+  window.loadEscritorios().then(lista => {
+    // select do form
+    const fEsc = document.getElementById('fEscritorio');
+    fEsc.innerHTML = lista.map(e => `<option value="${e.id}">${e.nome}</option>`).join('');
+    if (profile && profile.escritorio) fEsc.value = profile.escritorio;
+
+    // select do filtro
+    const feEl = document.getElementById('filterEscritorio');
+    feEl.innerHTML = '<option value="">Todos os escritórios</option>' +
+      lista.map(e => `<option value="${e.id}">${e.nome}</option>`).join('');
+    if (filtroEscritorio) feEl.value = filtroEscritorio;
+  });
+
+  // subtitle
+  document.getElementById('pageSubtitle').textContent = isAdmin ? 'Todos os escritórios' :
+    (profile && profile.escritorio ? window.nomeEscritorio(profile.escritorio) : '');
+
+  // subscrever Firestore
+  setStatus('A ligar…', '#f59e0b');
+  col.orderBy('criadoEm', 'desc').onSnapshot(snap => {
+    recs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    render();
+    setStatus('✓ Sincronizado', '#16a34a');
+    setTimeout(() => setStatus(''), 3000);
+  }, err => {
+    console.error('reclamacoes:', err);
+    col.onSnapshot(snap => {
+      recs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      render();
+      setStatus('✓ Sincronizado', '#16a34a');
+      setTimeout(() => setStatus(''), 3000);
+    }, e2 => setStatus('Erro de ligação', '#dc2626'));
+  });
+});
+
+// ── Helpers ──
+function setStatus(msg, color) {
+  const el = document.getElementById('syncStatus');
+  if (el) { el.textContent = msg; el.style.color = color || 'var(--muted)'; }
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+function selCanal(c) {
+  selCanalVal = c;
+  document.querySelectorAll('.canal-pill').forEach(b =>
+    b.classList.toggle('sel', b.dataset.c === c));
+}
+
+function setFiltro(f) {
+  filtroEstado = f;
+  document.querySelectorAll('.filter-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.f === f));
+  render();
+}
+
+function limparForm() {
+  ['fNumFunc','fNif','fNome','fCategoria','fEmpresa','fDias','fPeriodo','fHoraEntrada','fHoraSaida','fNotas']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  selCanal('email');
+}
+
+function fmtData(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return d.toLocaleDateString('pt-PT', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+// ── Submit ──
+async function submitReclamacao() {
+  const nif    = document.getElementById('fNif').value.trim();
+  const nome   = document.getElementById('fNome').value.trim();
+  const empresa = document.getElementById('fEmpresa').value.trim();
+  const dias   = document.getElementById('fDias').value.trim();
+  const periodo = document.getElementById('fPeriodo').value.trim();
+
+  if (!nif)    { toast('NIF obrigatório'); return; }
+  if (!nome)   { toast('Nome obrigatório'); return; }
+  if (!empresa){ toast('Empresa utilizadora obrigatória'); return; }
+  if (!dias)   { toast('Dia(s) em falta obrigatório'); return; }
+  if (!periodo){ toast('Mês/Período obrigatório'); return; }
+
+  const profile    = window.userProfile;
+  const criadoPor  = profile ? (profile.nomeCompleto || profile.nome || profile.email) : '—';
+  const escritorio = document.getElementById('fEscritorio').value;
+
+  const doc = {
+    numFunc:     document.getElementById('fNumFunc').value.trim(),
+    nif, nome, empresa,
+    categoria:   document.getElementById('fCategoria').value.trim(),
+    dias, periodo,
+    horaEntrada: document.getElementById('fHoraEntrada').value,
+    horaSaida:   document.getElementById('fHoraSaida').value,
+    escritorio,
+    canal:       selCanalVal,
+    notas:       document.getElementById('fNotas').value.trim(),
+    estado:      'nova',
+    criadoPor,
+    criadoPorUid: window.currentUser ? window.currentUser.uid : '',
+    criadoEm:    Date.now(),
+    historico: [{
+      estado: 'nova',
+      nota: 'Reclamação registada',
+      por: criadoPor,
+      em: Date.now(),
+    }],
+  };
+
+  try {
+    await col.add(doc);
+    limparForm();
+    toast('✓ Reclamação registada com sucesso!');
+  } catch(e) {
+    console.error(e);
+    toast('Erro ao registar. Tenta novamente.');
+  }
+}
+
+// ── Update estado ──
+async function updateEstado(id, novoEstado, nota) {
+  const profile = window.userProfile;
+  const por = profile ? (profile.nomeCompleto || profile.nome || profile.email) : '—';
+  const entrada = {
+    estado: novoEstado,
+    nota: nota || '',
+    por,
+    em: Date.now(),
+  };
+  try {
+    const ref = col.doc(id);
+    const snap = await ref.get();
+    const hist = snap.data().historico || [];
+    await ref.update({
+      estado: novoEstado,
+      historico: [...hist, entrada],
+    });
+    toast('✓ Estado atualizado');
+  } catch(e) { toast('Erro ao atualizar.'); }
+}
+
+async function deleteRec(id) {
+  if (!confirm('Eliminar esta reclamação?')) return;
+  expandedIds.delete(id);
+  try { await col.doc(id).delete(); toast('Eliminada.'); } catch(e) { toast('Erro.'); }
+}
+
+// ── Render ──
+function render() {
+  const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  const feEsc = document.getElementById('filterEscritorio').value;
+  const feEmp = document.getElementById('filterEmpresa').value;
+  const isAdmin = window.isAdmin();
+
+  // filtro de empresa para o select dinâmico
+  const empresas = [...new Set(recs.map(r => r.empresa).filter(Boolean))].sort();
+  const feEmpEl = document.getElementById('filterEmpresa');
+  const curEmp = feEmpEl.value;
+  feEmpEl.innerHTML = '<option value="">Todas as empresas</option>' +
+    empresas.map(e => `<option value="${e}" ${e === curEmp ? 'selected' : ''}>${e}</option>`).join('');
+
+  let lista = recs.filter(r => {
+    // filtro escritório
+    const escFiltro = feEsc || filtroEscritorio;
+    if (escFiltro && r.escritorio !== escFiltro) return false;
+    // filtro empresa
+    if (feEmp && r.empresa !== feEmp) return false;
+    // filtro estado
+    if (filtroEstado === 'ativos' && !ESTADOS_ATIVOS.includes(r.estado)) return false;
+    if (filtroEstado !== 'ativos' && filtroEstado !== 'todos' && r.estado !== filtroEstado) return false;
+    // pesquisa
+    if (q) {
+      const haystack = `${r.nome} ${r.nif} ${r.numFunc} ${r.empresa}`.toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    return true;
+  });
+
+  // stats (sobre todos, sem filtro de estado/pesquisa)
+  renderStats(recs, feEsc || filtroEscritorio);
+
+  document.getElementById('countBadge').textContent = `${lista.length} registo${lista.length !== 1 ? 's' : ''}`;
+
+  const container = document.getElementById('cardsList');
+  if (!lista.length) {
+    container.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+      <p>Nenhuma reclamação encontrada.</p>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = lista.map((r, i) => {
+    const expanded = expandedIds.has(r.id);
+    const estadoClass = (r.estado || 'nova').replace('-','');
+    const estadoLabel = ESTADO_LABEL[r.estado] || r.estado;
+    const hist = r.historico || [];
+    const podeGerir = window.isAdmin() || window.temPermissao('criarReclamacoes');
+
+    return `
+    <div class="rec-card estado-${r.estado || 'nova'}" id="card-${r.id}">
+      <div class="card-header" onclick="toggleCard('${r.id}')">
+        <span class="card-num">#${String(i+1).padStart(2,'0')}</span>
+        <div class="card-info">
+          <div class="card-nome">${r.nome || '—'}</div>
+          <div class="card-sub">${r.empresa || '—'} · ${r.periodo || '—'}</div>
+        </div>
+        <span class="card-date">${fmtData(r.criadoEm)}</span>
+        <span class="estado-pill ${(r.estado||'nova').replace('-','') === 'aguardaproc' ? 'aguarda-proc' : (r.estado||'nova')}">${estadoLabel}</span>
+        <svg class="chevron ${expanded ? 'open' : ''}" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6l4 4 4-4"/></svg>
+      </div>
+      <div class="card-body ${expanded ? 'open' : ''}" id="body-${r.id}">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-item-label">Nº Funcionário</div>
+            <div class="detail-item-val">${r.numFunc || '—'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-item-label">NIF</div>
+            <div class="detail-item-val">${r.nif || '—'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-item-label">Categoria</div>
+            <div class="detail-item-val">${r.categoria || '—'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-item-label">Empresa</div>
+            <div class="detail-item-val">${r.empresa || '—'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-item-label">Dia(s) em falta</div>
+            <div class="detail-item-val">${r.dias || '—'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-item-label">Período</div>
+            <div class="detail-item-val">${r.periodo || '—'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-item-label">Hora entrada</div>
+            <div class="detail-item-val">${r.horaEntrada || '—'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-item-label">Hora saída</div>
+            <div class="detail-item-val">${r.horaSaida || '—'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-item-label">Canal</div>
+            <div class="detail-item-val">${CANAL_LABEL[r.canal] || r.canal || '—'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-item-label">Escritório</div>
+            <div class="detail-item-val">${window.nomeEscritorio ? window.nomeEscritorio(r.escritorio) : (r.escritorio || '—')}</div>
+          </div>
+        </div>
+
+        ${r.notas ? `
+        <div class="card-notas">
+          <div class="card-notas-label">Notas</div>
+          ${r.notas}
+        </div>` : ''}
+
+        <div class="card-footer-row">
+          <span class="detail-meta">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+            ${r.criadoPor || '—'}
+          </span>
+          <span class="detail-meta">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="14" height="11" rx="1.5"/><path d="M1 7h14M5 1v4M11 1v4"/></svg>
+            ${fmtData(r.criadoEm)}
+          </span>
+        </div>
+
+        ${hist.length ? `
+        <div class="card-historico">
+          <div class="historico-label">Histórico</div>
+          <div class="historico-list">
+            ${hist.map(h => `
+            <div class="historico-item">
+              <div class="historico-dot ${(h.estado||'nova').replace('-','') === 'aguardaproc' ? 'aguarda-proc' : (h.estado||'nova')}"></div>
+              <div class="historico-content">
+                <div class="historico-estado">${ESTADO_LABEL[h.estado] || h.estado}</div>
+                ${h.nota ? `<div class="historico-nota">${h.nota}</div>` : ''}
+                <div class="historico-meta">${h.por || ''} · ${fmtData(h.em)}</div>
+              </div>
+            </div>`).join('')}
+          </div>
+        </div>` : ''}
+
+        ${podeGerir ? `
+        <div class="card-gestor show">
+          <div class="card-gestor-row">
+            <select class="estado-select" id="sel-${r.id}">
+              <option value="nova"           ${r.estado==='nova'?'selected':''}>Nova</option>
+              <option value="verificacao"    ${r.estado==='verificacao'?'selected':''}>Em Verificação</option>
+              <option value="enviada"        ${r.estado==='enviada'?'selected':''}>Enviada à Empresa</option>
+              <option value="confirmada"     ${r.estado==='confirmada'?'selected':''}>Confirmada</option>
+              <option value="aguarda-proc"   ${r.estado==='aguarda-proc'?'selected':''}>Aguarda Processamento</option>
+              <option value="paga"           ${r.estado==='paga'?'selected':''}>Paga</option>
+              <option value="sem-fundamento" ${r.estado==='sem-fundamento'?'selected':''}>Sem Fundamento</option>
+              <option value="negada"         ${r.estado==='negada'?'selected':''}>Negada pela Empresa</option>
+            </select>
+            <textarea class="notas-input" id="nota-${r.id}" rows="1" placeholder="Nota sobre esta alteração (ex: email enviado para RH)…"></textarea>
+            <button class="btn btn-sm btn-primary" onclick="saveEstado('${r.id}')">Guardar</button>
+            ${isAdmin ? `<button class="icon-btn del" title="Eliminar" onclick="deleteRec('${r.id}')">🗑</button>` : ''}
+          </div>
+        </div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCard(id) {
+  if (expandedIds.has(id)) expandedIds.delete(id);
+  else expandedIds.add(id);
+  render();
+}
+
+function saveEstado(id) {
+  const estado = document.getElementById('sel-' + id).value;
+  const nota   = document.getElementById('nota-' + id).value.trim();
+  updateEstado(id, estado, nota);
+}
+
+function renderStats(lista, escFiltro) {
+  const filtered = escFiltro ? lista.filter(r => r.escritorio === escFiltro) : lista;
+  const total      = filtered.length;
+  const abertos    = filtered.filter(r => ESTADOS_ATIVOS.includes(r.estado)).length;
+  const enviadas   = filtered.filter(r => r.estado === 'enviada').length;
+  const confirmadas= filtered.filter(r => r.estado === 'confirmada' || r.estado === 'aguarda-proc').length;
+  const pagas      = filtered.filter(r => r.estado === 'paga').length;
+  const negadas    = filtered.filter(r => r.estado === 'negada').length;
+
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-chip s-total"><span class="stat-val">${total}</span><span class="stat-lbl">Total</span></div>
+    <div class="stat-chip s-aberto"><span class="stat-val">${abertos}</span><span class="stat-lbl">Em aberto</span></div>
+    <div class="stat-chip s-enviado"><span class="stat-val">${enviadas}</span><span class="stat-lbl">Enviadas</span></div>
+    <div class="stat-chip s-confirmado"><span class="stat-val">${confirmadas}</span><span class="stat-lbl">Confirmadas</span></div>
+    <div class="stat-chip s-pago"><span class="stat-val">${pagas}</span><span class="stat-lbl">Pagas</span></div>
+    <div class="stat-chip s-negado"><span class="stat-val">${negadas}</span><span class="stat-lbl">Negadas</span></div>
+  `;
+}
+</script>
+</body>
+</html>

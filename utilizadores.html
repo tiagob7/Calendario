@@ -388,6 +388,7 @@ function renderUsers() {
       { key: 'criarAdmissoes',   label: 'Criar Admissões' },
       { key: 'resolverAdmissoes',label: 'Resolver Admissões' },
       { key: 'editarCalendario', label: 'Editar Calendário' },
+      { key: 'criarReclamacoes',  label: 'Reclamações de Horas' },
     ];
 
     const isAdminUser = role === 'admin';
@@ -497,7 +498,8 @@ async function criarUtilizador() {
         gerirComunicados: false,
         criarAdmissoes: false,
         resolverAdmissoes: false,
-        editarCalendario: false
+        editarCalendario: false,
+        criarReclamacoes: false
       }
     };
 
