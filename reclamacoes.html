@@ -851,7 +851,7 @@ function render(){
       <div class="card-header" onclick="toggleCard('${r.id}')">
         <span class="card-num">#${String(i+1).padStart(2,'0')}</span>
         <div class="card-info">
-          <div class="card-nome">${r.nome||'—'}</div>
+          <div class="card-nome">${r.nome||'—'}${r.codigoPortal?` <span style="font-size:9px;background:var(--blue-bg);border:1px solid var(--blue-border);color:var(--blue);border-radius:4px;padding:1px 6px;font-weight:500;letter-spacing:.03em;vertical-align:middle;">🔗 Portal</span>`:''}</div>
           <div class="card-sub">${r.empresa||'—'} · ${r.resumoPeriodo||'—'}</div>
         </div>
         <span class="card-date">${fmtData(r.criadoEm)}</span>
@@ -866,6 +866,7 @@ function render(){
           <div class="detail-item"><div class="detail-item-label">Empresa</div><div class="detail-item-val">${r.empresa||'—'}</div></div>
           <div class="detail-item"><div class="detail-item-label">Canal</div><div class="detail-item-val">${CANAL_LABEL[r.canal]||r.canal||'—'}</div></div>
           <div class="detail-item"><div class="detail-item-label">Escritório</div><div class="detail-item-val">${window.nomeEscritorio?window.nomeEscritorio(r.escritorio):(r.escritorio||'—')}</div></div>
+          ${r.codigoPortal?`<div class="detail-item"><div class="detail-item-label">Código Portal</div><div class="detail-item-val" style="display:flex;align-items:center;gap:6px;">${escHtml(r.codigoPortal)}<button onclick="event.stopPropagation();navigator.clipboard.writeText('${escHtml(r.codigoPortal)}').then(()=>toast('Código copiado!'))" style="background:none;border:1px solid var(--border);border-radius:4px;font-size:9px;cursor:pointer;padding:2px 7px;color:var(--muted);font-family:'DM Mono',monospace;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">📋</button></div></div>`:''}
           ${periodos.length?`<div class="detail-item span-full"><div class="detail-item-label">Períodos reclamados</div>${periodosHTML}</div>`:''}
         </div>
         ${r.notas?`<div class="card-notas"><div class="card-notas-label">Notas</div>${r.notas}</div>`:''}
