@@ -1175,13 +1175,13 @@ const VOZ_CLAUDE_API_KEY = ''; // coloca a tua API key aqui
 const VOZ_PROMPTS = {
   tarefa: `Analisa este texto em português e extrai os dados para uma tarefa. Responde APENAS com JSON.
 Formato: {"titulo":"...","descricao":"...","prioridade":"urgente|normal|baixa","escritorio":"quarteira|albufeira|lisboa|porto","departamento":"..."}`,
-  admissao: `Analisa este texto em português e extrai os dados para uma admissão. Responde APENAS com JSON.
-Formato: {"nome":"...","nif":"...","empresa":"...","categoria":"...","escritorio":"quarteira|albufeira|lisboa|porto","dataEntrada":"YYYY-MM-DD ou vazio","valorBase":"numero ou vazio","tipo":"admissao|cessacao"}`
+  admissao: `Analisa este texto em português e extrai os dados para uma admissão. Responde APENAS com JSON, sem mais nada.
+Formato: {"nome":"nome completo","numero":"número de colaborador ou vazio","nif":"NIF ou vazio","empresa":"nome da empresa utilizadora ou vazio","categoria":"categoria profissional em texto livre ou vazio","escritorio":"quarteira|albufeira|lisboa|porto ou vazio","dataEntrada":"YYYY-MM-DD ou vazio","valorBase":"só o número ex: 1200 ou vazio","tipo":"admissao|cessacao"}`
 };
 
 const VOZ_LABELS = {
   tarefa:   {titulo:'Título',descricao:'Descrição',prioridade:'Prioridade',escritorio:'Escritório',departamento:'Departamento'},
-  admissao: {nome:'Nome',nif:'NIF',empresa:'Empresa',categoria:'Categoria',escritorio:'Escritório',dataEntrada:'Data entrada',valorBase:'Valor base',tipo:'Tipo'}
+  admissao: {nome:'Nome',numero:'Nº Colaborador',nif:'NIF',empresa:'Empresa',categoria:'Categoria',escritorio:'Escritório',dataEntrada:'Data entrada',valorBase:'Valor base (€)',tipo:'Tipo'}
 };
 
 let _vozTipo = 'tarefa';
@@ -1358,11 +1358,12 @@ function vozPreencherTarefa(d) {
 }
 
 function vozPreencherAdmissao(d) {
-  if (d.nome)       document.getElementById('fNome').value = d.nome;
-  if (d.nif)        document.getElementById('fNif').value = d.nif;
-  if (d.empresa)    document.getElementById('fEmpresa') && (document.getElementById('fEmpresa').value = d.empresa);
-  if (d.categoria)  document.getElementById('fCategoria') && (document.getElementById('fCategoria').value = d.categoria);
-  if (d.valorBase && document.getElementById('fValorBase')) document.getElementById('fValorBase').value = d.valorBase;
+  if (d.nome)      document.getElementById('fNome').value = d.nome;
+  if (d.numero)    document.getElementById('fNumero').value = d.numero;
+  if (d.nif)       document.getElementById('fNif').value = d.nif;
+  if (d.empresa)   { const el = document.getElementById('fEmpresa');   if (el) el.value = d.empresa; }
+  if (d.categoria) { const el = document.getElementById('fCategoria'); if (el) el.value = d.categoria; }
+  if (d.valorBase) { const el = document.getElementById('fValorBase'); if (el) el.value = d.valorBase; }
   if (d.dataEntrada && document.getElementById('fDataEntrada')) {
     document.getElementById('fDataEntrada').value = d.dataEntrada;
     if (typeof updatePrioPreview === 'function') updatePrioPreview();
@@ -1378,9 +1379,30 @@ function vozPreencherAdmissao(d) {
 // Simulação offline
 function vozSimular(texto, tipo) {
   const t = texto.toLowerCase();
-  const nome = (texto.match(/\b([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][a-záéíóúàâêôãõç]+ [A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][a-záéíóúàâêôãõç]+)\b/) || [])[1] || '';
-  const esc = ['quarteira','albufeira','lisboa','porto'].find(e => t.includes(e)) || '';
+
+  // Nome próprio: 2+ palavras com maiúscula
+  const nome = (texto.match(/\b([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][a-záéíóúàâêôãõç]+(?:\s+[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][a-záéíóúàâêôãõç]+)+)\b/) || [])[1] || '';
+  const esc  = ['quarteira','albufeira','lisboa','porto'].find(e => t.includes(e)) || '';
   const data = (texto.match(/\b(\d{4}-\d{2}-\d{2}|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\b/) || [])[1] || '';
+
+  // Número de colaborador: "número XXXX" ou "nº XXXX"
+  const numero = (texto.match(/(?:n[uúº°]mero|n[oº]\.?)\s*(\d+)/i) || [])[1] || '';
+
+  // Empresa: após "empresa" ou "para a empresa"
+  const empresaM = texto.match(/(?:empresa|para\s+(?:a\s+)?empresa)\s+([A-Za-zÀ-ÿ0-9 &,\.]+?)(?:\s+(?:base|categoria|nif|n[uú]mero|escritório|€|\d))/i);
+  const empresa  = empresaM ? empresaM[1].trim() : '';
+
+  // Categoria: após "categoria"
+  const categoriaM = texto.match(/categoria\s+([A-Za-zÀ-ÿ ]+?)(?:\s+(?:base|empresa|nif|escritório|€|\d|$))/i);
+  const categoria  = categoriaM ? categoriaM[1].trim() : '';
+
+  // Valor base: "base XXXX" ou "XXXX €" ou "€ XXXX"
+  const valorM = texto.match(/(?:base\s+|salário\s+|vencimento\s+)?(\d[\d\s]*(?:[.,]\d{1,2})?)\s*€/i)
+              || texto.match(/base\s+(\d[\d\s]*(?:[.,]\d{1,2})?)/i);
+  const valorBase = valorM ? valorM[1].replace(/\s/g,'').replace(',','.') : '';
+
+  // NIF: 9 dígitos consecutivos
+  const nif = (texto.match(/\b(\d{9})\b/) || [])[1] || '';
 
   if (tipo === 'tarefa') {
     return {
@@ -1392,13 +1414,14 @@ function vozSimular(texto, tipo) {
     };
   }
   return {
-    nome: nome || '',
-    nif: (texto.match(/\b\d{9}\b/) || [])[0] || '',
-    empresa: '',
-    categoria: t.includes('contabil') ? 'Técnico de Contabilidade' : t.includes('payroll') ? 'Técnico de Payroll' : '',
+    nome,
+    numero,
+    nif,
+    empresa,
+    categoria,
     escritorio: esc,
     dataEntrada: data,
-    valorBase: (texto.match(/\b\d{3,4}([.,]\d{2})?\s*€?\b/) || [])[0]?.replace(/[^0-9.]/g,'') || '',
+    valorBase,
     tipo: t.includes('cessa') || t.includes('saída') || t.includes('saida') ? 'cessacao' : 'admissao',
   };
 }
