@@ -160,7 +160,7 @@ tbody tr.me-row td{border-bottom-color:#bfdbfe;}
   <div class="modal">
     <h3>Novo Utilizador</h3>
     <div class="modal-info">
-      Será criada uma conta e enviado um email ao utilizador para definir a password. A conta fica ativa imediatamente.
+      Será criada uma conta ativa imediatamente. Partilha a password com o utilizador.
     </div>
     <div class="modal-grid">
       <div>
@@ -187,10 +187,12 @@ tbody tr.me-row td{border-bottom-color:#bfdbfe;}
       <option value="colaborador">Colaborador</option>
       <option value="admin">Admin</option>
     </select>
+    <label class="field-label">Password</label>
+    <input class="field-input" type="password" id="newPassword" placeholder="Mínimo 6 caracteres">
     <div id="modalNovoErr" style="display:none;color:var(--red);font-size:11px;margin-bottom:10px;"></div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="fecharModalNovo()">Cancelar</button>
-      <button class="btn-save" id="btnSalvarNovo" onclick="criarUtilizador()">Criar e enviar email</button>
+      <button class="btn-save" id="btnSalvarNovo" onclick="criarUtilizador()">Criar conta</button>
     </div>
   </div>
 </div>
@@ -425,10 +427,12 @@ function abrirModalNovo() {
   document.getElementById('newEmail').value = '';
   document.getElementById('newEscritorio').value = '';
   document.getElementById('newRole').value = 'colaborador';
+  document.getElementById('newPassword').value = '';
   const errEl2 = document.getElementById('modalNovoErr');
   errEl2.textContent = '';
   errEl2.style.display = 'none';
   document.getElementById('btnSalvarNovo').disabled = false;
+  document.getElementById('btnSalvarNovo').textContent = 'Criar conta';
   document.getElementById('newNome').focus();
 }
 
@@ -442,14 +446,15 @@ async function criarUtilizador() {
   const email     = document.getElementById('newEmail').value.trim();
   const escritorio= document.getElementById('newEscritorio').value;
   const role      = document.getElementById('newRole').value;
+  const password  = document.getElementById('newPassword').value;
   const errEl     = document.getElementById('modalNovoErr');
   const btnSalvar = document.getElementById('btnSalvarNovo');
 
   errEl.textContent = '';
   errEl.style.display = 'none';
 
-  if (!nome || !email) {
-    errEl.textContent = 'Nome e email são obrigatórios.';
+  if (!nome || !email || !password) {
+    errEl.textContent = 'Nome, email e password são obrigatórios.';
     errEl.style.display = 'block';
     return;
   }
@@ -458,11 +463,14 @@ async function criarUtilizador() {
     errEl.style.display = 'block';
     return;
   }
+  if (password.length < 6) {
+    errEl.textContent = 'A password deve ter pelo menos 6 caracteres.';
+    errEl.style.display = 'block';
+    return;
+  }
 
   btnSalvar.disabled = true;
   btnSalvar.textContent = 'A criar…';
-
-  const tempPassword = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2) + 'A1!';
   const appName = 'adminCreate_' + Date.now();
   let secondaryApp = null;
 
@@ -471,7 +479,7 @@ async function criarUtilizador() {
     secondaryApp = firebase.initializeApp(firebase.app().options, appName);
     const secondaryAuth = secondaryApp.auth();
 
-    const cred = await secondaryAuth.createUserWithEmailAndPassword(email, tempPassword);
+    const cred = await secondaryAuth.createUserWithEmailAndPassword(email, password);
     const uid = cred.user.uid;
 
     await secondaryAuth.signOut();
@@ -502,11 +510,8 @@ async function criarUtilizador() {
 
     await db.collection('utilizadores').doc(uid).set(profile);
 
-    // Enviar email de redefinição de password para o utilizador definir a sua
-    await firebase.auth().sendPasswordResetEmail(email);
-
     fecharModalNovo();
-    alert('Conta criada com sucesso! Um email foi enviado para ' + email + ' para definir a password.');
+    alert('Conta criada com sucesso para ' + email + '.');
   } catch(err) {
     console.error('[criarUtilizador]', err);
     const msgs = {
@@ -517,7 +522,7 @@ async function criarUtilizador() {
     errEl.textContent = msgs[err.code] || 'Erro: ' + (err.message || err.code);
     errEl.style.display = 'block';
     btnSalvar.disabled = false;
-    btnSalvar.textContent = 'Criar e enviar email';
+    btnSalvar.textContent = 'Criar conta';
   } finally {
     if (secondaryApp) {
       secondaryApp.delete().catch(() => {});

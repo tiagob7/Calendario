@@ -444,30 +444,7 @@ auth.onAuthStateChanged(user => {
   const p = new URLSearchParams(window.location.search).get('conta') ||
             new URLSearchParams(window.location.search).get('email');
   if (p === 'desativada') {
-    showError('Conta inativa. Se te registaste recentemente, aguarda aprovação do administrador. Caso contrário, contacta o administrador.');
-  } else if (p === 'naoVerificado') {
-    showInfo('Verifica o teu email antes de entrar. Clica no link que te enviámos.');
-    // Mostrar botão de reenvio
-    const btn = document.createElement('button');
-    btn.className = 'btn-primary';
-    btn.style.cssText = 'margin-top:10px;font-size:10px;padding:8px;';
-    btn.textContent = 'Reenviar email de verificação';
-    btn.onclick = async () => {
-      const email = document.getElementById('loginEmail').value.trim();
-      const pass  = document.getElementById('loginPassword').value;
-      if (!email || !pass) { showError('Introduz o teu email e password para reenviar.'); return; }
-      btn.disabled = true; btn.textContent = 'A enviar…';
-      try {
-        const c = await auth.signInWithEmailAndPassword(email, pass);
-        await c.user.sendEmailVerification();
-        await auth.signOut();
-        showSuccess('Email de verificação reenviado para ' + email);
-      } catch(e) {
-        showError('Não foi possível reenviar: ' + translateAuthError(e.code));
-      }
-      btn.disabled = false; btn.textContent = 'Reenviar email de verificação';
-    };
-    document.getElementById('alertInfo').after(btn);
+    showError('Conta inativa. Aguarda aprovação do administrador. Caso contrário, contacta o administrador.');
   }
 })();
 
@@ -571,17 +548,10 @@ async function doRegister() {
     console.error('[registo] Falha ao guardar perfil no Firestore:', dbErr.code, dbErr.message);
   }
 
-  // 4. Enviar email de verificação
-  try {
-    await cred.user.sendEmailVerification();
-  } catch (e) {
-    console.warn('[registo] Falha ao enviar email de verificação:', e.message);
-  }
-
-  // Fazer logout imediato — não pode aceder sem verificar email + aprovação admin
+  // Fazer logout imediato — conta fica pendente até aprovação do admin
   await auth.signOut();
 
-  showSuccess('Conta criada! Verifica o teu email (' + email + ') e clica no link de confirmação. Após isso, aguarda aprovação do administrador.');
+  showSuccess('Conta criada! Aguarda aprovação do administrador antes de poderes entrar.');
   setLoading(document.getElementById('btnRegister'), false);
   isRegistering = false;
 }

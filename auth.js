@@ -158,16 +158,6 @@ firebase.auth().onAuthStateChanged(async (user) => {
 
   window.currentUser = user;
 
-  // Recarregar para garantir que emailVerified está atualizado
-  try { await user.reload(); } catch(e) {}
-
-  // Email não verificado — bloquear acesso
-  if (!user.emailVerified) {
-    await firebase.auth().signOut();
-    window.location.href = 'login.html?email=naoVerificado';
-    return;
-  }
-
   let snap;
   try {
     snap = await firebase.firestore()
