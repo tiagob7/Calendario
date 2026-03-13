@@ -216,14 +216,14 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
     <h1>Dashboard</h1>
     <span class="last-update" id="lastUpdate"></span>
     <span id="syncStatus"></span>
-    <!-- botão definições (só admin) -->
-    <a id="userAdminBtn" href="definicoes.html"
+    <!-- botão gestão de utilizadores (só admin) -->
+    <a id="userAdminBtn" href="utilizadores.html"
        style="display:none;margin-left:8px;display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-decoration:none;transition:all .15s;">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="width:12px;height:12px;">
         <path d="M7.5 2.1a1 1 0 011 0l.9.5a1 1 0 00.9 0l.9-.5a1 1 0 011 0l1.1.6a1 1 0 01.5.87v1.2a1 1 0 00.3.7l.7.7a1 1 0 010 1.4l-.7.7a1 1 0 00-.3.7v1.2a1 1 0 01-.5.87l-1.1.6a1 1 0 01-1 0l-.9-.5a1 1 0 00-.9 0l-.9.5a1 1 0 01-1 0l-1.1-.6a1 1 0 01-.5-.87V10.6a1 1 0 00-.3-.7l-.7-.7a1 1 0 010-1.4l.7-.7a1 1 0 00.3-.7V3.57a1 1 0 01.5-.87l1.1-.6z"/>
         <circle cx="8" cy="8" r="1.8"/>
       </svg>
-      <span>Definições</span>
+      <span>Utilizadores</span>
     </a>
     <!-- admin: filtro de escritório (pills) -->
     <div id="adminEscritorioPills" style="display:none;gap:4px;flex-wrap:wrap;align-items:center;"></div>
@@ -441,6 +441,12 @@ let escritorioAtivoDash = '';
 
 // ── LISTENERS — carregam tudo, filtro feito no cliente ──
 function startSync(escritorio) {
+  // ── Helper: ID do documento de calendário do mês atual ──
+  function dashCalDocId(esc) {
+    const n = new Date();
+    return 'calendario_' + esc + '_' + n.getFullYear() + '_' + String(n.getMonth()+1).padStart(2,'0');
+  }
+
   escritorioAtivoDash = escritorio || '';
 
   // Se já temos listeners ativos, re-renderizar (filtro no cliente)
@@ -451,7 +457,7 @@ function startSync(escritorio) {
     if (window._dashCalEsc !== calEscNovo) {
       window._dashCalEsc = calEscNovo;
       if (window._dashCalUnsub) window._dashCalUnsub();
-      const newDocId = 'calendario_' + calEscNovo;
+      const newDocId = dashCalDocId(calEscNovo);
       window._dashCalUnsub = db.collection('calendarios').doc(newDocId).onSnapshot(snap => {
         calData = snap.exists ? snap.data() : null;
         renderCalMini();
@@ -508,7 +514,7 @@ function startSync(escritorio) {
   // Re-subscreve quando o escritório muda
   const calEsc = (escritorioAtivoDash && escritorioAtivoDash !== 'todos')
     ? escritorioAtivoDash : 'quarteira';
-  const calDocId = 'calendario_' + calEsc;
+  const calDocId = dashCalDocId(calEsc);
 
   window._dashCalEsc = calEsc;
   window._dashCalUnsub = db.collection('calendarios').doc(calDocId).onSnapshot(snap => {
