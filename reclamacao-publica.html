@@ -571,18 +571,27 @@ function renderCard(r) {
 
   const periodosHTML = periodos.length ? `
     <table class="periodos-table">
-      <thead><tr><th>Mês/Ano</th><th>Dias</th><th>Total</th></tr></thead>
-      <tbody>${periodos.map(p => `<tr>
-        <td>${p.mesNome || MESES[p.mes] || ''} ${p.ano}</td>
-        <td><div class="dias-chips">${(p.dias||[]).map(d => `<span class="dia-chip">${d}</span>`).join('')}</div></td>
-        <td>${p.totalHoras || '—'}</td>
-      </tr>`).join('')}</tbody>
+      <thead><tr><th>Mês/Ano</th><th>Dias</th><th>Turnos</th><th>Total</th><th>🌙 Noc.</th><th>📅 Fer.</th></tr></thead>
+      <tbody>${periodos.map(p => {
+        const turnos = p.turnos || [];
+        const turnosHTML = turnos.length
+          ? turnos.map((t, i) => `<span style="white-space:nowrap;margin-right:8px">${turnos.length > 1 ? 'T' + (i+1) + ': ' : ''}${t.entrada||'—'} → ${t.saida||'—'}${t.total ? ' (' + t.total + ')' : ''}</span>`).join('')
+          : '—';
+        return `<tr>
+          <td>${p.mesNome || MESES[p.mes] || ''} ${p.ano}</td>
+          <td><div class="dias-chips">${(p.dias||[]).map(d => `<span class="dia-chip">${d}</span>`).join('')}</div></td>
+          <td style="font-size:10px">${turnosHTML}</td>
+          <td>${p.totalHoras || '—'}</td>
+          <td>${p.totalNoturnas || '—'}</td>
+          <td>${p.totalFeriado || '—'}</td>
+        </tr>`;
+      }).join('')}</tbody>
     </table>` : '';
 
   return `<div class="rec-card estado-${eCard}" id="card-${r.id}">
     <div class="card-header" onclick="toggleCard('${r.id}')">
       <div>
-        <div class="card-nome">${escHtml(r.empresa || '—')}</div>
+        <div class="card-nome">${escHtml(r.empresa || '—')}${r.categoria ? `<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:8px;">${escHtml(r.categoria)}</span>` : ''}</div>
         <div class="card-sub">${escHtml(r.resumoPeriodo || '—')} · ${fmtData(r.criadoEm)}</div>
       </div>
       <span class="estado-pill ${ePill}">${eLabel}</span>
@@ -590,10 +599,7 @@ function renderCard(r) {
     </div>
     <div class="card-body ${exp ? 'open' : ''}" id="body-${r.id}">
       <div class="detail-grid">
-        <div class="detail-item"><div class="detail-item-label">Data registo</div><div class="detail-item-val">${fmtData(r.criadoEm)}</div></div>
-        <div class="detail-item"><div class="detail-item-label">Categoria</div><div class="detail-item-val">${escHtml(r.categoria || '—')}</div></div>
-        <div class="detail-item"><div class="detail-item-label">Canal</div><div class="detail-item-val">${CANAL_LABEL[r.canal] || r.canal || '—'}</div></div>
-        ${periodos.length ? `<div class="detail-item span-full"><div class="detail-item-label">Períodos</div>${periodosHTML}</div>` : ''}
+        ${periodos.length ? `<div class="detail-item span-full"><div class="detail-item-label">Períodos reclamados</div>${periodosHTML}</div>` : ''}
       </div>
       ${hist.length ? `<div class="card-historico">
         <div class="historico-label">Histórico</div>
