@@ -705,10 +705,14 @@ document.addEventListener('authReady',({detail})=>{
   document.getElementById('pageSubtitle').textContent=isAdmin?'Todos os escritórios':
     (profile&&profile.escritorio?(window.nomeEscritorio?window.nomeEscritorio(profile.escritorio):profile.escritorio):'');
   setStatus('A ligar…','#f59e0b');
-  col.orderBy('criadoEm','desc').onSnapshot(snap=>{
+  // Admins carregam tudo; colaboradores filtram pelo próprio escritório para respeitar as Firestore rules
+  const baseQuery = isAdmin
+    ? col.orderBy('criadoEm','desc')
+    : col.where('escritorio','==', filtroEscritorio).orderBy('criadoEm','desc');
+  baseQuery.onSnapshot(snap=>{
     recs=snap.docs.map(d=>({id:d.id,...d.data()}));
     render(); setStatus('✓ Sincronizado','#16a34a'); setTimeout(()=>setStatus(''),3000);
-  },()=>col.onSnapshot(snap=>{
+  },()=>baseQuery.onSnapshot(snap=>{
     recs=snap.docs.map(d=>({id:d.id,...d.data()}));
     render(); setStatus('✓ Sincronizado','#16a34a'); setTimeout(()=>setStatus(''),3000);
   },()=>setStatus('Erro de ligação','#dc2626')));
