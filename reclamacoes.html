@@ -705,17 +705,18 @@ document.addEventListener('authReady',({detail})=>{
   document.getElementById('pageSubtitle').textContent=isAdmin?'Todos os escritórios':
     (profile&&profile.escritorio?(window.nomeEscritorio?window.nomeEscritorio(profile.escritorio):profile.escritorio):'');
   setStatus('A ligar…','#f59e0b');
-  // Admins carregam tudo; colaboradores filtram pelo próprio escritório para respeitar as Firestore rules
-  const baseQuery = isAdmin
-    ? col.orderBy('criadoEm','desc')
-    : col.where('escritorio','==', filtroEscritorio).orderBy('criadoEm','desc').limit(500);
-  baseQuery.onSnapshot(snap=>{
+  // Carrega tudo e filtra no cliente (igual às tarefas) — evita necessidade de índices compostos
+  col.orderBy('criadoEm','desc').onSnapshot(snap=>{
     recs=snap.docs.map(d=>({id:d.id,...d.data()}));
     render(); setStatus('✓ Sincronizado','#16a34a'); setTimeout(()=>setStatus(''),3000);
-  },()=>baseQuery.onSnapshot(snap=>{
-    recs=snap.docs.map(d=>({id:d.id,...d.data()}));
-    render(); setStatus('✓ Sincronizado','#16a34a'); setTimeout(()=>setStatus(''),3000);
-  },()=>setStatus('Erro de ligação','#dc2626')));
+  }, err=>{
+    console.error('reclamacoes (orderBy):', err);
+    // Fallback sem ordenação se o índice simples também falhar
+    col.onSnapshot(snap=>{
+      recs=snap.docs.map(d=>({id:d.id,...d.data()}));
+      render(); setStatus('✓ Sincronizado','#16a34a'); setTimeout(()=>setStatus(''),3000);
+    }, err2=>{ console.error('reclamacoes fallback:', err2); setStatus('Erro de ligação','#dc2626'); });
+  });
 });
 
 // ── SUBMIT ──
