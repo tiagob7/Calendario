@@ -310,14 +310,12 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
   /* Header: menos gap */
   .header-top{gap:8px;}
 
-  /* Nav links: scroll horizontal, sem wrap */
-  .nav-links{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;
-    padding-bottom:4px;scrollbar-width:none;margin-bottom:16px;}
-  .nav-links::-webkit-scrollbar{display:none;}
+  /* Nav links: wrap natural (links em cima, pesquisa em baixo) */
+  .nav-links{margin-bottom:16px;}
   .nav-link{flex-shrink:0;}
 
-  /* Pesquisa: linha separada, largura total */
-  #globalSearchWrap{margin-left:0;width:100%;order:99;}
+  /* Pesquisa: linha própria (flex-basis:100% com flex-wrap:wrap) */
+  #globalSearchWrap{order:99;flex-basis:100%;width:100%;margin-left:0;}
   #globalSearchBtn{width:100%;justify-content:center;}
 }
 </style>
