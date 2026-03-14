@@ -13,6 +13,7 @@ Calendario/                    ← pasta raiz do teu repositório GitHub
 ├── auditoria.js               ← módulo de audit log partilhado
 ├── config-escritorios.js      ← lista de escritórios (lida do Firestore)
 ├── utils.js                   ← utilitários partilhados
+├── styles.css                 ← CSS partilhado entre todas as páginas
 │
 ├── login.html                 ← página de login/registo (pública)
 ├── reclamacao-publica.html    ← portal do trabalhador (público, sem login)
@@ -37,7 +38,7 @@ Calendario/                    ← pasta raiz do teu repositório GitHub
 ### 1. Ativar Firebase Authentication
 
 1. Vai a https://console.firebase.google.com
-2. Abre o projeto `calendario-trabalho-39a6c`
+2. Abre o projeto
 3. Menu lateral → **Authentication** → **Sign-in method**
 4. Ativa **Email/Password**
 5. Guarda
@@ -90,6 +91,7 @@ Com a extensão "Live Server" no VS Code:
 | `auth.js` | Verifica sessão em todas as páginas protegidas. Redireciona para `login.html` se não autenticado. Expõe `window.userProfile`, `window.isAdmin()`, `window.temPermissao()`, `window.escritorioAtivo()`. Injeta a mini-navbar com nome, role e botão logout. |
 | `auditoria.js` | Módulo de audit log. Expõe `window.registarAuditoria()`. Calcula automaticamente o diff antes/depois. Incluir depois de `auth.js` em todas as páginas protegidas. |
 | `config-escritorios.js` | Carrega a lista de escritórios do Firestore (`config/escritorios`). Expõe `window.loadEscritorios()`, `window.getEscritoriosSync()`, `window.nomeEscritorio()` e `window.escritoriosValidos()`. |
+| `styles.css` | CSS partilhado: variáveis, botões, formulários, toasts, modais e outros componentes comuns. |
 
 **Ordem de carregamento obrigatória em cada página protegida:**
 ```html
@@ -105,8 +107,6 @@ Com a extensão "Live Server" no VS Code:
 <script src="config-escritorios.js"></script>
 ```
 
-> **Nota:** `admissoes.html`, `tarefas.html` e `reclamacoes.html` usam também o SDK `firebase-storage-compat.js` (para anexos) e ainda têm a configuração Firebase inline — duplicação a limpar.
-
 ### Páginas públicas (sem login)
 
 **`login.html`**
@@ -121,6 +121,7 @@ Com a extensão "Live Server" no VS Code:
 - Preenche períodos e turnos detalhados
 - Escolhe escritório a partir da lista dinâmica do Firestore
 - Reclamações submetidas ficam visíveis em `reclamacoes.html`
+- Rate limiting por sessão: máx. 3 submissões, cooldown de 60s entre submissões
 
 ### Páginas protegidas
 
@@ -216,23 +217,15 @@ Todos os documentos incluem `escritorio` (ex: `"lisboa"`) e `criadoPor` (UID).
 
 ---
 
-## ⚠️ Pontos de atenção actuais
+## ⚠️ Pontos de atenção atuais
 
-- **Firebase config inline** em `admissoes.html`, `tarefas.html` e `reclamacoes.html` — ainda têm o bloco `firebaseConfig` no HTML além de usarem os SDKs. Funciona, mas é duplicação desnecessária.
-- **`reclamacao-publica.html`** — página sem autenticação nem rate limiting. Qualquer pessoa com o link pode submeter reclamações.
-- **`console.log()` em `utilizadores.html`** — linha de debug que imprime emails de todos os utilizadores na consola do browser. Remover antes de produção.
-- **`auditoria.html` e `utilizadores.html` sem `@media` queries** — sem estilos adaptados para mobile.
-- **CSS duplicado** — `:root`, `.btn`, `.toast`, `.field-label` e ~20 outras classes repetem-se em todos os ficheiros. Extrair para `styles.css` reduziria cerca de 1000 linhas no total.
 - **Documentos antigos sem `escritorio`** — aparecem apenas para admins. Editar manualmente no Firestore se necessário.
+- **`reclamacao-publica.html`** — rate limiting apenas por sessão (reset ao recarregar). Sem Firestore Security Rules nem Firebase App Check (a implementar futuramente).
 
 ---
 
 ## ✅ Próximos passos sugeridos (por prioridade)
 
-- [ ] Remover `firebaseConfig` inline de `admissoes.html`, `tarefas.html`, `reclamacoes.html`
-- [ ] Remover `console.log()` de `utilizadores.html`
-- [ ] Extrair CSS partilhado para `styles.css`
-- [ ] Adicionar `@media` queries a `auditoria.html` e `utilizadores.html`
 - [ ] Implementar Firestore Security Rules
-- [ ] Adicionar rate limiting a `reclamacao-publica.html`
+- [ ] Adicionar Firebase App Check a `reclamacao-publica.html`
 - [ ] Migrar documentos antigos sem campo `escritorio`
