@@ -708,7 +708,7 @@ document.addEventListener('authReady',({detail})=>{
   // Admins carregam tudo; colaboradores filtram pelo próprio escritório para respeitar as Firestore rules
   const baseQuery = isAdmin
     ? col.orderBy('criadoEm','desc')
-    : col.where('escritorio','==', filtroEscritorio).orderBy('criadoEm','desc');
+    : col.where('escritorio','==', filtroEscritorio).orderBy('criadoEm','desc').limit(500);
   baseQuery.onSnapshot(snap=>{
     recs=snap.docs.map(d=>({id:d.id,...d.data()}));
     render(); setStatus('✓ Sincronizado','#16a34a'); setTimeout(()=>setStatus(''),3000);
