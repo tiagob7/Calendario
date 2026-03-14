@@ -272,6 +272,54 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .gsearch-item-label{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
 .gsearch-item-sub{font-size:9px;color:var(--muted);white-space:nowrap;}
 .gsearch-section{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:8px 9px 3px;}
+
+/* ── Mobile ─────────────────────────────────────────────── */
+@media(max-width:600px){
+  .page{padding:16px 12px;}
+
+  /* Drag & drop e botão ⇔ não fazem sentido em mobile */
+  .drag-handle,.panel-width-btn,.layout-reset-btn{display:none!important;}
+
+  /* Admin pills: scroll horizontal em vez de wrap */
+  #adminEscritorioPills{
+    overflow-x:auto;flex-wrap:nowrap!important;
+    -webkit-overflow-scrolling:touch;
+    padding-bottom:4px;scrollbar-width:none;
+  }
+  #adminEscritorioPills::-webkit-scrollbar{display:none;}
+
+  /* KPI: números menores, cards mais compactos */
+  .kpi-val{font-size:26px;}
+  .kpi-card{padding:12px 14px;}
+
+  /* Reclamações: esconder meta (data), 3 colunas */
+  .rec-dash-row{grid-template-columns:auto 1fr auto;}
+  .rec-dash-meta{display:none;}
+
+  /* Painéis: menos padding */
+  .panel{padding:14px 16px;}
+
+  /* Pesquisa global: fixar ao viewport */
+  #globalSearchPanel{
+    position:fixed!important;
+    left:10px!important;right:10px!important;
+    width:auto!important;top:auto!important;
+    bottom:20px!important;max-height:70vh;overflow-y:auto;
+  }
+
+  /* Header: menos gap */
+  .header-top{gap:8px;}
+
+  /* Nav links: scroll horizontal, sem wrap */
+  .nav-links{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;
+    padding-bottom:4px;scrollbar-width:none;margin-bottom:16px;}
+  .nav-links::-webkit-scrollbar{display:none;}
+  .nav-link{flex-shrink:0;}
+
+  /* Pesquisa: linha separada, largura total */
+  #globalSearchWrap{margin-left:0;width:100%;order:99;}
+  #globalSearchBtn{width:100%;justify-content:center;}
+}
 </style>
 </head>
 <body>
