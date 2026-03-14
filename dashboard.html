@@ -51,7 +51,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 
 /* KPI ROW */
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:24px;}
-.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:0 1px 5px rgba(0,0,0,.05);position:relative;overflow:hidden;}
+.kpi-card{min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:0 1px 5px rgba(0,0,0,.05);position:relative;overflow:hidden;}
 .kpi-card::before{content:'';position:absolute;right:-10px;top:-10px;width:60px;height:60px;border-radius:50%;opacity:.06;}
 .kpi-card.k-total::before{background:var(--text);}
 .kpi-card.k-urgente::before{background:var(--red);}
@@ -74,7 +74,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .main-grid .full{grid-column:1/-1;}
 
 /* PANELS */
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;box-shadow:0 1px 6px rgba(0,0,0,.06);}
+.panel{min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;box-shadow:0 1px 6px rgba(0,0,0,.06);}
 .panel-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
 .panel-title{font-family:'Manrope',sans-serif;font-size:13px;font-weight:700;flex:1;}
 .panel-link{font-size:10px;color:var(--accent);text-decoration:none;text-transform:uppercase;letter-spacing:.07em;opacity:.8;transition:opacity .15s;}
@@ -309,6 +309,9 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 
   /* Header: menos gap */
   .header-top{gap:8px;}
+
+  /* Subtitle: wrap para evitar overflow com info do utilizador */
+  .subtitle{flex-wrap:wrap;gap:6px;margin-bottom:16px;}
 
   /* Nav links: wrap natural (links em cima, pesquisa em baixo) */
   .nav-links{margin-bottom:16px;}
