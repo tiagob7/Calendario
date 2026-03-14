@@ -359,7 +359,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
         <button class="btn btn-secondary" onclick="mostrarVistaLista()">Cancelar</button>
-        <button class="btn btn-primary" onclick="submitReclamacao()">Submeter Reclamação</button>
+        <button class="btn btn-primary" id="btnSubmit" onclick="submitReclamacao()">Submeter Reclamação</button>
       </div>
     </div>
   </div>
@@ -388,6 +388,14 @@ let trabalhador = null;
 let recsList    = [];
 let selCanalVal = 'email';
 const expandedIds = new Set();
+
+// ── RATE LIMITING (cliente) ─────────────────────────────
+// Máximo de 3 submissões por sessão, com cooldown de 60 s entre submissões.
+// Não substitui regras de segurança no servidor, mas reduz abusos acidentais.
+const RATE_LIMIT_MAX       = 3;   // submissões por sessão
+const RATE_LIMIT_COOLDOWN  = 60;  // segundos entre submissões
+let _submitCount     = 0;
+let _lastSubmitTime  = 0;
 
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -862,6 +870,19 @@ function getPeriodos() {
 // ── SUBMIT ──
 async function submitReclamacao() {
   if (!trabalhador) return;
+
+  // ── Verificação de rate limit ──
+  const agora = Date.now();
+  if (_submitCount >= RATE_LIMIT_MAX) {
+    showAlert('alertForm', 'err', `Limite de ${RATE_LIMIT_MAX} submissões por sessão atingido. Recarrega a página se precisares de submeter novamente.`);
+    return;
+  }
+  const segundosDesdeUltimo = (agora - _lastSubmitTime) / 1000;
+  if (_lastSubmitTime > 0 && segundosDesdeUltimo < RATE_LIMIT_COOLDOWN) {
+    const espera = Math.ceil(RATE_LIMIT_COOLDOWN - segundosDesdeUltimo);
+    showAlert('alertForm', 'err', `Aguarda ${espera}s antes de submeter novamente.`);
+    return;
+  }
   const nome    = document.getElementById('fNome').value.trim();
   const nif     = document.getElementById('fNif').value.trim();
   const numFunc = document.getElementById('fNumFunc').value.trim();
@@ -890,6 +911,28 @@ async function submitReclamacao() {
       criadoEm:  Date.now(),
       historico: [{ estado: 'nova', nota: 'Submetido pelo trabalhador', por: nome, em: Date.now() }]
     });
+    // Registar submissão para rate limiting
+    _submitCount++;
+    _lastSubmitTime = Date.now();
+    // Cooldown visual no botão
+    const btnSubmit = document.getElementById('btnSubmit');
+    if (btnSubmit && _submitCount < RATE_LIMIT_MAX) {
+      let restante = RATE_LIMIT_COOLDOWN;
+      btnSubmit.disabled = true;
+      const iv = setInterval(() => {
+        restante--;
+        if (restante <= 0) {
+          clearInterval(iv);
+          btnSubmit.disabled = false;
+          btnSubmit.textContent = 'Submeter Reclamação';
+        } else {
+          btnSubmit.textContent = `Aguarda ${restante}s…`;
+        }
+      }, 1000);
+    } else if (btnSubmit && _submitCount >= RATE_LIMIT_MAX) {
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = 'Limite atingido';
+    }
     // Actualizar nome e ultimaReclamacao no portal
     const updates = { ultimaReclamacao: Date.now() };
     if (!trabalhador.nome) updates.nome = nome;
