@@ -558,6 +558,7 @@ firebase.initializeApp(firebaseConfig);
 </script>
 <script src="auth.js"></script>
 <script src="config-escritorios.js"></script>
+<script src="auditoria.js"></script>
 <script>
 const db      = firebase.firestore();
 const col     = db.collection('admissoes');
@@ -711,6 +712,12 @@ async function submitProcesso() {
 
   try {
     const docRef = await col.add(doc);
+    await registarAuditoria({
+      modulo: 'admissoes', acao: 'criado',
+      docId: docRef.id,
+      titulo: doc.nome + (doc.tipo === 'admissao' ? ' — Admissão' : ' — Cessação'),
+      depois: doc,
+    });
 
     // Upload pending files
     if (pendingFilesAdm.length) {
@@ -758,19 +765,52 @@ function resetForm() {
 
 // ── UPDATE (gestor) ──
 async function updateEstado(id, val) {
-  try { await col.doc(id).update({ estado: val }); }
+  try {
+    const snap = await col.doc(id).get();
+    const antes = snap.data();
+    await col.doc(id).update({ estado: val });
+    await registarAuditoria({
+      modulo: 'admissoes', acao: 'estado',
+      docId: id,
+      titulo: antes.nome + (antes.tipo === 'admissao' ? ' — Admissão' : ' — Cessação'),
+      antes: { estado: antes.estado },
+      depois: { estado: val },
+    });
+  }
   catch(e) { toast('Erro ao actualizar.'); }
 }
 
 async function updateNotas(id, val) {
-  try { await col.doc(id).update({ notas: val }); }
+  try {
+    const snap = await col.doc(id).get();
+    const antes = snap.data();
+    await col.doc(id).update({ notas: val });
+    await registarAuditoria({
+      modulo: 'admissoes', acao: 'atualizado',
+      docId: id,
+      titulo: antes.nome + (antes.tipo === 'admissao' ? ' — Admissão' : ' — Cessação'),
+      antes: { notas: antes.notas },
+      depois: { notas: val },
+    });
+  }
   catch(e) {}
 }
 
 async function deleteProcesso(id) {
   if (!confirm('Eliminar este processo permanentemente?')) return;
   expandedIds.delete(id);
-  try { await col.doc(id).delete(); toast('Processo eliminado.'); }
+  try {
+    const snap = await col.doc(id).get();
+    const antes = snap.data();
+    await col.doc(id).delete();
+    await registarAuditoria({
+      modulo: 'admissoes', acao: 'eliminado',
+      docId: id,
+      titulo: antes.nome + (antes.tipo === 'admissao' ? ' — Admissão' : ' — Cessação'),
+      antes,
+    });
+    toast('Processo eliminado.');
+  }
   catch(e) { toast('Erro ao eliminar.'); }
 }
 

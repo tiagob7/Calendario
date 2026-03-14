@@ -336,6 +336,7 @@ firebase.initializeApp(firebaseConfig);
 </script>
 <script src="auth.js"></script>
 <script src="config-escritorios.js"></script>
+<script src="auditoria.js"></script>
 <script>
 const db = firebase.firestore();
 const storage = firebase.storage();
@@ -447,13 +448,19 @@ async function submitTarefa() {
 
   const maxOrdem = tasks.length ? Math.max(...tasks.map(t => t.ordemChegada || 0)) : 0;
   try {
-    const docRef = await col.add({
+    const dadosTarefa = {
       titulo, descricao, solicitante,
       prioridade: selPrioVal, estado: 'aguardar', notas: '',
       criadaEm: Date.now(), ordemChegada: maxOrdem + 1,
       escritorio: destino,
       escritorioOrigem,
       criadoPor: window.currentUser ? window.currentUser.uid : ''
+    };
+    const docRef = await col.add(dadosTarefa);
+    await registarAuditoria({
+      modulo: 'tarefas', acao: 'criado',
+      docId: docRef.id, titulo,
+      depois: dadosTarefa,
     });
 
     // Upload pending files
@@ -484,15 +491,45 @@ async function submitTarefa() {
 }
 
 async function updateEstado(id, val) {
-  try { await col.doc(id).update({ estado: val }); } catch(e) { toast('Erro.'); }
+  try {
+    const snap = await col.doc(id).get();
+    const antes = snap.data();
+    await col.doc(id).update({ estado: val });
+    await registarAuditoria({
+      modulo: 'tarefas', acao: 'estado',
+      docId: id, titulo: antes.titulo,
+      antes: { estado: antes.estado },
+      depois: { estado: val },
+    });
+  } catch(e) { toast('Erro.'); }
 }
 async function updateNotas(id, val) {
-  try { await col.doc(id).update({ notas: val }); } catch(e) {}
+  try {
+    const snap = await col.doc(id).get();
+    const antes = snap.data();
+    await col.doc(id).update({ notas: val });
+    await registarAuditoria({
+      modulo: 'tarefas', acao: 'atualizado',
+      docId: id, titulo: antes.titulo,
+      antes: { notas: antes.notas },
+      depois: { notas: val },
+    });
+  } catch(e) {}
 }
 async function deleteTask(id) {
   if (!confirm('Eliminar esta tarefa?')) return;
   expandedIds.delete(id);
-  try { await col.doc(id).delete(); toast('Eliminada.'); } catch(e) { toast('Erro.'); }
+  try {
+    const snap = await col.doc(id).get();
+    const antes = snap.data();
+    await col.doc(id).delete();
+    await registarAuditoria({
+      modulo: 'tarefas', acao: 'eliminado',
+      docId: id, titulo: antes.titulo,
+      antes,
+    });
+    toast('Eliminada.');
+  } catch(e) { toast('Erro.'); }
 }
 
 function getSorted(list) {

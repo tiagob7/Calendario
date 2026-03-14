@@ -354,6 +354,7 @@ firebase.initializeApp({
 </script>
 <script src="auth.js"></script>
 <script src="config-escritorios.js"></script>
+<script src="auditoria.js"></script>
 <script>
 const db  = firebase.firestore();
 const col = db.collection('reclamacoes_horas');
@@ -733,7 +734,7 @@ async function submitReclamacao(){
   const criadoPor=profile?(profile.nomeCompleto||profile.nome||profile.email):'—';
   const resumoPeriodo=periodos.map(p=>`${p.dias.length} dia(s) — ${p.mesNome} ${p.ano}`).join(' | ');
   try{
-    const docRef = await col.add({
+    const dadosRec = {
       numFunc:document.getElementById('fNumFunc').value.trim(),
       nif,nome,empresa,
       categoria:document.getElementById('fCategoria').value.trim(),
@@ -745,6 +746,13 @@ async function submitReclamacao(){
       criadoPorUid:window.currentUser?window.currentUser.uid:'',
       criadoEm:Date.now(),
       historico:[{estado:'nova',nota:'Reclamação registada',por:criadoPor,em:Date.now()}]
+    };
+    const docRef = await col.add(dadosRec);
+    await registarAuditoria({
+      modulo: 'reclamacoes', acao: 'criado',
+      docId: docRef.id,
+      titulo: nome + ' — ' + empresa,
+      depois: dadosRec,
     });
     if (pendingFiles.length) {
       const statusEl = document.getElementById('formUploadStatus');
@@ -774,15 +782,36 @@ async function updateEstado(id,novoEstado,nota){
   const por=profile?(profile.nomeCompleto||profile.nome||profile.email):'—';
   try{
     const snap=await col.doc(id).get();
-    const hist=snap.data().historico||[];
+    const dados=snap.data();
+    const hist=dados.historico||[];
+    const estadoAntigo=dados.estado;
     await col.doc(id).update({estado:novoEstado,historico:[...hist,{estado:novoEstado,nota:nota||'',por,em:Date.now()}]});
+    await registarAuditoria({
+      modulo: 'reclamacoes', acao: 'estado',
+      docId: id,
+      titulo: dados.nome + ' — ' + dados.empresa,
+      antes:  { estado: estadoAntigo },
+      depois: { estado: novoEstado },
+      nota: nota || '',
+    });
     toast('✓ Estado atualizado');
   }catch(e){toast('Erro ao atualizar.');}
 }
 async function deleteRec(id){
   if(!confirm('Eliminar esta reclamação?'))return;
   expandedIds.delete(id);
-  try{await col.doc(id).delete();toast('Eliminada.');}catch(e){toast('Erro.');}
+  try{
+    const snap=await col.doc(id).get();
+    const antes=snap.data();
+    await col.doc(id).delete();
+    await registarAuditoria({
+      modulo: 'reclamacoes', acao: 'eliminado',
+      docId: id,
+      titulo: antes.nome + ' — ' + antes.empresa,
+      antes,
+    });
+    toast('Eliminada.');
+  }catch(e){toast('Erro.');}
 }
 
 // ── HELPERS ──

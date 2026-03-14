@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auditoria — Histórico de Alterações</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@600;700;800&display=swap');
+
+:root {
+  --bg:#f4f4f6; --surface:#fff; --surface2:#f7f7f9; --border:#e2e2e8;
+  --text:#1a1a22; --muted:#8888a0; --accent:#2563eb;
+  --green:#16a34a; --green-bg:#f0fdf4; --green-border:#bbf7d0;
+  --blue:#2563eb;  --blue-bg:#eff6ff;  --blue-border:#bfdbfe;
+  --red:#dc2626;   --red-bg:#fef2f2;   --red-border:#fecaca;
+  --amber:#d97706; --amber-bg:#fffbeb; --amber-border:#fde68a;
+  --purple:#7c3aed;--purple-bg:#f5f3ff;--purple-border:#ddd6fe;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;}
+.page{max-width:1100px;margin:0 auto;padding:32px 20px;}
+h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,26px);letter-spacing:-.03em;margin-bottom:4px;}
+.subtitle{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px;}
+
+/* FILTROS */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center;}
+.filter-select,.filter-input{
+  padding:7px 12px;border:1px solid var(--border);border-radius:8px;
+  font-family:'DM Mono',monospace;font-size:11px;background:var(--surface);
+  color:var(--text);outline:none;transition:border .15s;
+}
+.filter-select:focus,.filter-input:focus{border-color:var(--accent);}
+.filter-input{min-width:200px;}
+.filter-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;align-self:center;}
+.btn{padding:7px 16px;border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;text-transform:uppercase;letter-spacing:.07em;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn svg{width:11px;height:11px;}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border);}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+.btn-sm{padding:5px 10px;font-size:10px;}
+
+/* STATS ROW */
+.stats-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+.stat-pill{
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:5px 14px;font-size:10px;display:flex;align-items:center;gap:6px;
+  color:var(--muted);
+}
+.stat-pill strong{font-family:'Manrope',sans-serif;font-size:13px;font-weight:700;color:var(--text);}
+
+/* TIMELINE */
+.timeline{position:relative;padding-left:28px;}
+.timeline::before{
+  content:'';position:absolute;left:8px;top:0;bottom:0;
+  width:2px;background:var(--border);border-radius:2px;
+}
+.tl-group{margin-bottom:24px;}
+.tl-date{
+  font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);
+  margin-bottom:10px;margin-left:-28px;display:flex;align-items:center;gap:8px;
+}
+.tl-date::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.tl-entry{
+  position:relative;background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;margin-bottom:8px;
+  cursor:pointer;transition:border-color .15s, box-shadow .15s;
+}
+.tl-entry:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(37,99,235,.08);}
+.tl-entry.expanded{border-color:var(--accent);}
+
+/* dot na linha do tempo */
+.tl-entry::before{
+  content:'';position:absolute;left:-24px;top:18px;
+  width:10px;height:10px;border-radius:50%;border:2px solid var(--surface);
+  background:var(--muted);
+}
+.tl-entry.acao-criado::before    { background:var(--green); }
+.tl-entry.acao-eliminado::before { background:var(--red); }
+.tl-entry.acao-estado::before    { background:var(--blue); }
+.tl-entry.acao-permissao::before { background:var(--purple); }
+.tl-entry.acao-atualizado::before{ background:var(--amber); }
+
+.tl-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.tl-modulo{
+  font-size:9px;text-transform:uppercase;letter-spacing:.08em;
+  padding:2px 8px;border-radius:10px;font-weight:500;white-space:nowrap;
+}
+.mod-tarefas     {background:var(--blue-bg);   color:var(--blue);   border:1px solid var(--blue-border);}
+.mod-comunicados {background:var(--purple-bg); color:var(--purple); border:1px solid var(--purple-border);}
+.mod-admissoes   {background:var(--green-bg);  color:var(--green);  border:1px solid var(--green-border);}
+.mod-reclamacoes {background:var(--amber-bg);  color:var(--amber);  border:1px solid var(--amber-border);}
+.mod-utilizadores{background:var(--red-bg);    color:var(--red);    border:1px solid var(--red-border);}
+.mod-calendarios {background:var(--surface2);  color:var(--muted);  border:1px solid var(--border);}
+
+.tl-acao{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.tl-titulo{font-size:12px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tl-hora{font-size:10px;color:var(--muted);white-space:nowrap;margin-left:auto;}
+.tl-user{font-size:10px;color:var(--muted);margin-top:5px;display:flex;align-items:center;gap:5px;}
+.tl-user svg{width:10px;height:10px;opacity:.6;}
+
+/* DIFF */
+.tl-diff{margin-top:12px;border-top:1px solid var(--border);padding-top:12px;display:none;}
+.tl-entry.expanded .tl-diff{display:block;}
+.diff-table{width:100%;border-collapse:collapse;font-size:11px;}
+.diff-table th{
+  font-size:9px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--muted);padding:4px 8px;text-align:left;
+  border-bottom:1px solid var(--border);font-weight:500;
+}
+.diff-table td{padding:5px 8px;border-bottom:1px solid var(--surface2);vertical-align:top;}
+.diff-table tr:last-child td{border-bottom:none;}
+.diff-campo{font-weight:500;color:var(--text);}
+.diff-antes{color:var(--red);text-decoration:line-through;opacity:.8;}
+.diff-depois{color:var(--green);font-weight:500;}
+.diff-empty{color:var(--muted);font-style:italic;}
+.nota-badge{
+  display:inline-block;margin-top:8px;padding:4px 10px;
+  background:var(--amber-bg);border:1px solid var(--amber-border);
+  border-radius:6px;font-size:10px;color:var(--amber);
+}
+
+/* EMPTY / LOADING */
+.empty-state{
+  text-align:center;padding:60px 20px;color:var(--muted);
+}
+.empty-state svg{width:36px;height:36px;margin-bottom:12px;opacity:.3;}
+.empty-state p{font-size:11px;text-transform:uppercase;letter-spacing:.1em;}
+.loading-bar{
+  height:2px;background:var(--border);border-radius:2px;overflow:hidden;
+  margin-bottom:20px;
+}
+.loading-bar-inner{
+  height:100%;width:40%;background:var(--accent);border-radius:2px;
+  animation:slide 1.2s ease-in-out infinite;
+}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--text);color:#fff;padding:9px 20px;border-radius:10px;
+  font-size:11px;letter-spacing:.04em;opacity:0;transition:all .25s;
+  pointer-events:none;white-space:nowrap;z-index:999;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* LOAD MORE */
+.load-more-wrap{text-align:center;padding:20px 0;}
+</style>
+</head>
+<body>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-init.js"></script>
+<script src="config-escritorios.js"></script>
+<script src="auth.js"></script>
+<!-- auditoria.js não é necessário aqui (só leitura) -->
+
+<div class="page">
+  <h1>Auditoria</h1>
+  <div class="subtitle">Histórico de alterações · acesso restrito a admins</div>
+
+  <!-- FILTROS -->
+  <div class="filters">
+    <span class="filter-label">Filtrar</span>
+
+    <select class="filter-select" id="filtroModulo" onchange="aplicarFiltros()">
+      <option value="">Todos os módulos</option>
+      <option value="tarefas">Tarefas</option>
+      <option value="comunicados">Comunicados</option>
+      <option value="admissoes">Admissões</option>
+      <option value="reclamacoes">Reclamações</option>
+      <option value="utilizadores">Utilizadores</option>
+      <option value="calendarios">Calendários</option>
+    </select>
+
+    <select class="filter-select" id="filtroAcao" onchange="aplicarFiltros()">
+      <option value="">Todas as ações</option>
+      <option value="criado">Criado</option>
+      <option value="atualizado">Atualizado</option>
+      <option value="eliminado">Eliminado</option>
+      <option value="estado">Estado alterado</option>
+      <option value="permissao">Permissão alterada</option>
+    </select>
+
+    <select class="filter-select" id="filtroEscritorio" onchange="aplicarFiltros()">
+      <option value="">Todos os escritórios</option>
+    </select>
+
+    <input type="text" class="filter-input" id="filtroTexto"
+           placeholder="Pesquisar por título ou utilizador…"
+           oninput="aplicarFiltros()">
+
+    <button class="btn btn-secondary btn-sm" onclick="limparFiltros()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M12 4L4 12M4 4l8 8"/>
+      </svg>
+      Limpar
+    </button>
+
+    <button class="btn btn-secondary btn-sm" onclick="exportarCSV()" style="margin-left:auto;">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M8 3v8M5 8l3 3 3-3M3 13h10"/>
+      </svg>
+      Exportar CSV
+    </button>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row" id="statsRow"></div>
+
+  <!-- LOADING -->
+  <div id="loadingBar" class="loading-bar"><div class="loading-bar-inner"></div></div>
+
+  <!-- TIMELINE -->
+  <div class="timeline" id="timeline"></div>
+
+  <!-- LOAD MORE -->
+  <div class="load-more-wrap" id="loadMoreWrap" style="display:none;">
+    <button class="btn btn-secondary" onclick="carregarMais()">Carregar mais registos</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Estado ──────────────────────────────────────────────
+const db        = firebase.firestore();
+const PAGE_SIZE = 50;
+
+let todosRegistos = [];   // cache local
+let filtrados     = [];   // após filtros
+let lastDoc       = null; // cursor para paginação
+let carregando    = false;
+
+// ── Auth ready ──────────────────────────────────────────
+document.addEventListener('authReady', async () => {
+  if (!window.isAdmin()) {
+    document.querySelector('.page').innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <p>Acesso restrito a administradores</p>
+      </div>`;
+    return;
+  }
+
+  // Carregar escritórios para o filtro
+  const lista = await window.loadEscritorios();
+  const sel = document.getElementById('filtroEscritorio');
+  lista.forEach(e => {
+    const o = document.createElement('option');
+    o.value = e.id;
+    o.textContent = e.nome;
+    sel.appendChild(o);
+  });
+
+  await carregarRegistos();
+});
+
+// ── Carregar do Firestore ────────────────────────────────
+async function carregarRegistos(mais = false) {
+  if (carregando) return;
+  carregando = true;
+  document.getElementById('loadingBar').style.display = mais ? 'none' : 'block';
+
+  try {
+    let q = db.collection('auditoria')
+              .orderBy('ts', 'desc')
+              .limit(PAGE_SIZE);
+
+    if (mais && lastDoc) q = q.startAfter(lastDoc);
+
+    const snap = await q.get();
+
+    if (!snap.empty) {
+      lastDoc = snap.docs[snap.docs.length - 1];
+      const novos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (mais) {
+        todosRegistos = [...todosRegistos, ...novos];
+      } else {
+        todosRegistos = novos;
+      }
+    }
+
+    document.getElementById('loadMoreWrap').style.display =
+      snap.docs.length === PAGE_SIZE ? 'block' : 'none';
+
+  } catch (err) {
+    console.error('[auditoria] Erro ao carregar:', err);
+    toast('Erro ao carregar registos.');
+  }
+
+  carregando = false;
+  document.getElementById('loadingBar').style.display = 'none';
+  aplicarFiltros();
+}
+
+async function carregarMais() {
+  await carregarRegistos(true);
+}
+
+// ── Filtros ──────────────────────────────────────────────
+function aplicarFiltros() {
+  const modulo    = document.getElementById('filtroModulo').value;
+  const acao      = document.getElementById('filtroAcao').value;
+  const escritorio= document.getElementById('filtroEscritorio').value;
+  const texto     = document.getElementById('filtroTexto').value.toLowerCase().trim();
+
+  filtrados = todosRegistos.filter(r => {
+    if (modulo     && r.modulo !== modulo)         return false;
+    if (acao       && r.acao   !== acao)            return false;
+    if (escritorio && r.escritorioDoc !== escritorio
+                   && r.escritorioUser !== escritorio) return false;
+    if (texto) {
+      const haystack = [r.titulo, r.nomeUser, r.email, r.nota].join(' ').toLowerCase();
+      if (!haystack.includes(texto)) return false;
+    }
+    return true;
+  });
+
+  renderStats();
+  renderTimeline();
+}
+
+function limparFiltros() {
+  document.getElementById('filtroModulo').value    = '';
+  document.getElementById('filtroAcao').value      = '';
+  document.getElementById('filtroEscritorio').value= '';
+  document.getElementById('filtroTexto').value     = '';
+  aplicarFiltros();
+}
+
+// ── Render Stats ─────────────────────────────────────────
+function renderStats() {
+  const contagens = {};
+  filtrados.forEach(r => {
+    contagens[r.modulo] = (contagens[r.modulo] || 0) + 1;
+  });
+
+  const { MODULO_LABELS } = window._auditoriaLabels || {};
+  const labels = MODULO_LABELS || {};
+
+  const html = [
+    `<div class="stat-pill"><strong>${filtrados.length}</strong> registo(s)</div>`,
+    ...Object.entries(contagens).map(([m, n]) =>
+      `<div class="stat-pill"><strong>${n}</strong> ${labels[m] || m}</div>`
+    )
+  ].join('');
+
+  document.getElementById('statsRow').innerHTML = html;
+}
+
+// ── Render Timeline ──────────────────────────────────────
+function renderTimeline() {
+  const container = document.getElementById('timeline');
+
+  if (!filtrados.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1"/>
+        </svg>
+        <p>Nenhum registo encontrado</p>
+      </div>`;
+    return;
+  }
+
+  // Agrupar por data (dia)
+  const grupos = {};
+  filtrados.forEach(r => {
+    const d = new Date(r.ts);
+    const key = d.toLocaleDateString('pt-PT', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    if (!grupos[key]) grupos[key] = [];
+    grupos[key].push(r);
+  });
+
+  const { MODULO_LABELS, ACAO_LABELS } = window._auditoriaLabels || {};
+  const modLabels  = MODULO_LABELS || {};
+  const acaoLabels = ACAO_LABELS   || {};
+
+  let html = '';
+  Object.entries(grupos).forEach(([data, registos]) => {
+    html += `<div class="tl-group">`;
+    html += `<div class="tl-date">${data}</div>`;
+    registos.forEach(r => {
+      const hora  = new Date(r.ts).toLocaleTimeString('pt-PT', { hour:'2-digit', minute:'2-digit' });
+      const modCls = 'mod-' + (r.modulo || 'desconhecido');
+      const acoaCls= 'acao-' + (r.acao   || '');
+      const temDiff = r.diff && r.diff.length > 0;
+      const temNota = r.nota && r.nota.trim();
+
+      html += `
+        <div class="tl-entry ${acoaCls}" id="entry_${r.id}"
+             onclick="toggleEntry('${r.id}', ${temDiff || temNota})">
+          <div class="tl-top">
+            <span class="tl-modulo ${modCls}">${modLabels[r.modulo] || r.modulo}</span>
+            <span class="tl-acao">${acaoLabels[r.acao] || r.acao}</span>
+            <span class="tl-titulo" title="${escHtml(r.titulo)}">${escHtml(r.titulo) || '—'}</span>
+            <span class="tl-hora">${hora}</span>
+          </div>
+          <div class="tl-user">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="8" cy="5" r="3"/><path d="M2 14c0-3 2.7-5 6-5s6 2 6 5"/>
+            </svg>
+            ${escHtml(r.nomeUser || r.email)}
+            ${r.escritorioUser ? `<span style="opacity:.5">· ${escHtml(r.escritorioUser)}</span>` : ''}
+          </div>
+          ${temDiff || temNota ? `
+          <div class="tl-diff">
+            ${temDiff ? `
+            <table class="diff-table">
+              <tr>
+                <th>Campo</th>
+                <th>Antes</th>
+                <th>Depois</th>
+              </tr>
+              ${r.diff.map(d => `
+              <tr>
+                <td class="diff-campo">${escHtml(d.label)}</td>
+                <td class="diff-antes">${formatVal(d.antes)}</td>
+                <td class="diff-depois">${formatVal(d.depois)}</td>
+              </tr>`).join('')}
+            </table>` : ''}
+            ${temNota ? `<div class="nota-badge">📝 ${escHtml(r.nota)}</div>` : ''}
+          </div>` : ''}
+        </div>`;
+    });
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+// ── Helpers ──────────────────────────────────────────────
+function toggleEntry(id, temConteudo) {
+  if (!temConteudo) return;
+  const el = document.getElementById('entry_' + id);
+  if (el) el.classList.toggle('expanded');
+}
+
+function formatVal(v) {
+  if (v === undefined || v === null || v === '—') return '<span class="diff-empty">—</span>';
+  if (typeof v === 'boolean') return v ? 'Sim' : 'Não';
+  return escHtml(String(v));
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ── Exportar CSV ─────────────────────────────────────────
+function exportarCSV() {
+  if (!filtrados.length) { toast('Nenhum registo para exportar.'); return; }
+
+  const { MODULO_LABELS, ACAO_LABELS } = window._auditoriaLabels || {};
+  const modL  = MODULO_LABELS  || {};
+  const acaoL = ACAO_LABELS    || {};
+
+  const linhas = [
+    ['Data/Hora', 'Módulo', 'Ação', 'Documento', 'Utilizador', 'Email', 'Escritório', 'Campos alterados', 'Nota']
+  ];
+
+  filtrados.forEach(r => {
+    const dt = new Date(r.ts).toLocaleString('pt-PT');
+    const campos = (r.diff || []).map(d => `${d.label}: ${d.antes} → ${d.depois}`).join(' | ');
+    linhas.push([
+      dt,
+      modL[r.modulo]  || r.modulo,
+      acaoL[r.acao]   || r.acao,
+      r.titulo        || r.docId,
+      r.nomeUser      || '',
+      r.email         || '',
+      r.escritorioDoc || r.escritorioUser || '',
+      campos,
+      r.nota          || '',
+    ]);
+  });
+
+  const csv = linhas.map(l =>
+    l.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')
+  ).join('\n');
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `auditoria_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('✓ CSV exportado');
+}
+</script>
+</body>
+</html>
