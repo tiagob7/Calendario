@@ -493,7 +493,7 @@ async function criarUtilizador() {
     await db.collection('utilizadores').doc(uid).set(profile);
 
     fecharModalNovo();
-    alert('Conta criada com sucesso para ' + email + '.');
+    toast('✓ Conta criada com sucesso para ' + email + '.');
   } catch(err) {
     console.error('[criarUtilizador]', err);
     const msgs = {
@@ -528,7 +528,7 @@ document.addEventListener('authReady', ({ detail }) => {
 
   setStatus('A ligar…', '#f59e0b');
 
-  db.collection('utilizadores').onSnapshot(snap => {
+  const _utilUnsub = db.collection('utilizadores').limit(500).onSnapshot(snap => {
     users = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
     console.log('[utilizadores] Total de documentos no Firestore:', users.length, users.map(u => u.email));
     renderUsers();
@@ -538,6 +538,8 @@ document.addEventListener('authReady', ({ detail }) => {
     console.error('[utilizadores] Erro no onSnapshot:', err);
     setStatus('Erro ao carregar: ' + err.code, '#dc2626');
   });
+  window._utilUnsub = _utilUnsub;
+  window.addEventListener('beforeunload', () => { if (window._utilUnsub) window._utilUnsub(); }, { once: true });
 
   // Preencher selects de escritórios (filtro + modal novo) de forma dinâmica
   if (window.loadEscritorios) {

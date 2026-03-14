@@ -415,7 +415,7 @@ document.addEventListener('authReady', ({ detail }) => {
   col = db.collection('tarefas_todo');
 
   setStatus('A ligar…', '#f59e0b');
-  col.orderBy('ordemChegada', 'asc').onSnapshot(snap => {
+  const unsubTarefas = col.orderBy('ordemChegada', 'asc').limit(200).onSnapshot(snap => {
     tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     render();
     setStatus('✓ Sincronizado', '#16a34a');
@@ -423,13 +423,16 @@ document.addEventListener('authReady', ({ detail }) => {
   }, err => {
     console.error('tarefas (orderBy):', err);
     // Fallback sem orderBy — evita página em branco se o índice falhar
-    col.onSnapshot(snap => {
+    const unsubFallback = col.limit(200).onSnapshot(snap => {
       tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       render();
       setStatus('✓ Sincronizado', '#16a34a');
       setTimeout(() => setStatus(''), 3000);
     }, err2 => { console.error('tarefas fallback:', err2); setStatus('Erro de ligação', '#dc2626'); });
+    window._tarefasUnsub = unsubFallback;
   });
+  window._tarefasUnsub = unsubTarefas;
+  window.addEventListener('beforeunload', () => { if (window._tarefasUnsub) window._tarefasUnsub(); });
 });
 
 
@@ -514,7 +517,7 @@ async function updateNotas(id, val) {
   } catch(e) {}
 }
 async function deleteTask(id) {
-  if (!confirm('Eliminar esta tarefa?')) return;
+  if (!await confirmar({ titulo: 'Eliminar esta tarefa?', btnOk: 'Confirmar', perigo: true })) return;
   expandedIds.delete(id);
   try {
     const snap = await col.doc(id).get();
@@ -691,7 +694,7 @@ function renderFicheiros(docId, ficheiros, canDel) {
 
 async function deleteFicheiro(docId, index) {
   const f = (window._files[docId] || [])[index];
-  if (!f || !confirm('Remover este anexo?')) return;
+  if (!f || !await confirmar({ titulo: 'Remover este anexo?', btnOk: 'Remover', perigo: true })) return;
   try {
     if (f.path) await storage.ref(f.path).delete().catch(()=>{});
     await col.doc(docId).update({ ficheiros: firebase.firestore.FieldValue.arrayRemove(f) });
@@ -765,7 +768,7 @@ let _vozDados = null;
 
 function vozAbrir(tipo) {
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-    alert('A Web Speech API só funciona no Chrome ou Edge.');
+    toast('A Web Speech API só funciona no Chrome ou Edge.');
     return;
   }
   _vozTipo = tipo;

@@ -749,7 +749,7 @@ function onSlider(v) {
 }
 
 function applyDay() {
-  if (!selDay) { alert('Selecione um dia primeiro.'); return; }
+  if (!selDay) { toast('Selecione um dia primeiro.'); return; }
   const v = parseInt(document.getElementById('slider').value);
   const dept = getDept(selDeptId);
   if (dept) { dept.data[selDay-1] = v; render(); }
@@ -759,7 +759,7 @@ function applyRange() {
   const from = parseInt(document.getElementById('rFrom').value);
   const to   = parseInt(document.getElementById('rTo').value);
   const v    = parseInt(document.getElementById('slider').value);
-  if (isNaN(from)||isNaN(to)||from<1||to>numDias()||from>to) { alert('Intervalo inválido.'); return; }
+  if (isNaN(from)||isNaN(to)||from<1||to>numDias()||from>to) { toast('Intervalo inválido.'); return; }
   const dept = getDept(selDeptId);
   if (dept) { for(let d=from;d<=to;d++) dept.data[d-1]=v; render(); }
 }
@@ -786,13 +786,13 @@ function addEvent() {
   let dayFrom, dayTo;
   if (evType==='single') {
     dayFrom = dayTo = parseInt(document.getElementById('evDay').value);
-    if (!dayFrom||dayFrom<1||dayFrom>numDias()) { alert('Dia inválido.'); return; }
+    if (!dayFrom||dayFrom<1||dayFrom>numDias()) { toast('Dia inválido.'); return; }
   } else {
     dayFrom = parseInt(document.getElementById('evFrom').value);
     dayTo   = parseInt(document.getElementById('evTo').value);
-    if (isNaN(dayFrom)||isNaN(dayTo)||dayFrom<1||dayTo>numDias()||dayFrom>dayTo) { alert('Intervalo inválido.'); return; }
+    if (isNaN(dayFrom)||isNaN(dayTo)||dayFrom<1||dayTo>numDias()||dayFrom>dayTo) { toast('Intervalo inválido.'); return; }
   }
-  if (!label) { alert('Preencha a descrição.'); return; }
+  if (!label) { toast('Preencha a descrição.'); return; }
   events.push({dayFrom, dayTo, label, deptId, pinned:newPin});
   document.getElementById('evDay').value = '';
   document.getElementById('evFrom').value = '';
@@ -839,15 +839,15 @@ function saveEditEvent() {
   if (editEvIdx===null) return;
   const label  = document.getElementById('editLabel').value.trim();
   const deptId = document.getElementById('editEvDept').value;
-  if (!label) { alert('Preencha a descrição.'); return; }
+  if (!label) { toast('Preencha a descrição.'); return; }
   let dayFrom, dayTo;
   if (editEvType==='single') {
     dayFrom = dayTo = parseInt(document.getElementById('editDay').value);
-    if (!dayFrom||dayFrom<1||dayFrom>numDias()) { alert('Dia inválido.'); return; }
+    if (!dayFrom||dayFrom<1||dayFrom>numDias()) { toast('Dia inválido.'); return; }
   } else {
     dayFrom = parseInt(document.getElementById('editFrom').value);
     dayTo   = parseInt(document.getElementById('editTo').value);
-    if (isNaN(dayFrom)||isNaN(dayTo)||dayFrom<1||dayTo>numDias()||dayFrom>dayTo) { alert('Intervalo inválido.'); return; }
+    if (isNaN(dayFrom)||isNaN(dayTo)||dayFrom<1||dayTo>numDias()||dayFrom>dayTo) { toast('Intervalo inválido.'); return; }
   }
   events[editEvIdx] = {dayFrom, dayTo, label, deptId, pinned:editEvPin};
   closeModal('editModal');
@@ -908,7 +908,7 @@ function buildDeptColorScaleEdit() {
 
 function saveDept() {
   const name = document.getElementById('deptName').value.trim();
-  if (!name) { alert('Preencha o nome.'); return; }
+  if (!name) { toast('Preencha o nome.'); return; }
   if (editDeptIdx === null) {
     // new
     departments.push({
@@ -925,10 +925,10 @@ function saveDept() {
   render();
 }
 
-function removeDept(i) {
-  if (departments.length <= 1) { alert('Deve existir pelo menos um departamento.'); return; }
+async function removeDept(i) {
+  if (departments.length <= 1) { toast('Deve existir pelo menos um departamento.'); return; }
   const dept = departments[i];
-  if (!confirm(`Remover "${dept.name}"? Os eventos deste departamento serão também eliminados.`)) return;
+  if (!await confirmar({ titulo: `Remover "${dept.name}"?`, texto: 'Os eventos deste departamento serão também eliminados.', btnOk: 'Remover', perigo: true })) return;
   events = events.filter(ev => ev.deptId !== dept.id);
   departments.splice(i,1);
   if (selDeptId === dept.id) selDeptId = departments[0].id;
@@ -1125,7 +1125,7 @@ saveDept = function() {
 };
 
 const _removeDept = removeDept;
-removeDept = function(i) {
+removeDept = async function(i) {
   const dept = departments[i];
   _removeDept(i);
   saveToFirebase();

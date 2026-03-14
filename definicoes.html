@@ -456,8 +456,8 @@ async function guardarEscritorio() {
   const nome = document.getElementById('escNome').value.trim();
   const id   = document.getElementById('escId').value.trim().toLowerCase();
 
-  if (!nome) { alert('Introduz o nome do escritório.'); return; }
-  if (!id || !/^[a-z0-9]+$/.test(id)) { alert('O ID só pode ter letras minúsculas e números, sem espaços.'); return; }
+  if (!nome) { toast('Introduz o nome do escritório.'); return; }
+  if (!id || !/^[a-z0-9]+$/.test(id)) { toast('O ID só pode ter letras minúsculas e números, sem espaços.'); return; }
 
   const btn = document.getElementById('btnGuardar');
   btn.disabled = true; btn.textContent = 'A guardar…';
@@ -468,7 +468,7 @@ async function guardarEscritorio() {
       if (idx !== -1) escritoriosData[idx] = { ...escritoriosData[idx], nome, cor: corSel };
     } else {
       if (escritoriosData.find(e => e.id === id)) {
-        alert('Já existe um escritório com esse ID.'); btn.disabled=false; btn.textContent='Guardar'; return;
+        toast('Já existe um escritório com esse ID.'); btn.disabled=false; btn.textContent='Guardar'; return;
       }
       escritoriosData.push({ id, nome, cor: corSel, default: false });
     }
@@ -476,7 +476,7 @@ async function guardarEscritorio() {
     fecharModal();
     renderLista();
   } catch(e) {
-    alert('Erro ao guardar: ' + e.message);
+    toast('Erro ao guardar: ' + e.message);
   }
   btn.disabled = false; btn.textContent = 'Guardar';
 }
@@ -500,7 +500,7 @@ async function confirmarApagar() {
     fecharModal();
     renderLista();
   } catch(e) {
-    alert('Erro ao apagar: ' + e.message);
+    toast('Erro ao apagar: ' + e.message);
   }
   btn.disabled = false; escApagarId = null;
 }

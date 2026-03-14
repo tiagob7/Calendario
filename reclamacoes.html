@@ -672,7 +672,7 @@ function renderFicheiros(docId, ficheiros, canDel) {
 }
 async function deleteFicheiro(docId, index) {
   const f = (window._files[docId] || [])[index];
-  if (!f || !confirm('Remover este anexo?')) return;
+  if (!f || !await confirmar({ titulo: 'Remover este anexo?', btnOk: 'Remover', perigo: true })) return;
   try {
     if (f.path) await storage.ref(f.path).delete().catch(() => {});
     await col.doc(docId).update({ ficheiros: firebase.firestore.FieldValue.arrayRemove(f) });
@@ -705,17 +705,19 @@ document.addEventListener('authReady',({detail})=>{
     (profile&&profile.escritorio?(window.nomeEscritorio?window.nomeEscritorio(profile.escritorio):profile.escritorio):'');
   setStatus('A ligar…','#f59e0b');
   // Carrega tudo e filtra no cliente (igual às tarefas) — evita necessidade de índices compostos
-  col.orderBy('criadoEm','desc').onSnapshot(snap=>{
+  const _recUnsub = col.orderBy('criadoEm','desc').limit(200).onSnapshot(snap=>{
     recs=snap.docs.map(d=>({id:d.id,...d.data()}));
     render(); setStatus('✓ Sincronizado','#16a34a'); setTimeout(()=>setStatus(''),3000);
   }, err=>{
     console.error('reclamacoes (orderBy):', err);
     // Fallback sem ordenação se o índice simples também falhar
-    col.onSnapshot(snap=>{
+    col.limit(200).onSnapshot(snap=>{
       recs=snap.docs.map(d=>({id:d.id,...d.data()}));
       render(); setStatus('✓ Sincronizado','#16a34a'); setTimeout(()=>setStatus(''),3000);
     }, err2=>{ console.error('reclamacoes fallback:', err2); setStatus('Erro de ligação','#dc2626'); });
   });
+  window._reclamacoesUnsub = _recUnsub;
+  window.addEventListener('beforeunload', () => { if (window._reclamacoesUnsub) window._reclamacoesUnsub(); }, { once: true });
 });
 
 // ── SUBMIT ──
@@ -796,7 +798,7 @@ async function updateEstado(id,novoEstado,nota){
   }catch(e){toast('Erro ao atualizar.');}
 }
 async function deleteRec(id){
-  if(!confirm('Eliminar esta reclamação?'))return;
+  if (!await confirmar({ titulo: 'Eliminar esta reclamação?', btnOk: 'Confirmar', perigo: true })) return;
   expandedIds.delete(id);
   try{
     const snap=await col.doc(id).get();

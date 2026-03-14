@@ -624,14 +624,14 @@ async function publicarFeriados() {
   const escritorios = getEscritorios('f-escritorios');
   const substituir = document.getElementById('f-substituir').classList.contains('on');
 
-  if (!escritorios.length) { alert('Seleciona pelo menos um escritório.'); return; }
+  if (!escritorios.length) { toast('Seleciona pelo menos um escritório.'); return; }
 
   // Feriados selecionados
   const todosF = document.getElementById('feriadosList')._lista || feriadosDoAno(ano);
   const selecionados = [...document.querySelectorAll('#feriadosList .feriado-item.on')]
     .map(el => todosF[parseInt(el.querySelector('input').dataset.idx)]);
 
-  if (!selecionados.length) { alert('Seleciona pelo menos um feriado.'); return; }
+  if (!selecionados.length) { toast('Seleciona pelo menos um feriado.'); return; }
 
   const btn = document.getElementById('f-btnPublicar');
   btn.disabled = true;
@@ -703,9 +703,9 @@ function adicionarEvento() {
   const label  = document.getElementById('e-label').value.trim();
   const pinned = document.getElementById('e-pinToggle').classList.contains('on');
 
-  if (!diaIni || diaIni < 1 || diaIni > 31) { alert('Dia de início inválido (1–31).'); return; }
-  if (diaFim < diaIni || diaFim > 31) { alert('Dia de fim inválido.'); return; }
-  if (!label) { alert('Introduz uma descrição para o evento.'); return; }
+  if (!diaIni || diaIni < 1 || diaIni > 31) { toast('Dia de início inválido (1–31).'); return; }
+  if (diaFim < diaIni || diaFim > 31) { toast('Dia de fim inválido.'); return; }
+  if (!label) { toast('Introduz uma descrição para o evento.'); return; }
 
   const mesesFiltro = [...document.querySelectorAll('#e-mesesEsp .ck.on input')]
     .map(i => parseInt(i.value));
@@ -751,14 +751,14 @@ function renderEvenrosPendentes() {
 }
 
 async function publicarEventos() {
-  if (!eventosPendentes.length) { alert('Adiciona pelo menos um evento antes de publicar.'); return; }
+  if (!eventosPendentes.length) { toast('Adiciona pelo menos um evento antes de publicar.'); return; }
 
   const ano        = parseInt(document.getElementById('e-ano').value);
   const meses      = getMeses('e-mesInicio', 'e-mesFim');
   const escritorios = getEscritorios('e-escritorios');
   const substituir = document.getElementById('e-substituir').classList.contains('on');
 
-  if (!escritorios.length) { alert('Seleciona pelo menos um escritório.'); return; }
+  if (!escritorios.length) { toast('Seleciona pelo menos um escritório.'); return; }
 
   const btn = document.getElementById('e-btnPublicar');
   btn.disabled = true;
@@ -822,8 +822,8 @@ async function apagarEventos() {
   const modo       = document.querySelector('input[name=modoApagar]:checked').value;
   const textoFiltro = document.getElementById('a-texto').value.trim().toLowerCase();
 
-  if (!escritorios.length) { alert('Seleciona pelo menos um escritório.'); return; }
-  if (modo === 'texto' && !textoFiltro) { alert('Introduz o texto a pesquisar.'); return; }
+  if (!escritorios.length) { toast('Seleciona pelo menos um escritório.'); return; }
+  if (modo === 'texto' && !textoFiltro) { toast('Introduz o texto a pesquisar.'); return; }
 
   const confirmMsg = modo === 'tudo'
     ? `Apagar TODOS os eventos de ${escritorios.length} escritório(s) × ${meses.length} mês(es)?\n\nEsta operação não pode ser desfeita.`
@@ -831,7 +831,7 @@ async function apagarEventos() {
     ? `Apagar todos os feriados/eventos gerais de ${escritorios.length} escritório(s) × ${meses.length} mês(es)?`
     : `Apagar eventos que contenham "${textoFiltro}" de ${escritorios.length} escritório(s) × ${meses.length} mês(es)?`;
 
-  if (!confirm(confirmMsg)) return;
+  if (!await confirmar({ titulo: confirmMsg, btnOk: 'Apagar', perigo: true })) return;
 
   const btn = document.getElementById('a-btnApagar');
   btn.disabled = true;

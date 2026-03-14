@@ -755,6 +755,7 @@ function startSync(escritorio) {
   // ── Tarefas ──
   const unsubTarefas = db.collection('tarefas_todo')
     .orderBy('ordemChegada', 'asc')
+    .limit(50)
     .onSnapshot(snap => {
       tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       loadedFlags.tasks = true;
@@ -773,6 +774,7 @@ function startSync(escritorio) {
   // ── Comunicados ──
   const unsubCom = db.collection('comunicados')
     .orderBy('criadoEm', 'desc')
+    .limit(20)
     .onSnapshot(snap => {
       comunicados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       loadedFlags.com = true;
@@ -783,6 +785,7 @@ function startSync(escritorio) {
   // ── Admissões ──
   const unsubAdm = db.collection('admissoes')
     .orderBy('criadoEm', 'desc')
+    .limit(20)
     .onSnapshot(snap => {
       admissoes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       loadedFlags.adm = true;
@@ -807,6 +810,7 @@ function startSync(escritorio) {
   // ── Reclamações ──
   const unsubRec = db.collection('reclamacoes_horas')
     .orderBy('criadoEm', 'desc')
+    .limit(20)
     .onSnapshot(snap => {
       reclamacoes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       loadedFlags.rec = true;
