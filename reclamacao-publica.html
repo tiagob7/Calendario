@@ -20,7 +20,7 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:.4;pointer-events:none;z-index:0;}
-.wrap{max-width:660px;margin:0 auto;padding:32px 20px 64px;position:relative;z-index:1;}
+.wrap{max-width:920px;margin:0 auto;padding:32px 20px 64px;position:relative;z-index:1;}
 
 /* HEADER */
 .pub-header{text-align:center;margin-bottom:32px;}
@@ -353,13 +353,6 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       </button>
 
       <div class="divider"></div>
-      <div class="section-label">Canal de entrada</div>
-      <div class="canal-row" style="margin-bottom:16px;">
-        <button class="canal-pill sel" data-c="email" onclick="selCanal('email')">📧 Email</button>
-        <button class="canal-pill" data-c="telefone" onclick="selCanal('telefone')">📞 Telefone</button>
-        <button class="canal-pill" data-c="mensagem" onclick="selCanal('mensagem')">💬 Mensagem</button>
-        <button class="canal-pill" data-c="presencial" onclick="selCanal('presencial')">🧑 Presencial</button>
-      </div>
       <div class="field">
         <label class="field-label">Notas</label>
         <textarea class="form-textarea" id="fNotas" placeholder="Descreve a situação com o maior detalhe possível…"></textarea>
@@ -865,12 +858,6 @@ function getPeriodos() {
   }).filter(Boolean);
 }
 
-// ── CANAL ──
-function selCanal(c) {
-  selCanalVal = c;
-  document.querySelectorAll('.canal-pill').forEach(b => b.classList.toggle('sel', b.dataset.c === c));
-}
-
 // ── SUBMIT ──
 async function submitReclamacao() {
   if (!trabalhador) return;
@@ -947,13 +934,21 @@ function estadoPillClass(e) { const c = estadoClass(e); return c === 'aguardapro
 function toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2800); }
 
 // ── INIT: carregar escritórios ──
-db.collection('config').doc('escritorios').get().then(snap => {
-  const lista = (snap.exists && snap.data() && Array.isArray(snap.data().lista))
-    ? snap.data().lista
-    : [{id:'quarteira',nome:'Quarteira'},{id:'albufeira',nome:'Albufeira'},{id:'lisboa',nome:'Lisboa'},{id:'porto',nome:'Porto'}];
+const ESCRITORIOS_FALLBACK = [
+  {id:'quarteira',nome:'Quarteira'},{id:'albufeira',nome:'Albufeira'},
+  {id:'lisboa',nome:'Lisboa'},{id:'porto',nome:'Porto'}
+];
+function popularEscritorios(lista) {
   const sel = document.getElementById('fEscritorio');
   sel.innerHTML = '<option value="">— Selecionar —</option>' + lista.map(e => `<option value="${e.id}">${e.nome}</option>`).join('');
-}).catch(() => {});
+}
+db.collection('config').doc('escritorios').get()
+  .then(snap => {
+    const lista = (snap.exists && snap.data() && Array.isArray(snap.data().lista))
+      ? snap.data().lista : ESCRITORIOS_FALLBACK;
+    popularEscritorios(lista);
+  })
+  .catch(() => popularEscritorios(ESCRITORIOS_FALLBACK));
 </script>
 </body>
 </html>
