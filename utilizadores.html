@@ -1,11 +1,98 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestão de Utilizadores</title>
-  <link rel="stylesheet" href="css/shared.css">
-  <link rel="stylesheet" href="css/utilizadores.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestão de Utilizadores</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@600;700;800&display=swap');
+
+:root {
+  --bg:#f4f4f6; --surface:#fff; --surface2:#f7f7f9; --border:#e2e2e8;
+  --text:#1a1a22; --muted:#8888a0; --accent:#2563eb;
+  --red:#dc2626; --green:#16a34a;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;}
+.page{max-width:980px;margin:0 auto;padding:32px 20px;}
+h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,28px);letter-spacing:-.03em;margin-bottom:4px;}
+.subtitle{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px;}
+.header-top{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;flex-wrap:wrap;}
+.header-top h1{margin-bottom:0;}
+#syncStatus{font-size:10px;color:var(--muted);letter-spacing:.05em;margin-left:auto;}
+
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.badge-me{font-size:10px;color:var(--muted);}
+.legend{display:flex;gap:8px;font-size:10px;color:var(--muted);flex-wrap:wrap;}
+.legend span{display:flex;align-items:center;gap:4px;}
+.dot{width:8px;height:8px;border-radius:50%;}
+.dot-admin{background:#1d4ed8;}
+.dot-colab{background:#9ca3af;}
+
+.filter-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.filter-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;}
+.filter-select{padding:5px 8px;border:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;font-size:10px;border-radius:20px;color:var(--muted);outline:none;cursor:pointer;}
+.count-badge{margin-left:auto;font-size:10px;color:var(--muted);white-space:nowrap;}
+
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.06);overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+thead{background:var(--surface2);}
+th,td{padding:9px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:middle;}
+th{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
+tbody tr:nth-child(even){background:#fafafa;}
+tbody tr.me-row{background:#eff6ff;}
+tbody tr.me-row td{border-bottom-color:#bfdbfe;}
+.name-cell{font-family:'Manrope',sans-serif;font-weight:600;font-size:12px;}
+.email-cell{font-size:10px;color:var(--muted);}
+.chip-role{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:9px;text-transform:uppercase;letter-spacing:.07em;border:1px solid transparent;}
+.chip-admin{background:#eff6ff;color:#2563eb;border-color:#bfdbfe;}
+.chip-colab{background:#f4f4f6;color:#6b7280;border-color:#e5e7eb;}
+.chip-ativo{background:#ecfdf3;color:#166534;border:1px solid #bbf7d0;font-size:9px;padding:2px 6px;border-radius:999px;}
+.chip-inativo{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;font-size:9px;padding:2px 6px;border-radius:999px;}
+.chip-pendente{background:#fffbeb;color:#92400e;border:1px solid #fde68a;font-size:9px;padding:2px 6px;border-radius:999px;}
+
+.small{font-size:9px;color:#9ca3af;}
+.select-small{padding:4px 6px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;font-size:10px;outline:none;cursor:pointer;}
+.toggle{position:relative;width:30px;height:16px;border-radius:999px;background:#e5e7eb;cursor:pointer;transition:background .15s;}
+.toggle-thumb{position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:1px;left:1px;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .15s;}
+.toggle.on{background:#16a34a;}
+.toggle.on .toggle-thumb{left:15px;}
+
+.empty{padding:32px 16px;text-align:center;font-size:11px;color:var(--muted);}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;font-size:11px;padding:10px 20px;border-radius:20px;opacity:0;transition:all .25s;pointer-events:none;z-index:600;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.btn-novo{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--text);color:#fff;border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.07em;cursor:pointer;transition:opacity .15s;}
+.btn-novo:hover{opacity:.82;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:800;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:420px;max-width:calc(100vw - 32px);box-shadow:0 12px 40px rgba(0,0,0,.18);}
+.modal h3{font-family:'Manrope',sans-serif;font-weight:700;font-size:15px;margin-bottom:18px;}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.field-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;display:block;}
+.field-input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border-radius:7px;outline:none;transition:border-color .15s;margin-bottom:12px;}
+.field-input:focus{border-color:var(--accent);}
+.field-select-modal{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border-radius:7px;outline:none;cursor:pointer;margin-bottom:12px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:6px;}
+.btn-cancel{padding:8px 14px;border:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;font-size:10px;border-radius:7px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;}
+.btn-save{padding:8px 16px;background:var(--text);color:#fff;border:none;font-family:'DM Mono',monospace;font-size:10px;border-radius:7px;cursor:pointer;text-transform:uppercase;letter-spacing:.07em;transition:opacity .15s;}
+.btn-save:hover{opacity:.82;}
+.btn-save:disabled{opacity:.4;cursor:not-allowed;}
+.modal-info{font-size:10px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;line-height:1.6;margin-bottom:14px;}
+.btn-perms{padding:4px 9px;border:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;font-size:9px;border-radius:6px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;transition:all .15s;white-space:nowrap;}
+.btn-perms:hover,.btn-perms.active{border-color:var(--accent);color:var(--accent);background:#eff6ff;}
+.perms-row{display:none;background:#fafbff;border-top:1px dashed var(--border);}
+.perms-row.open{display:table-row;}
+.perms-cell{padding:12px 16px;}
+.perms-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;}
+.perms-grid{display:flex;flex-wrap:wrap;gap:8px;}
+.perm-item{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;transition:all .15s;}
+.perm-item:hover{border-color:#aaa;}
+.perm-item.on{border-color:#bfdbfe;background:#eff6ff;}
+.perm-item input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;cursor:pointer;flex-shrink:0;}
+.perm-item label{font-size:10px;color:var(--text);cursor:pointer;white-space:nowrap;}
+.perm-item.on label{color:var(--accent);}
+.perm-all-badge{font-size:10px;color:var(--muted);font-style:italic;padding:4px 0;}
+</style>
 </head>
 <body>
 
@@ -106,14 +193,390 @@
   </div>
 </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="firebase-init.js"></script>
-  <script src="auth.js"></script>
-  <script src="config-escritorios.js"></script>
-  <script src="js/shared.js"></script>
-  <script src="auditoria.js"></script>
-  <script src="js/utilizadores.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-init.js"></script>
+<script src="auth.js"></script>
+<script src="config-escritorios.js"></script>
+<script>
+const db = firebase.firestore();
+
+let users = [];
+let roleFilter = '';
+let escritorioFilter = '';
+let searchFilter = '';
+
+function setStatus(msg, color) {
+  const el = document.getElementById('syncStatus');
+  if (el) { el.textContent = msg; el.style.color = color || 'var(--muted)'; }
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDateShort(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return d.toLocaleDateString('pt-PT',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+function setRoleFilter(v) {
+  roleFilter = v || '';
+  renderUsers();
+}
+
+function setEscritorioFilter(v) {
+  escritorioFilter = v || '';
+  renderUsers();
+}
+
+function setSearch(v) {
+  searchFilter = (v || '').toLowerCase().trim();
+  renderUsers();
+}
+
+function filteredUsers() {
+  let list = users;
+  if (roleFilter)       list = list.filter(u => u.role === roleFilter);
+  if (escritorioFilter) list = list.filter(u => u.escritorio === escritorioFilter);
+  if (searchFilter)     list = list.filter(u =>
+    (u.nomeCompleto || u.nome || '').toLowerCase().includes(searchFilter) ||
+    (u.email || '').toLowerCase().includes(searchFilter)
+  );
+  return list;
+}
+
+async function updateUser(uid, patch) {
+  try {
+    await db.collection('utilizadores').doc(uid).update(patch);
+    toast('Alterações guardadas.');
+  } catch (e) {
+    console.error(e);
+    toast('Erro ao guardar alterações.');
+  }
+}
+
+function togglePerms(uid) {
+  const row = document.getElementById('permsRow_' + uid);
+  const btn = document.getElementById('btnPerms_' + uid);
+  if (!row) return;
+  const isOpen = row.classList.contains('open');
+  // fechar todos os outros
+  document.querySelectorAll('.perms-row.open').forEach(r => r.classList.remove('open'));
+  document.querySelectorAll('.btn-perms.active').forEach(b => b.classList.remove('active'));
+  if (!isOpen) {
+    row.classList.add('open');
+    if (btn) btn.classList.add('active');
+  }
+}
+
+async function setPermissao(uid, perm, val) {
+  const item = document.getElementById('permItem_' + uid + '_' + perm);
+  if (item) item.classList.toggle('on', val);
+  const patch = {};
+  patch['permissoes.' + perm] = val;
+  try {
+    await db.collection('utilizadores').doc(uid).update(patch);
+    toast('Permissão ' + (val ? 'activada' : 'removida') + '.');
+  } catch (e) {
+    console.error(e);
+    toast('Erro ao actualizar permissão.');
+  }
+}
+
+function renderUsers() {
+  const tbody = document.getElementById('usersTbody');
+  const meUid = window.currentUser ? window.currentUser.uid : null;
+  const list = filteredUsers().sort((a,b) => {
+    const na = (a.nomeCompleto || a.nome || a.email || '').toLowerCase();
+    const nb = (b.nomeCompleto || b.nome || b.email || '').toLowerCase();
+    return na.localeCompare(nb,'pt-PT');
+  });
+
+  document.getElementById('countBadge').textContent =
+    list.length + ' utilizador' + (list.length !== 1 ? 'es' : '');
+
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum utilizador encontrado.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  list.forEach(u => {
+    const tr = document.createElement('tr');
+    if (u.uid === meUid) tr.classList.add('me-row');
+
+    const nome = u.nomeCompleto || u.nome || '';
+    const email = u.email || '';
+    const escritorio = u.escritorio || '';
+    const role = u.role || 'colaborador';
+    const ativo = u.ativo !== false;
+
+    tr.innerHTML = `
+      <td>
+        <div class="name-cell">${escHtml(nome || email)}</div>
+        <div class="email-cell">${escHtml(email)}</div>
+      </td>
+      <td>
+        <select class="select-small" data-escritorio-select="${u.uid}" onchange="updateUser('${u.uid}', { escritorio: this.value })">
+          <option value="">—</option>
+        </select>
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="chip-role ${role==='admin'?'chip-admin':'chip-colab'}">
+            ${role==='admin'?'Admin':'Colaborador'}
+          </span>
+          <select class="select-small" onchange="updateUser('${u.uid}', { role: this.value })">
+            <option value="colaborador" ${role==='colaborador'?'selected':''}>Colaborador</option>
+            <option value="admin"       ${role==='admin'?'selected':''}>Admin</option>
+          </select>
+        </div>
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="toggle ${ativo?'on':''}" onclick="const on=!${ativo};updateUser('${u.uid}', { ativo: !${ativo} })">
+            <div class="toggle-thumb"></div>
+          </div>
+          ${ativo
+            ? '<span class="chip-ativo">Ativo</span>'
+            : (Date.now() - (u.criadoEm||0) < 7*24*60*60*1000
+                ? '<span class="chip-pendente">Pendente</span>'
+                : '<span class="chip-inativo">Inativo</span>')
+          }
+        </div>
+      </td>
+      <td>
+        <div>${fmtDateShort(u.ultimoAcesso)}</div>
+      </td>
+      <td>
+        <button class="btn-perms" id="btnPerms_${u.uid}" onclick="togglePerms('${u.uid}')">Config</button>
+      </td>
+    `;
+
+    // corrigir toggle para pegar estado atual ao clicar
+    const toggle = tr.querySelector('.toggle');
+    toggle.onclick = () => {
+      const nowOn = toggle.classList.contains('on');
+      const novo = !nowOn;
+      toggle.classList.toggle('on', novo);
+      updateUser(u.uid, { ativo: novo });
+    };
+
+    tbody.appendChild(tr);
+
+    // Linha de permissões (collapsível)
+    const perms = u.permissoes || {};
+    const trPerms = document.createElement('tr');
+    trPerms.className = 'perms-row';
+    trPerms.id = 'permsRow_' + u.uid;
+
+    const PERMS_DEF = [
+      { key: 'criarTarefas',     label: 'Criar Tarefas' },
+      { key: 'resolverTarefas',  label: 'Resolver Tarefas' },
+      { key: 'gerirComunicados', label: 'Gerir Comunicados' },
+      { key: 'criarAdmissoes',   label: 'Criar Admissões' },
+      { key: 'resolverAdmissoes',label: 'Resolver Admissões' },
+      { key: 'editarCalendario', label: 'Editar Calendário' },
+      { key: 'criarReclamacoes',  label: 'Reclamações de Horas' },
+    ];
+
+    const isAdminUser = role === 'admin';
+    let innerHtml;
+    if (isAdminUser) {
+      innerHtml = `<span class="perm-all-badge">Admin — todas as permissões activas</span>`;
+    } else {
+      innerHtml = PERMS_DEF.map(p => {
+        const checked = perms[p.key] === true;
+        return `<div class="perm-item ${checked?'on':''}" id="permItem_${u.uid}_${p.key}">
+          <input type="checkbox" id="perm_${u.uid}_${p.key}" ${checked?'checked':''} onchange="setPermissao('${u.uid}','${p.key}',this.checked)">
+          <label for="perm_${u.uid}_${p.key}">${p.label}</label>
+        </div>`;
+      }).join('');
+    }
+
+    trPerms.innerHTML = `<td colspan="6" class="perms-cell">
+      <div class="perms-label">Permissões específicas</div>
+      <div class="perms-grid">${innerHtml}</div>
+    </td>`;
+    tbody.appendChild(trPerms);
+  });
+}
+
+// ── Modal Novo Utilizador ──
+function abrirModalNovo() {
+  document.getElementById('modalNovoUser').classList.add('open');
+  document.getElementById('newNome').value = '';
+  document.getElementById('newApelido').value = '';
+  document.getElementById('newEmail').value = '';
+  document.getElementById('newEscritorio').value = '';
+  document.getElementById('newRole').value = 'colaborador';
+  document.getElementById('newPassword').value = '';
+  const errEl2 = document.getElementById('modalNovoErr');
+  errEl2.textContent = '';
+  errEl2.style.display = 'none';
+  document.getElementById('btnSalvarNovo').disabled = false;
+  document.getElementById('btnSalvarNovo').textContent = 'Criar conta';
+  document.getElementById('newNome').focus();
+}
+
+function fecharModalNovo() {
+  document.getElementById('modalNovoUser').classList.remove('open');
+}
+
+async function criarUtilizador() {
+  const nome      = document.getElementById('newNome').value.trim();
+  const apelido   = document.getElementById('newApelido').value.trim();
+  const email     = document.getElementById('newEmail').value.trim();
+  const escritorio= document.getElementById('newEscritorio').value;
+  const role      = document.getElementById('newRole').value;
+  const password  = document.getElementById('newPassword').value;
+  const errEl     = document.getElementById('modalNovoErr');
+  const btnSalvar = document.getElementById('btnSalvarNovo');
+
+  errEl.textContent = '';
+  errEl.style.display = 'none';
+
+  if (!nome || !email || !password) {
+    errEl.textContent = 'Nome, email e password são obrigatórios.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'Email inválido.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (password.length < 6) {
+    errEl.textContent = 'A password deve ter pelo menos 6 caracteres.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btnSalvar.disabled = true;
+  btnSalvar.textContent = 'A criar…';
+  const appName = 'adminCreate_' + Date.now();
+  let secondaryApp = null;
+
+  try {
+    // Criar utilizador numa instância secundária para não desligar o admin
+    secondaryApp = firebase.initializeApp(firebase.app().options, appName);
+    const secondaryAuth = secondaryApp.auth();
+
+    const cred = await secondaryAuth.createUserWithEmailAndPassword(email, password);
+    const uid = cred.user.uid;
+
+    await secondaryAuth.signOut();
+
+    const nomeCompleto = (nome + ' ' + apelido).trim();
+
+    const profile = {
+      uid,
+      email,
+      nome,
+      apelido,
+      nomeCompleto,
+      escritorio,
+      funcao: '',
+      role,
+      ativo: true,
+      criadoEm: Date.now(),
+      ultimoAcesso: Date.now(),
+      permissoes: {
+        criarTarefas: false,
+        resolverTarefas: false,
+        gerirComunicados: false,
+        criarAdmissoes: false,
+        resolverAdmissoes: false,
+        editarCalendario: false,
+        criarReclamacoes: false
+      }
+    };
+
+    await db.collection('utilizadores').doc(uid).set(profile);
+
+    fecharModalNovo();
+    alert('Conta criada com sucesso para ' + email + '.');
+  } catch(err) {
+    console.error('[criarUtilizador]', err);
+    const msgs = {
+      'auth/email-already-in-use': 'Este email já está registado.',
+      'auth/invalid-email':        'Email inválido.',
+      'auth/weak-password':        'Erro interno ao gerar password temporária.',
+    };
+    errEl.textContent = msgs[err.code] || 'Erro: ' + (err.message || err.code);
+    errEl.style.display = 'block';
+    btnSalvar.disabled = false;
+    btnSalvar.textContent = 'Criar conta';
+  } finally {
+    if (secondaryApp) {
+      secondaryApp.delete().catch(() => {});
+    }
+  }
+}
+
+document.addEventListener('authReady', ({ detail }) => {
+  // proteger rota — só admin
+  if (!window.isAdmin || !window.isAdmin()) {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  window.renderNavbar('dashboard');
+
+  const profile = detail.profile;
+  const me = profile ? (profile.nomeCompleto || profile.nome || profile.email || '') : '';
+  const meInfo = document.getElementById('meInfo');
+  if (meInfo) meInfo.textContent = 'Sessão iniciada como Admin: ' + me;
+
+  setStatus('A ligar…', '#f59e0b');
+
+  db.collection('utilizadores').onSnapshot(snap => {
+    users = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+    console.log('[utilizadores] Total de documentos no Firestore:', users.length, users.map(u => u.email));
+    renderUsers();
+    setStatus('✓ Sincronizado — ' + users.length + ' doc(s) no Firestore', '#16a34a');
+    setTimeout(() => setStatus(''), 5000);
+  }, err => {
+    console.error('[utilizadores] Erro no onSnapshot:', err);
+    setStatus('Erro ao carregar: ' + err.code, '#dc2626');
+  });
+
+  // Preencher selects de escritórios (filtro + modal novo) de forma dinâmica
+  if (window.loadEscritorios) {
+    loadEscritorios().then(lista => {
+      const filtro = document.getElementById('escritorioFilter');
+      if (filtro) {
+        filtro.innerHTML = '<option value=\"\">Todos os escritórios</option>' +
+          lista.map(e => `<option value=\"${e.id}\">${e.nome}</option>`).join('');
+      }
+      const novoEsc = document.getElementById('newEscritorio');
+      if (novoEsc) {
+        novoEsc.innerHTML = '<option value=\"\">Selecionar…</option>' +
+          lista.map(e => `<option value=\"${e.id}\">${e.nome}</option>`).join('');
+      }
+      // atualizar selects de linha já renderizados
+      document.querySelectorAll('select[data-escritorio-select]').forEach(sel => {
+        const uid = sel.getAttribute('data-escritorio-select');
+        const u   = users.find(x => x.uid === uid);
+        const atual = u && u.escritorio ? u.escritorio : '';
+        sel.innerHTML = '<option value=\"\">—</option>' +
+          lista.map(e => `<option value=\"${e.id}\" ${atual===e.id?'selected':''}>${e.nome}</option>`).join('');
+      });
+    });
+  }
+});
+</script>
 </body>
 </html>
+
