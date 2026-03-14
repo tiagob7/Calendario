@@ -5,17 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Escalas</title>
 
-<!-- ── Firebase SDKs (compat v9) ── -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<!-- ── Ficheiros partilhados ── -->
-<script src="firebase-init.js"></script>
-<script src="utils.js"></script>
-<script src="auth.js"></script>       <!-- injecta overlay + dispara authReady -->
-<script src="config-escritorios.js"></script>
-
 <!-- ── Drag & drop ── -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 
@@ -409,6 +398,16 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(18px,2vw,26p
   </div>
 </div>
 
+<!-- ── Firebase SDKs (compat v9) ── -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- ── Ficheiros partilhados ── -->
+<script src="firebase-init.js"></script>
+<script src="utils.js"></script>
+<script src="config-escritorios.js"></script>
+<script src="auth.js"></script>
+
 <script>
 /* ══════════════════════════════════════════════════════
    UTILS LOCAIS
@@ -438,7 +437,16 @@ async function loadDay(key) {
   try {
     const snap = await db.collection(COLLECTION).doc(key).get();
     if (snap.exists) {
-      DIAS_DATA[key] = snap.data();
+      const data = snap.data();
+      // Reconstituir columns a partir de columnsObj (compatibilidade)
+      if (data.columnsObj && !data.columns) {
+        const n = data.numColumns || Object.keys(data.columnsObj).length;
+        data.columns = [];
+        for (let i = 0; i < n; i++) data.columns.push(data.columnsObj[String(i)] || []);
+        delete data.columnsObj;
+        delete data.numColumns;
+      }
+      DIAS_DATA[key] = data;
     } else {
       DIAS_DATA[key] = { columns: [], empresas: {} };
     }
@@ -457,9 +465,16 @@ async function saveDay(key) {
   const btnSave = document.getElementById('btnSave');
   btnSave.classList.add('saving');
   setStatus('A guardar…', 'var(--amber)');
+  // Firestore nao suporta arrays aninhados.
+  // Serializar columns como objecto: { "0": [id,id], "1": [id] }
+  const columnsObj = {};
+  (day.columns || []).forEach((col, i) => { columnsObj[String(i)] = col; });
+
   try {
     await db.collection(COLLECTION).doc(key).set({
-      ...day,
+      empresas: day.empresas || {},
+      columnsObj,
+      numColumns: (day.columns || []).length,
       updatedAt: Date.now(),
       updatedBy: window.currentUser ? window.currentUser.uid : '',
     });
