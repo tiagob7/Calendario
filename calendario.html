@@ -342,6 +342,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-init.js"></script>
 <script src="auth.js"></script>
+<script src="auditoria.js"></script>
 <script src="config-escritorios.js"></script>
 <script>
 // ── Número de dias do mês ativo ──
@@ -1034,20 +1035,118 @@ function startRealtimeSync() {
   window._calUnsubscribe = unsubscribe;
 }
 
-// Patch: guardar automaticamente ao editar
-const _applyDay      = applyDay;      applyDay      = function()  { _applyDay();      saveToFirebase(); };
-const _applyRange    = applyRange;    applyRange    = function()  { _applyRange();    saveToFirebase(); };
-const _addEvent      = addEvent;      addEvent      = function()  { _addEvent();      saveToFirebase(); };
-const _delEvent      = delEvent;      delEvent      = function(i) { _delEvent(i);     saveToFirebase(); };
-const _saveDept      = saveDept;      saveDept      = function()  { _saveDept();      saveToFirebase(); };
-const _removeDept    = removeDept;    removeDept    = function(i) { _removeDept(i);   saveToFirebase(); };
-const _saveEditEvent = saveEditEvent; saveEditEvent = function()  { _saveEditEvent(); saveToFirebase(); };
+// Patch: guardar automaticamente ao editar + registar auditoria
+function _auditCal(acao, titulo, antes, depois) {
+  registarAuditoria({
+    modulo: 'calendarios',
+    acao,
+    docId:  CALENDAR_ID || '',
+    titulo: titulo || '',
+    antes:  antes  || undefined,
+    depois: depois || undefined,
+    nota:   'Escritório: ' + (_calEscritorio || '') + ' · ' + (typeof NOMES_MES !== 'undefined' ? NOMES_MES[_calMes-1] : '') + ' ' + _calAno,
+  });
+}
+
+const _applyDay = applyDay;
+applyDay = function() {
+  const dept = getDept(selDeptId);
+  const antes = dept ? dept.data[selDay - 1] : undefined;
+  _applyDay();
+  saveToFirebase();
+  if (dept && selDay) {
+    _auditCal('atualizado',
+      `${dept.name} — Dia ${selDay}`,
+      { intensidade: antes },
+      { intensidade: dept.data[selDay - 1] }
+    );
+  }
+};
+
+const _applyRange = applyRange;
+applyRange = function() {
+  const from = parseInt(document.getElementById('rFrom').value);
+  const to   = parseInt(document.getElementById('rTo').value);
+  const v    = parseInt(document.getElementById('slider').value);
+  const dept = getDept(selDeptId);
+  _applyRange();
+  saveToFirebase();
+  if (dept && !isNaN(from) && !isNaN(to)) {
+    _auditCal('atualizado',
+      `${dept.name} — Dias ${from}–${to}`,
+      { intensidade: '(vários)' },
+      { intensidade: v }
+    );
+  }
+};
+
+const _addEvent = addEvent;
+addEvent = function() {
+  const label  = document.getElementById('evLabel').value.trim();
+  const deptId = document.getElementById('evDept').value;
+  const dept   = getDept(deptId);
+  _addEvent();
+  saveToFirebase();
+  if (label) {
+    _auditCal('criado', label, undefined, { label, deptId, dept: dept ? dept.name : deptId });
+  }
+};
+
+const _delEvent = delEvent;
+delEvent = function(i) {
+  const ev   = events[i];
+  const dept = ev ? getDept(ev.deptId) : null;
+  _delEvent(i);
+  saveToFirebase();
+  if (ev) {
+    _auditCal('eliminado', ev.label, { label: ev.label, dept: dept ? dept.name : ev.deptId }, undefined);
+  }
+};
+
+const _saveEditEvent = saveEditEvent;
+saveEditEvent = function() {
+  const antes = editEvIdx !== null ? { ...events[editEvIdx] } : undefined;
+  _saveEditEvent();
+  saveToFirebase();
+  if (antes) {
+    const depois = editEvIdx !== null ? { ...events[editEvIdx] } : undefined;
+    _auditCal('atualizado', antes.label, antes, depois);
+  }
+};
+
+const _saveDept = saveDept;
+saveDept = function() {
+  const isNew = (editDeptIdx === null);
+  const nomeBefore = !isNew ? departments[editDeptIdx].name : '';
+  _saveDept();
+  saveToFirebase();
+  const nomeAfter = document.getElementById('deptName') ? '' : ''; // já foi fechado
+  _auditCal(
+    isNew ? 'criado' : 'atualizado',
+    isNew ? (departments[departments.length - 1] && departments[departments.length - 1].name) || 'Novo departamento' : nomeBefore,
+    isNew ? undefined : { nome: nomeBefore },
+    undefined
+  );
+};
+
+const _removeDept = removeDept;
+removeDept = function(i) {
+  const dept = departments[i];
+  _removeDept(i);
+  saveToFirebase();
+  if (dept) {
+    _auditCal('eliminado', dept.name, { nome: dept.name }, undefined);
+  }
+};
 
 const _buildDeptCards = buildDeptCards;
 buildDeptCards = function() {
   _buildDeptCards();
   document.querySelectorAll('.dept-card input[type=color]').forEach(input => {
-    input.addEventListener('change', () => saveToFirebase());
+    input.addEventListener('change', () => {
+      saveToFirebase();
+      _auditCal('atualizado', 'Cor de departamento alterada', undefined, undefined);
+    });
   });
 };
 

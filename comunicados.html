@@ -221,6 +221,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 </script>
 <script src="auth.js"></script>
+<script src="auditoria.js"></script>
 <script src="config-escritorios.js"></script>
 <script>
 const db = firebase.firestore();
@@ -321,7 +322,7 @@ async function submitComunicado() {
   const escrOrigem = window.userProfile ? (window.userProfile.escritorio || '') : '';
   if (!destinos.length && escrOrigem) destinos = [escrOrigem];
   try {
-    await col.add({
+    const dados = {
       titulo, texto, autor, dept,
       tipo: selTipoVal,
       arquivado: false,
@@ -329,6 +330,14 @@ async function submitComunicado() {
       escritorio: escrOrigem,
       destinosEscritorio: destinos,
       criadoPor: window.currentUser ? window.currentUser.uid : ''
+    };
+    const docRef = await col.add(dados);
+    await registarAuditoria({
+      modulo: 'comunicados',
+      acao:   'criado',
+      docId:  docRef.id,
+      titulo: dados.titulo,
+      depois: dados,
     });
     document.getElementById('fTitulo').value = '';
     document.getElementById('fTexto').value = '';
@@ -339,12 +348,34 @@ async function submitComunicado() {
 }
 
 async function toggleArquivado(id, current) {
-  try { await col.doc(id).update({ arquivado: !current }); } catch(e) { toast('Erro.'); }
+  try {
+    await col.doc(id).update({ arquivado: !current });
+    const com = comunicados.find(c => c.id === id);
+    await registarAuditoria({
+      modulo: 'comunicados',
+      acao:   'estado',
+      docId:  id,
+      titulo: com ? com.titulo : id,
+      antes:  { arquivado: current },
+      depois: { arquivado: !current },
+    });
+  } catch(e) { toast('Erro.'); }
 }
 async function deleteComunicado(id) {
   if (!confirm('Eliminar este comunicado?')) return;
   expandedIds.delete(id);
-  try { await col.doc(id).delete(); toast('Eliminado.'); } catch(e) { toast('Erro.'); }
+  try {
+    const com = comunicados.find(c => c.id === id);
+    await col.doc(id).delete();
+    await registarAuditoria({
+      modulo: 'comunicados',
+      acao:   'eliminado',
+      docId:  id,
+      titulo: com ? com.titulo : id,
+      antes:  com || {},
+    });
+    toast('Eliminado.');
+  } catch(e) { toast('Erro.'); }
 }
 
 function getFiltered() {
