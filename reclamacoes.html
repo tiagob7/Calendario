@@ -241,7 +241,7 @@
     <div class="upload-status" id="formUploadStatus"></div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
       <button class="btn btn-secondary" onclick="limparForm()">Limpar</button>
-      <button class="btn btn-primary" onclick="submitReclamacao()">+ Registar Reclamação</button>
+      <button class="btn btn-primary" id="btnRegistarReclamacao" onclick="submitReclamacao()">+ Registar Reclamação</button>
     </div>
   </div>
 
@@ -662,18 +662,20 @@ document.addEventListener('authReady',({detail})=>{
 
 // ── SUBMIT ──
 async function submitReclamacao(){
-  const nif=document.getElementById('fNif').value.trim();
-  const nome=document.getElementById('fNome').value.trim();
-  const empresa=document.getElementById('fEmpresa').value.trim();
-  if(!nif){toast('NIF obrigatório');return;}
-  if(!nome){toast('Nome obrigatório');return;}
-  if(!empresa){toast('Empresa utilizadora obrigatória');return;}
-  const periodos=getPeriodos();
-  if(!periodos.length||periodos.every(p=>p.dias.length===0)){toast('Seleciona pelo menos um dia');return;}
-  const profile=window.userProfile;
-  const criadoPor=profile?(profile.nomeCompleto||profile.nome||profile.email):'—';
-  const resumoPeriodo=periodos.map(p=>`${p.dias.length} dia(s) — ${p.mesNome} ${p.ano}`).join(' | ');
+  const btn=document.getElementById('btnRegistarReclamacao');
+  if(btn) btn.disabled=true;
   try{
+    const nif=document.getElementById('fNif').value.trim();
+    const nome=document.getElementById('fNome').value.trim();
+    const empresa=document.getElementById('fEmpresa').value.trim();
+    if(!nif){toast('NIF obrigatório');return;}
+    if(!nome){toast('Nome obrigatório');return;}
+    if(!empresa){toast('Empresa utilizadora obrigatória');return;}
+    const periodos=getPeriodos();
+    if(!periodos.length||periodos.every(p=>p.dias.length===0)){toast('Seleciona pelo menos um dia');return;}
+    const profile=window.userProfile;
+    const criadoPor=profile?(profile.nomeCompleto||profile.nome||profile.email):'—';
+    const resumoPeriodo=periodos.map(p=>`${p.dias.length} dia(s) — ${p.mesNome} ${p.ano}`).join(' | ');
     const dadosRec = {
       numFunc:document.getElementById('fNumFunc').value.trim(),
       nif,nome,empresa,
@@ -714,6 +716,7 @@ async function submitReclamacao(){
     renderPendingFilesList();
     limparForm(); toast('✓ Reclamação registada com sucesso!');
   }catch(e){console.error(e);toast('Erro ao registar.');}
+  finally{if(btn) btn.disabled=false;}
 }
 
 // ── UPDATE ESTADO ──

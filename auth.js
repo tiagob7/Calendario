@@ -96,7 +96,7 @@ window.renderNavbar = function(activePage) {
         Dashboard
       </a>
       <div class="mini-header-title">${titulo}</div>
-      <span class="mini-header-user">${nome}</span>
+      <span class="mini-header-user">${escHtml(nome)}</span>
       <span class="mini-header-role ${roleClass}">${role}</span>
       <button class="mini-header-logout" onclick="window.logout()">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3M11 11l3-3-3-3M14 8H6"/></svg>

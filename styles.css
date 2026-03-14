@@ -138,9 +138,13 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
   .stat-chip{padding:6px 10px;}
   .stat-val{font-size:15px;}
   .controls-row{gap:4px;}
-  .filter-btn{font-size:9px;padding:4px 9px;}
+  .filter-btn{font-size:9px;padding:4px 9px;min-height:36px;}
   .form-panel{padding:16px 14px;}
   .modal{padding:18px 16px;}
+  /* Touch targets mínimos */
+  .btn{min-height:36px;}
+  .btn-sm{min-height:36px;}
+  .form-input,.form-select{min-height:36px;}
 }
 
 /* ══════════════════════════════════════════════════════════

@@ -83,7 +83,11 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 /* TAREFAS */
 .task-row{display:grid;grid-template-columns:10px 1fr 88px 100px;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:11px;cursor:default;}
 .task-row:last-child{border-bottom:none;}
-@media(max-width:480px){.task-row{grid-template-columns:10px 1fr 96px;}.task-person{display:none;}}
+@media(max-width:480px){
+  .task-row{grid-template-columns:10px 1fr 96px;}
+  .task-name{white-space:normal;}
+  .task-person{grid-column:2;font-size:9px;margin-top:-4px;opacity:.7;}
+}
 .task-prio-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 .task-prio-dot.urgente{background:var(--red);}
 .task-prio-dot.normal{background:var(--amber);}
@@ -592,6 +596,8 @@ let reclamacoes = [];
 let calData     = null;
 let loadedFlags = { tasks: false, com: false, cal: false, adm: false, rec: false };
 let unsubFns    = []; // para cancelar listeners ao mudar filtro
+let _switchEscTimer = null;
+let errorFlags  = {}; // regista listeners que falharam
 
 // ── AGUARDAR AUTH ──
 document.addEventListener('authReady', ({ detail }) => {
@@ -685,15 +691,18 @@ document.addEventListener('authReady', ({ detail }) => {
 
 // ── TROCAR ESCRITÓRIO (admin, sem reload) ──
 function switchEscritorioDash(val) {
-  sessionStorage.setItem('filtroEscritorio', val);
-
-  // Atualizar pills
+  // Atualizar pills imediatamente para feedback visual
   document.querySelectorAll('.dash-esc-pill').forEach(b => {
     b.classList.toggle('ativo', b.dataset.e === val);
   });
-
   updateSubtitle(val);
-  startSync(val);
+
+  // Debounce: evitar múltiplos re-subscribes em cliques rápidos
+  clearTimeout(_switchEscTimer);
+  _switchEscTimer = setTimeout(() => {
+    sessionStorage.setItem('filtroEscritorio', val);
+    startSync(val);
+  }, 200);
 }
 
 function updateSubtitle(escritorio) {
@@ -735,14 +744,18 @@ function startSync(escritorio) {
     // Re-subscrever calendário se mudou de escritório
     const calEscNovo = (escritorioAtivoDash && escritorioAtivoDash !== 'todos') ? escritorioAtivoDash : (window.getEscritoriosSync ? (window.getEscritoriosSync()[0]||{}).id : '') || 'quarteira';
     if (window._dashCalEsc !== calEscNovo) {
-      window._dashCalEsc = calEscNovo;
+      // Remover unsub antigo do array antes de cancelar
+      const calIdx = unsubFns.indexOf(window._dashCalUnsub);
+      if (calIdx > -1) unsubFns.splice(calIdx, 1);
       if (window._dashCalUnsub) window._dashCalUnsub();
+      window._dashCalEsc = calEscNovo;
       const newDocId = dashCalDocId(calEscNovo);
       window._dashCalUnsub = db.collection('calendarios').doc(newDocId).onSnapshot(snap => {
         calData = snap.exists ? snap.data() : null;
         renderCalMini();
         renderEvents();
       }, err => { console.error('cal:', err); });
+      unsubFns.push(window._dashCalUnsub);
     }
     renderAll();
     return;
@@ -750,6 +763,7 @@ function startSync(escritorio) {
 
   // Primeira vez: criar listeners sem .where no servidor (evita índices compostos)
   loadedFlags = { tasks: false, com: false, cal: false, adm: false, rec: false };
+  errorFlags  = {};
   setStatus('A ligar…', '#f59e0b');
 
   // ── Tarefas ──
@@ -779,7 +793,7 @@ function startSync(escritorio) {
       comunicados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       loadedFlags.com = true;
       checkAllLoaded();
-    }, err => { console.error('com:', err); loadedFlags.com = true; checkAllLoaded(); });
+    }, err => { console.error('com:', err); errorFlags.com = true; loadedFlags.com = true; checkAllLoaded(); });
   unsubFns.push(unsubCom);
 
   // ── Admissões ──
@@ -790,7 +804,7 @@ function startSync(escritorio) {
       admissoes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       loadedFlags.adm = true;
       checkAllLoaded();
-    }, err => { console.error('adm:', err); loadedFlags.adm = true; checkAllLoaded(); });
+    }, err => { console.error('adm:', err); errorFlags.adm = true; loadedFlags.adm = true; checkAllLoaded(); });
   unsubFns.push(unsubAdm);
 
   // ── Calendário — carrega o doc do escritório ativo ──
@@ -804,7 +818,7 @@ function startSync(escritorio) {
     calData = snap.exists ? snap.data() : null;
     loadedFlags.cal = true;
     checkAllLoaded();
-  }, err => { console.error('cal:', err); loadedFlags.cal = true; checkAllLoaded(); });
+  }, err => { console.error('cal:', err); errorFlags.cal = true; loadedFlags.cal = true; checkAllLoaded(); });
   unsubFns.push(window._dashCalUnsub);
 
   // ── Reclamações ──
@@ -816,7 +830,7 @@ function startSync(escritorio) {
       loadedFlags.rec = true;
       checkAllLoaded();
       renderReclamacoes(); // atualizar painel mesmo após carregamento inicial
-    }, err => { console.error('rec:', err); loadedFlags.rec = true; checkAllLoaded(); });
+    }, err => { console.error('rec:', err); errorFlags.rec = true; loadedFlags.rec = true; checkAllLoaded(); });
   unsubFns.push(unsubRec);
 }
 
@@ -824,8 +838,12 @@ function startSync(escritorio) {
 function checkAllLoaded() {
   if (!loadedFlags.tasks || !loadedFlags.com || !loadedFlags.cal || !loadedFlags.adm || !loadedFlags.rec) return;
   renderAll();
-  setStatus('✓ Sincronizado', '#16a34a');
-  setTimeout(() => setStatus(''), 3000);
+  if (Object.keys(errorFlags).length > 0) {
+    setStatus('⚠ Ligação parcial', '#d97706');
+  } else {
+    setStatus('✓ Sincronizado', '#16a34a');
+    setTimeout(() => setStatus(''), 3000);
+  }
   const now = new Date();
   document.getElementById('lastUpdate').textContent =
     'Actualizado às ' + now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
