@@ -7,15 +7,14 @@
 <link rel="stylesheet" href="styles.css">
 <style>
 /* ── CSS específico de admissoes.html ── */
-.page{max-width:920px;}
 
-/* Botão gestor */
+/* GESTOR BTN */
 .btn-gestor{background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;padding:6px 14px;border-radius:20px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;white-space:nowrap;margin-left:auto;}
 .btn-gestor:hover{border-color:var(--accent);color:var(--accent);}
 .btn-gestor.active{background:var(--accent);border-color:var(--accent);color:#fff;}
 .btn-gestor svg{width:12px;height:12px;}
 
-/* Tipo selector */
+/* TIPO SELECTOR */
 .tipo-selector{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;}
 .tipo-card{border:2px solid var(--border);border-radius:12px;padding:14px 18px;cursor:pointer;transition:all .2s;background:var(--surface2);}
 .tipo-card:hover{border-color:#aaa;}
@@ -27,33 +26,30 @@
 .tipo-card.sel-admissao .tipo-card-label{color:var(--teal);}
 .tipo-card.sel-cessacao .tipo-card-label{color:var(--amber);}
 
-/* Stats específicas */
+/* STATS específicos */
 .stat-chip.s-admissao .stat-val{color:var(--teal);}
 .stat-chip.s-cessacao .stat-val{color:var(--amber);}
-.stat-chip.s-alta     .stat-val{color:var(--red);}
+.stat-chip.s-alta .stat-val{color:var(--red);}
 .stat-chip.s-pendente .stat-val{color:var(--blue);}
 .stat-chip.s-concluido .stat-val{color:var(--green);}
 
-/* Valor group */
+/* valor group */
 .valor-group{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
 @media(max-width:600px){.valor-group{grid-template-columns:1fr 1fr;}}
 @media(max-width:480px){.valor-group{grid-template-columns:1fr;}}
 
-/* Pagamento pills */
+/* tipo pagamento pills */
 .pagamento-row{display:flex;gap:6px;}
 .pag-pill{flex:1;padding:8px 6px;border:1px solid var(--border);background:transparent;font-family:'DM Mono',monospace;font-size:10px;border-radius:6px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;transition:all .15s;text-align:center;}
 .pag-pill[data-p="mes"].sel{background:var(--teal-bg);border-color:var(--teal);color:var(--teal);}
 .pag-pill[data-p="hora"].sel{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);}
 .pag-pill:not(.sel):hover{border-color:#aaa;color:var(--text);}
 
-/* Campos especiais */
+/* required star */
 .req{color:var(--red);margin-left:2px;}
 .section-label{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);}
-.user-info-avatar{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;font-family:'Manrope',sans-serif;}
-.user-info-name{font-size:11px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.user-info-role{font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:2px 7px;border-radius:8px;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);white-space:nowrap;}
 
-/* Cards de processo */
+/* CARD específico — admissões */
 .proc-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.05);transition:box-shadow .15s;position:relative;overflow:hidden;}
 .proc-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.09);}
 .proc-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:12px 0 0 12px;}
@@ -65,7 +61,7 @@
 @media(max-width:768px){.card-header{grid-template-columns:auto 1fr auto auto auto;}}
 @media(max-width:480px){.card-header{grid-template-columns:auto 1fr auto auto;}}
 .card-num{font-size:10px;font-weight:600;white-space:nowrap;min-width:28px;}
-.card-num.alta{color:var(--red);} .card-num.media{color:var(--amber);} .card-num.baixa{color:var(--green);}
+.card-num.alta{color:var(--red);}.card-num.media{color:var(--amber);}.card-num.baixa{color:var(--green);}
 .card-info{min-width:0;}
 .card-nome{font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .card-nome.done{text-decoration:line-through;color:var(--muted);}
@@ -85,8 +81,6 @@
 .estado-pill.cancelado{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
 .chevron{width:14px;height:14px;color:var(--muted);flex-shrink:0;transition:transform .2s;justify-self:end;}
 .chevron.open{transform:rotate(180deg);}
-.card-body{display:none;padding:0 16px 16px;border-top:1px solid var(--border);}
-.card-body.open{display:block;}
 .detail-item-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;}
 .detail-item-val{font-size:11px;font-weight:500;color:var(--text);}
 .detail-item-val.val-money{font-family:'Manrope',sans-serif;font-size:13px;font-weight:700;color:var(--teal);}
@@ -102,11 +96,8 @@
 .estado-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:6px 8px;border-radius:6px;outline:none;cursor:pointer;flex-shrink:0;}
 .notas-input{flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:6px 8px;border-radius:6px;outline:none;resize:none;transition:border-color .15s;}
 .notas-input:focus{border-color:var(--accent);}
-/* Modal PIN */
-.pin-input{width:100%;text-align:center;letter-spacing:.4em;font-size:24px;font-family:'Manrope',sans-serif;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;outline:none;transition:border-color .15s;margin-bottom:6px;}
-.pin-input:focus{border-color:var(--accent);}
-.pin-error{font-size:10px;color:var(--red);text-align:center;margin-bottom:12px;min-height:16px;}
-/* Ficheiros */
+
+/* FILE ATTACHMENTS */
 .card-files{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
 .files-header{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
 .files-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);flex:1;}
@@ -121,11 +112,79 @@
 .file-item-del{background:none;border:none;cursor:pointer;color:#ccc;font-size:12px;padding:0 2px;flex-shrink:0;transition:color .1s;line-height:1;}
 .file-item-del:hover{color:var(--red);}
 .files-empty{font-size:10px;color:var(--muted);font-style:italic;padding:2px 0;}
-.upload-status{font-size:10px;color:var(--accent);font-style:italic;min-height:14px;}
-/* VOZ AI — avatar e role */
+
+/* MODAL PIN */
+.pin-input{width:100%;text-align:center;letter-spacing:.4em;font-size:24px;font-family:'Manrope',sans-serif;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;outline:none;transition:border-color .15s;margin-bottom:6px;}
+.pin-input:focus{border-color:var(--accent);}
+.pin-error{font-size:10px;color:var(--red);text-align:center;margin-bottom:12px;min-height:16px;}
+
+/* USER INFO */
+.user-info-avatar{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;font-family:'Manrope',sans-serif;}
+.user-info-name{font-size:11px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.user-info-role{font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:2px 7px;border-radius:8px;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);white-space:nowrap;}
+
+/* VOZ AI */
 .mic-trigger-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid var(--border);border-radius:20px;background:var(--surface2);font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);cursor:pointer;text-transform:uppercase;letter-spacing:.07em;transition:all .18s;margin-left:auto;}
 .mic-trigger-btn:hover{border-color:var(--accent);color:var(--accent);}
 .mic-trigger-btn svg{width:12px;height:12px;}
+.mic-trigger-btn.recording{border-color:#ef4444;color:#ef4444;background:rgba(239,68,68,.07);animation:micPulse 1.2s ease-in-out infinite;}
+.voz-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:700;align-items:flex-end;justify-content:center;padding-bottom:0;}
+.voz-modal-overlay.open{display:flex;animation:fadeIn .2s ease;}
+.voz-modal{background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;width:100%;max-width:560px;box-shadow:0 -8px 40px rgba(0,0,0,.2);overflow:hidden;animation:slideUp .25s ease;}
+.voz-modal-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.voz-modal-header h3{font-family:'Manrope',sans-serif;font-weight:700;font-size:13px;flex:1;}
+.voz-modal-close{background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;padding:0 4px;line-height:1;transition:color .15s;}
+.voz-modal-close:hover{color:var(--text);}
+.voz-modal-body{padding:20px;}
+.voz-mic-wrap{text-align:center;margin-bottom:18px;}
+.voz-mic-btn{width:64px;height:64px;border-radius:50%;border:none;background:var(--surface2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;position:relative;transition:all .2s;outline:none;}
+.voz-mic-btn svg{width:26px;height:26px;color:var(--muted);transition:color .2s;position:relative;z-index:1;}
+.voz-mic-btn:hover svg{color:var(--text);}
+.voz-mic-btn.recording{background:rgba(239,68,68,.1);}
+.voz-mic-btn.recording svg{color:#ef4444;}
+.voz-mic-btn.recording::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid #ef4444;animation:ripple 1.2s ease-out infinite;opacity:.6;}
+.voz-status{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:10px;}
+.voz-status.rec{color:#ef4444;}
+.voz-waves{display:flex;align-items:center;justify-content:center;gap:3px;height:24px;margin:8px 0;}
+.voz-wave{width:3px;background:var(--accent);border-radius:2px;height:3px;opacity:.3;transition:height .1s;}
+.voz-modal-overlay.recording .voz-wave{opacity:1;}
+.voz-modal-overlay.recording .voz-wave:nth-child(1){animation:vWave 1s ease-in-out infinite 0s;}
+.voz-modal-overlay.recording .voz-wave:nth-child(2){animation:vWave 1s ease-in-out infinite .1s;}
+.voz-modal-overlay.recording .voz-wave:nth-child(3){animation:vWave 1s ease-in-out infinite .2s;}
+.voz-modal-overlay.recording .voz-wave:nth-child(4){animation:vWave 1s ease-in-out infinite .05s;}
+.voz-modal-overlay.recording .voz-wave:nth-child(5){animation:vWave 1s ease-in-out infinite .15s;}
+.voz-modal-overlay.recording .voz-wave:nth-child(6){animation:vWave 1s ease-in-out infinite .08s;}
+.voz-modal-overlay.recording .voz-wave:nth-child(7){animation:vWave 1s ease-in-out infinite .18s;}
+.voz-transcript{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.6;min-height:40px;margin-bottom:14px;display:none;color:var(--text);}
+.voz-transcript.visible{display:block;}
+.voz-transcript-interim{color:var(--muted);font-style:italic;}
+.voz-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;display:none;}
+.voz-fields.visible{display:grid;}
+.voz-field{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;}
+.voz-field.full{grid-column:1/-1;}
+.voz-field-key{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px;}
+.voz-field-val{font-size:11px;color:var(--text);}
+.voz-field-val.empty{color:var(--muted);font-style:italic;}
+.voz-actions{display:flex;gap:8px;}
+.voz-btn{flex:1;padding:9px 12px;border:none;border-radius:9px;font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.voz-btn svg{width:11px;height:11px;}
+.voz-btn:hover{opacity:.82;}
+.voz-btn:disabled{opacity:.35;cursor:not-allowed;}
+.voz-btn-confirm{background:var(--text);color:#fff;}
+.voz-btn-retry{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.voz-btn-cancel{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+.voz-loading{text-align:center;padding:14px 0;display:none;}
+.voz-loading.visible{display:block;}
+.voz-dots{display:inline-flex;gap:4px;}
+.voz-dots span{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:vDot 1.2s ease-in-out infinite;}
+.voz-dots span:nth-child(2){animation-delay:.2s;}
+.voz-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes micPulse{0%,100%{box-shadow:none}50%{box-shadow:0 0 0 4px rgba(239,68,68,.15)}}
+@keyframes ripple{0%{transform:scale(1);opacity:.6}100%{transform:scale(1.6);opacity:0}}
+@keyframes vWave{0%,100%{height:3px}50%{height:18px}}
+@keyframes vDot{0%,80%,100%{transform:scale(0);opacity:.3}40%{transform:scale(1);opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
 </style>
 </head>
 <body>
@@ -155,7 +214,7 @@
     <div class="panel-title">
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v3l2 1.5"/></svg>
       Novo Processo
-      <button class="mic-trigger-btn" onclick="VozAI.abrir('admissao')">
+      <button class="mic-trigger-btn" onclick="vozAbrir('admissao')">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5" y="1" width="6" height="9" rx="3"/><path d="M2 8c0 3.3 2.7 6 6 6s6-2.7 6-6"/><path d="M8 14v2"/></svg>
         Voz
       </button>
@@ -362,7 +421,6 @@
 <script src="auth.js"></script>
 <script src="config-escritorios.js"></script>
 <script src="auditoria.js"></script>
-<script src="voz-ai.js"></script>
 <script>
 const GESTOR_PIN = '9005';
 <script>
@@ -959,120 +1017,306 @@ function startSync() {
   window.addEventListener('beforeunload', () => { if (window._admissoesUnsub) window._admissoesUnsub(); }, { once: true });
 }
 </script>
+<!-- MODAL VOZ AI -->
+<div class="voz-modal-overlay" id="vozModal">
+  <div class="voz-modal">
+    <div class="voz-modal-header">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5" y="1" width="6" height="9" rx="3"/><path d="M2 8c0 3.3 2.7 6 6 6s6-2.7 6-6"/><path d="M8 14v2"/></svg>
+      <h3 id="vozModalTitulo">Preencher com voz</h3>
+      <button class="voz-modal-close" onclick="vozFechar()">×</button>
+    </div>
+    <div class="voz-modal-body">
+      <div class="voz-mic-wrap">
+        <button class="voz-mic-btn" id="vozMicBtn" onclick="vozToggle()">
+          <svg id="vozMicIcon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5" y="1" width="6" height="9" rx="3"/><path d="M2 8c0 3.3 2.7 6 6 6s6-2.7 6-6"/><path d="M8 14v2"/></svg>
+        </button>
+        <div class="voz-waves">
+          <div class="voz-wave"></div><div class="voz-wave"></div><div class="voz-wave"></div>
+          <div class="voz-wave"></div><div class="voz-wave"></div><div class="voz-wave"></div><div class="voz-wave"></div>
+        </div>
+        <div class="voz-status" id="vozStatus">Clica para falar</div>
+      </div>
+      <div class="voz-transcript" id="vozTranscript">
+        <span id="vozTranscriptFinal"></span><span class="voz-transcript-interim" id="vozTranscriptInterim"></span>
+      </div>
+      <div class="voz-loading" id="vozLoading">
+        <div class="voz-dots"><span></span><span></span><span></span></div>
+        <p style="font-size:10px;color:var(--muted);margin-top:8px;letter-spacing:.05em;">A Claude está a interpretar…</p>
+      </div>
+      <div class="voz-fields" id="vozFields"></div>
+      <div class="voz-actions" id="vozActions">
+        <button class="voz-btn voz-btn-cancel" onclick="vozFechar()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
-// ── VOZ AI — registo do tipo 'admissao' ──────────────────
-// A API key é opcional; sem ela usa simulação offline.
-// window.VOZ_CLAUDE_API_KEY = 'sk-ant-...';
+// ── VOZ AI ──
+const VOZ_CLAUDE_API_KEY = ''; // coloca a tua API key aqui
 
-document.addEventListener('authReady', () => {
-  VozAI.registarTipo('admissao', {
-    titulo: 'Novo processo por voz',
+// ── Helper: normalizar escritório (ignora maiúsculas, acentos, palavras extra)
+function _vozNormalizarEsc(valor) {
+  if (!valor) return '';
+  const lista = window.getEscritoriosSync ? window.getEscritoriosSync() : [];
+  const limpar = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,' ').trim();
+  const v = limpar(valor);
+  return (lista.find(e => v.includes(limpar(e.id)) || limpar(e.id).includes(v) || v.includes(limpar(e.nome)) || limpar(e.nome).includes(v)) || {}).id || '';
+}
 
-    prompt: `Analisa este texto em português e extrai os dados para uma admissão ou cessação de colaborador.
+const VOZ_PROMPTS = {
+  tarefa: `Analisa este texto em português e extrai os dados para uma tarefa interna.
 Responde APENAS com um objecto JSON válido, sem texto adicional, sem marcadores de código.
 Usa exactamente estas chaves (deixa em branco "" se não mencionado):
-{
-  "tipo": "admissao" ou "cessacao",
-  "nome": "nome completo do colaborador",
-  "numero": "número de colaborador (só dígitos)",
-  "nif": "NIF (9 dígitos)",
-  "empresa": "nome da empresa utilizadora/cliente",
-  "categoria": "categoria ou função profissional",
-  "escritorio": "quarteira" ou "albufeira" ou "lisboa" ou "porto",
-  "dataEntrada": "data no formato YYYY-MM-DD ou vazio",
-  "dataSaida": "data no formato YYYY-MM-DD ou vazio (só para cessações)",
-  "valorBase": "valor numérico sem símbolo de moeda, ex: 1200.00",
-  "tipoPagamento": "mes" ou "hora"
-}`,
+{"titulo":"título curto da tarefa (máx 80 chars)","descricao":"descrição detalhada ou vazio","prioridade":"urgente ou normal ou baixa","escritorio":"quarteira ou albufeira ou lisboa ou porto","departamento":"nome do departamento ou vazio"}`,
+  admissao: `Analisa este texto em português e extrai os dados para uma admissão ou cessação.
+Responde APENAS com um objecto JSON válido, sem texto adicional, sem marcadores de código.
+Usa exactamente estas chaves (deixa em branco "" se não mencionado):
+{"tipo":"admissao ou cessacao","nome":"nome completo","numero":"número de colaborador (só dígitos)","nif":"NIF (9 dígitos)","empresa":"nome da empresa utilizadora","categoria":"categoria ou função profissional","escritorio":"quarteira ou albufeira ou lisboa ou porto","dataEntrada":"YYYY-MM-DD ou vazio","valorBase":"valor numérico sem símbolo ex: 1200.00","tipoPagamento":"mes ou hora"}`
+};
 
-    labels: {
-      tipo:          'Tipo',
-      nome:          'Nome',
-      numero:        'Nº Colaborador',
-      nif:           'NIF',
-      empresa:       'Empresa',
-      categoria:     'Categoria',
-      escritorio:    'Escritório',
-      dataEntrada:   'Data entrada',
-      dataSaida:     'Data saída',
-      valorBase:     'Valor base (€)',
-      tipoPagamento: 'Tipo pagamento',
-    },
+const VOZ_LABELS = {
+  tarefa:   {titulo:'Título',descricao:'Descrição',prioridade:'Prioridade',escritorio:'Escritório',departamento:'Departamento'},
+  admissao: {tipo:'Tipo',nome:'Nome',numero:'Nº Colaborador',nif:'NIF',empresa:'Empresa',categoria:'Categoria',escritorio:'Escritório',dataEntrada:'Data entrada',valorBase:'Valor base (€)',tipoPagamento:'Tipo pagamento'}
+};
 
-    fullFields: ['empresa', 'categoria'],
+let _vozTipo = 'tarefa';
+let _vozRec = null;
+let _vozGravando = false;
+let _vozTranscricao = '';
+let _vozDados = null;
 
-    preencher(d) {
-      // Tipo (admissao / cessacao) — chama a função da página
-      if (d.tipo && typeof selTipo === 'function') {
-        selTipo(d.tipo === 'cessacao' ? 'cessacao' : 'admissao');
-      }
+function vozAbrir(tipo) {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    toast('A Web Speech API só funciona no Chrome ou Edge.');
+    return;
+  }
+  _vozTipo = tipo;
+  _vozDados = null;
+  _vozTranscricao = '';
+  const overlay = document.getElementById('vozModal');
+  overlay.classList.add('open');
+  document.getElementById('vozModalTitulo').textContent = tipo === 'tarefa' ? 'Nova tarefa por voz' : 'Novo processo por voz';
+  document.getElementById('vozTranscript').classList.remove('visible');
+  document.getElementById('vozFields').classList.remove('visible');
+  document.getElementById('vozFields').innerHTML = '';
+  document.getElementById('vozLoading').classList.remove('visible');
+  document.getElementById('vozTranscriptFinal').textContent = '';
+  document.getElementById('vozTranscriptInterim').textContent = '';
+  document.getElementById('vozStatus').textContent = 'Clica para falar';
+  document.getElementById('vozStatus').className = 'voz-status';
+  document.getElementById('vozMicBtn').classList.remove('recording');
+  document.getElementById('vozActions').innerHTML = '<button class="voz-btn voz-btn-cancel" onclick="vozFechar()">Cancelar</button>';
+  overlay.classList.remove('recording');
+}
 
-      // Campos de texto simples
-      if (d.nome)     document.getElementById('fNome').value    = d.nome.trim();
-      if (d.numero)   document.getElementById('fNumero').value  = String(d.numero).trim();
-      if (d.nif)      document.getElementById('fNif').value     = String(d.nif).trim();
+function vozFechar() {
+  if (_vozGravando) vozParar();
+  document.getElementById('vozModal').classList.remove('open');
+}
 
-      const fEmp = document.getElementById('fEmpresa');
-      if (d.empresa && fEmp) fEmp.value = d.empresa.trim();
+function vozToggle() {
+  if (_vozGravando) vozParar();
+  else vozIniciar();
+}
 
-      const fCat = document.getElementById('fCategoria');
-      if (d.categoria && fCat) fCat.value = d.categoria.trim();
+function vozIniciar() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  _vozRec = new SR();
+  _vozRec.lang = 'pt-PT';
+  _vozRec.continuous = true;
+  _vozRec.interimResults = true;
+  _vozTranscricao = '';
+  document.getElementById('vozTranscript').classList.add('visible');
+  document.getElementById('vozTranscriptFinal').textContent = '';
+  document.getElementById('vozTranscriptInterim').textContent = '';
 
-      const fVal = document.getElementById('fValorBase');
-      if (d.valorBase && fVal) fVal.value = String(d.valorBase).replace(/[^0-9.]/g, '');
+  _vozRec.onstart = () => {
+    _vozGravando = true;
+    document.getElementById('vozMicBtn').classList.add('recording');
+    document.getElementById('vozModal').classList.add('recording');
+    document.getElementById('vozStatus').textContent = 'A ouvir… (clica para parar)';
+    document.getElementById('vozStatus').className = 'voz-status rec';
+    document.getElementById('vozMicIcon').innerHTML = '<rect x="4" y="4" width="8" height="8" rx="1" fill="currentColor" stroke="none"/>';
+  };
+  _vozRec.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) _vozTranscricao += t + ' ';
+      else interim = t;
+    }
+    document.getElementById('vozTranscriptFinal').textContent = _vozTranscricao;
+    document.getElementById('vozTranscriptInterim').textContent = interim;
+  };
+  _vozRec.onerror = () => vozParar();
+  _vozRec.onend = () => { if (_vozGravando) _vozRec.start(); };
+  _vozRec.start();
+}
 
-      // Datas
-      const fDataE = document.getElementById('fDataEntrada');
-      if (d.dataEntrada && fDataE) {
-        fDataE.value = d.dataEntrada;
-        if (typeof updatePrioPreview === 'function') updatePrioPreview();
-      }
-      const fDataS = document.getElementById('fDataSaida');
-      if (d.dataSaida && fDataS) {
-        fDataS.value = d.dataSaida;
-        if (typeof updatePrioPreview === 'function') updatePrioPreview();
-      }
+function vozParar() {
+  _vozGravando = false;
+  if (_vozRec) { _vozRec.onend = null; _vozRec.stop(); }
+  document.getElementById('vozMicBtn').classList.remove('recording');
+  document.getElementById('vozModal').classList.remove('recording');
+  document.getElementById('vozStatus').textContent = 'Clica para falar';
+  document.getElementById('vozStatus').className = 'voz-status';
+  document.getElementById('vozMicIcon').innerHTML = '<rect x="5" y="1" width="6" height="9" rx="3"/><path d="M2 8c0 3.3 2.7 6 6 6s6-2.7 6-6"/><path d="M8 14v2"/>';
+  const texto = _vozTranscricao.trim();
+  if (texto) vozProcessar(texto);
+}
 
-      // Escritório — normalização robusta via helper do VozAI
-      const escId = VozAI.normalizarEscritorio(d.escritorio);
-      if (escId) VozAI.setSelect('fEscritorioAdm', escId);
+async function vozProcessar(texto) {
+  document.getElementById('vozLoading').classList.add('visible');
+  document.getElementById('vozFields').classList.remove('visible');
+  document.getElementById('vozActions').innerHTML = '';
 
-      // Tipo de pagamento — chama a função da página
-      if (d.tipoPagamento && typeof selPagamento === 'function') {
-        const tp = String(d.tipoPagamento).toLowerCase();
-        selPagamento(tp === 'hora' ? 'hora' : 'mes');
-      }
-    },
+  try {
+    let dados;
+    if (!VOZ_CLAUDE_API_KEY) {
+      await new Promise(r => setTimeout(r, 1400));
+      dados = vozSimular(texto, _vozTipo);
+    } else {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': VOZ_CLAUDE_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 800,
+          messages: [{ role: 'user', content: VOZ_PROMPTS[_vozTipo] + '\n\nTexto: "' + texto + '"' }]
+        })
+      });
+      const data = await resp.json();
+      const raw = data.content?.[0]?.text || '{}';
+      dados = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    }
+    _vozDados = dados;
+    vozMostrarCampos(dados);
+  } catch(e) {
+    document.getElementById('vozLoading').classList.remove('visible');
+    document.getElementById('vozStatus').textContent = 'Erro: ' + e.message;
+    document.getElementById('vozActions').innerHTML = '<button class="voz-btn voz-btn-retry" onclick="vozProcessar(_vozTranscricao.trim())">Tentar novamente</button><button class="voz-btn voz-btn-cancel" onclick="vozFechar()">Cancelar</button>';
+  }
+}
 
-    simular(texto) {
-      const t    = texto.toLowerCase();
-      const nome = (texto.match(/\b([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][a-záéíóúàâêôãõç]+(?:\s+[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][a-záéíóúàâêôãõç]+)+)\b/) || [])[1] || '';
-      const esc  = VozAI.normalizarEscritorio(
-        (window.getEscritoriosSync ? window.getEscritoriosSync() : []).map(e => e.id).find(e => t.includes(e)) || ''
-      );
-      const dataE = (texto.match(/\b(\d{4}-\d{2}-\d{2})\b/) || [])[1] || '';
-      const num   = (texto.match(/(?:n[uúº°]mero|n[oº]\.?)\s*(\d+)/i) || [])[1] || '';
-      const empM  = texto.match(/(?:empresa|para\s+(?:a\s+)?empresa)\s+([A-Za-zÀ-ÿ0-9 &,\.]+?)(?:\s+(?:base|categoria|nif|n[uú]mero|escritório|€|\d))/i);
-      const catM  = texto.match(/categoria\s+([A-Za-zÀ-ÿ ]+?)(?:\s+(?:base|empresa|nif|escritório|€|\d|$))/i);
-      const valM  = texto.match(/(?:base\s+|salário\s+)?([\d][\d\s]*(?:[.,]\d{1,2})?)\s*€/i) || texto.match(/base\s+([\d][\d\s]*(?:[.,]\d{1,2})?)/i);
-      const nif   = (texto.match(/\b(\d{9})\b/) || [])[1] || '';
-      return {
-        tipo:          t.includes('cessa') || t.includes('saída') || t.includes('saida') ? 'cessacao' : 'admissao',
-        nome,
-        numero:        num,
-        nif,
-        empresa:       empM ? empM[1].trim() : '',
-        categoria:     catM ? catM[1].trim() : '',
-        escritorio:    esc,
-        dataEntrada:   dataE,
-        dataSaida:     '',
-        valorBase:     valM ? valM[1].replace(/\s/g, '').replace(',', '.') : '',
-        tipoPagamento: t.includes(' hora') || t.includes('horário') ? 'hora' : 'mes',
-      };
-    },
-  });
+function vozMostrarCampos(dados) {
+  document.getElementById('vozLoading').classList.remove('visible');
+  const labels = VOZ_LABELS[_vozTipo];
+  const fields = document.getElementById('vozFields');
+  const fullFields = _vozTipo === 'tarefa' ? ['descricao'] : ['empresa'];
+  fields.innerHTML = Object.entries(dados).map(([k,v]) => {
+    if (!(k in labels)) return '';
+    const empty = !v || v === '' || v === 'vazio';
+    const full = fullFields.includes(k);
+    return '<div class="voz-field' + (full?' full':'') + '"><div class="voz-field-key">' + labels[k] + '</div><div class="voz-field-val' + (empty?' empty':'') + '">' + (empty ? '—' : String(v)) + '</div></div>';
+  }).join('');
+  fields.classList.add('visible');
+  document.getElementById('vozActions').innerHTML = `
+    <button class="voz-btn voz-btn-confirm" onclick="vozConfirmar()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l3.5 3.5L13 4"/></svg>
+      Preencher formulário
+    </button>
+    <button class="voz-btn voz-btn-retry" onclick="vozToggle()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8A6 6 0 1114 8"/><path d="M2 8V4H6"/></svg>
+      Regravar
+    </button>`;
+}
+
+function vozConfirmar() {
+  if (!_vozDados) return;
+  if (_vozTipo === 'tarefa') vozPreencherTarefa(_vozDados);
+  else vozPreencherAdmissao(_vozDados);
+  vozFechar();
+  document.querySelector('.novo-pedido-panel, .form-panel')?.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function vozPreencherTarefa(d) {
+  if (d.titulo)    document.getElementById('fTitulo').value    = d.titulo.trim();
+  if (d.descricao) document.getElementById('fDescricao').value = d.descricao.trim();
+  // Escritório — normalização robusta
+  const escId = _vozNormalizarEsc(d.escritorio);
+  if (escId) {
+    const sel = document.getElementById('fEscritorio');
+    if (sel) [...sel.options].forEach(o => { if (o.value === escId) sel.value = o.value; });
+  }
+  // Prioridade — chama selPrio() para actualizar variável E pills
+  if (d.prioridade && typeof selPrio === 'function') {
+    const p = String(d.prioridade).toLowerCase().trim();
+    selPrio(['urgente','normal','baixa'].includes(p) ? p : 'normal');
+  }
+  toast('Formulário preenchido por voz ✓');
+}
+
+function vozPreencherAdmissao(d) {
+  // Tipo — chama selTipo() para actualizar cards e variável interna
+  if (d.tipo && typeof selTipo === 'function') selTipo(d.tipo === 'cessacao' ? 'cessacao' : 'admissao');
+  if (d.nome)     document.getElementById('fNome').value    = d.nome.trim();
+  if (d.numero)   document.getElementById('fNumero').value  = String(d.numero).trim();
+  if (d.nif)      document.getElementById('fNif').value     = String(d.nif).trim();
+  if (d.empresa)  { const el = document.getElementById('fEmpresa');   if (el) el.value = d.empresa.trim(); }
+  if (d.categoria){ const el = document.getElementById('fCategoria'); if (el) el.value = d.categoria.trim(); }
+  if (d.valorBase){ const el = document.getElementById('fValorBase'); if (el) el.value = String(d.valorBase).replace(/[^0-9.]/g,''); }
+  if (d.dataEntrada) {
+    const el = document.getElementById('fDataEntrada');
+    if (el) { el.value = d.dataEntrada; if (typeof updatePrioPreview === 'function') updatePrioPreview(); }
+  }
+  // Escritório — normalização robusta
+  const escId = _vozNormalizarEsc(d.escritorio);
+  if (escId) {
+    const sel = document.getElementById('fEscritorioAdm');
+    if (sel) [...sel.options].forEach(o => { if (o.value === escId) sel.value = o.value; });
+  }
+  // Tipo de pagamento — chama selPagamento()
+  if (d.tipoPagamento && typeof selPagamento === 'function') {
+    selPagamento(String(d.tipoPagamento).toLowerCase() === 'hora' ? 'hora' : 'mes');
+  }
+  toast('Formulário preenchido por voz ✓');
+}
+
+// Simulação offline
+function vozSimular(texto, tipo) {
+  const t = texto.toLowerCase();
+  const nome = (texto.match(/\b([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][a-záéíóúàâêôãõç]+(?:\s+[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][a-záéíóúàâêôãõç]+)+)\b/) || [])[1] || '';
+  const esc  = _vozNormalizarEsc((window.getEscritoriosSync ? window.getEscritoriosSync() : []).map(e => e.id).find(e => t.includes(e)) || '');
+  const data = (texto.match(/\b(\d{4}-\d{2}-\d{2}|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\b/) || [])[1] || '';
+  const numero = (texto.match(/(?:n[uúº°]mero|n[oº]\.?)\s*(\d+)/i) || [])[1] || '';
+  const empM = texto.match(/(?:empresa|para\s+(?:a\s+)?empresa)\s+([A-Za-zÀ-ÿ0-9 &,\.]+?)(?:\s+(?:base|categoria|nif|n[uú]mero|escritório|€|\d))/i);
+  const catM = texto.match(/categoria\s+([A-Za-zÀ-ÿ ]+?)(?:\s+(?:base|empresa|nif|escritório|€|\d|$))/i);
+  const valM = texto.match(/(?:base\s+|salário\s+)?(\d[\d\s]*(?:[.,]\d{1,2})?)\s*€/i) || texto.match(/base\s+(\d[\d\s]*(?:[.,]\d{1,2})?)/i);
+  const nif  = (texto.match(/\b(\d{9})\b/) || [])[1] || '';
+  if (tipo === 'tarefa') {
+    return {
+      titulo: texto.split(' ').slice(0,7).join(' ').replace(/^\w/, c => c.toUpperCase()),
+      descricao: texto.length > 50 ? texto : '',
+      prioridade: t.includes('urgente') ? 'urgente' : t.includes('baixa') ? 'baixa' : 'normal',
+      escritorio: esc,
+      departamento: t.includes('contabil') ? 'Contabilidade' : t.includes('payroll')||t.includes('rh') ? 'Payroll' : '',
+    };
+  }
+  return {
+    tipo:          t.includes('cessa') || t.includes('saída') || t.includes('saida') ? 'cessacao' : 'admissao',
+    nome,
+    numero,
+    nif,
+    empresa:       empM ? empM[1].trim() : '',
+    categoria:     catM ? catM[1].trim() : '',
+    escritorio:    esc,
+    dataEntrada:   data,
+    valorBase:     valM ? valM[1].replace(/\s/g,'').replace(',','.') : '',
+    tipoPagamento: t.includes(' hora') || t.includes('horário') ? 'hora' : 'mes',
+  };
+}
+
+// Fechar ao clicar fora
+document.getElementById('vozModal').addEventListener('click', function(e) {
+  if (e.target === this) vozFechar();
 });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') vozFechar(); });
 </script>
 </body>
 </html>
