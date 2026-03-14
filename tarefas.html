@@ -312,6 +312,10 @@ document.addEventListener('authReady', ({ detail }) => {
   const formPanel = document.querySelector('.novo-pedido-panel');
   if (formPanel) formPanel.style.display = canCreate ? '' : 'none';
 
+  // botão VOZ — visível apenas para admins
+  const btnVozTar = document.querySelector('.novo-pedido-panel .mic-trigger-btn');
+  if (btnVozTar && !isAdmin) btnVozTar.style.display = 'none';
+
   // preencher info do utilizador no form
   if (profile) {
     const nome = profile.nomeCompleto || profile.nome || profile.email || '?';

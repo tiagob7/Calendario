@@ -423,7 +423,6 @@
 <script src="auditoria.js"></script>
 <script>
 const GESTOR_PIN = '9005';
-<script>
 const db      = firebase.firestore();
 const col     = db.collection('admissoes');
 const storage = firebase.storage();
@@ -948,6 +947,10 @@ document.addEventListener('authReady', ({ detail }) => {
   const canResolverAdm = window.temPermissao('resolverAdmissoes');
   const btnGestor = document.getElementById('btnGestor');
   if (btnGestor && !canResolverAdm) btnGestor.style.display = 'none';
+
+  // botão VOZ — visível apenas para admins
+  const btnVozAdm = document.querySelector('.form-panel .mic-trigger-btn');
+  if (btnVozAdm && !isAdmin) btnVozAdm.style.display = 'none';
 
   // Modo gestor automático para quem tem permissão de resolver + admin
   if (isAdmin || window.temPermissao('resolverAdmissoes')) {
