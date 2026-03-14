@@ -648,8 +648,16 @@ document.addEventListener('authReady', () => {
   VozAI.registarTipo('tarefa', {
     titulo: 'Nova tarefa por voz',
 
-    prompt: `Analisa este texto em português e extrai os dados para uma tarefa. Responde APENAS com JSON.
-Formato: {"titulo":"...","descricao":"...","prioridade":"urgente|normal|baixa","escritorio":"quarteira|albufeira|lisboa|porto","departamento":"..."}`,
+    prompt: `Analisa este texto em português e extrai os dados para uma tarefa interna.
+Responde APENAS com um objecto JSON válido, sem texto adicional, sem marcadores de código.
+Usa exactamente estas chaves (deixa em branco "" se não mencionado):
+{
+  "titulo": "título curto e claro da tarefa (máx 80 chars)",
+  "descricao": "descrição detalhada ou vazio",
+  "prioridade": "urgente" ou "normal" ou "baixa",
+  "escritorio": "quarteira" ou "albufeira" ou "lisboa" ou "porto",
+  "departamento": "nome do departamento ou vazio"
+}`,
 
     labels: {
       titulo:       'Título',
@@ -662,25 +670,29 @@ Formato: {"titulo":"...","descricao":"...","prioridade":"urgente|normal|baixa","
     fullFields: ['descricao'],
 
     preencher(d) {
-      if (d.titulo)    document.getElementById('fTitulo').value = d.titulo;
-      if (d.descricao) document.getElementById('fDescricao').value = d.descricao;
-      if (d.escritorio) {
-        const sel = document.getElementById('fEscritorio');
-        if (sel) [...sel.options].forEach(o => { if (o.value === d.escritorio.toLowerCase()) sel.value = o.value; });
-      }
-      if (d.prioridade) {
-        const p = d.prioridade.toLowerCase();
-        document.querySelectorAll('.prio-pill').forEach(btn => btn.classList.toggle('sel', btn.dataset.p === p));
-        if (typeof selPrioVal !== 'undefined') window.selPrioVal = p;
+      if (d.titulo)    document.getElementById('fTitulo').value    = d.titulo.trim();
+      if (d.descricao) document.getElementById('fDescricao').value = d.descricao.trim();
+
+      // Escritório — normalização robusta via helper do VozAI
+      const escId = VozAI.normalizarEscritorio(d.escritorio);
+      if (escId) VozAI.setSelect('fEscritorio', escId);
+
+      // Prioridade — chama selPrio() para actualizar variável E pills
+      if (d.prioridade && typeof selPrio === 'function') {
+        const p = String(d.prioridade).toLowerCase().trim();
+        const pValido = ['urgente', 'normal', 'baixa'].includes(p) ? p : 'normal';
+        selPrio(pValido);
       }
     },
 
     simular(texto) {
       const t   = texto.toLowerCase();
-      const esc = (window.getEscritoriosSync ? window.getEscritoriosSync() : []).map(e => e.id).find(e => t.includes(e)) || '';
+      const esc = VozAI.normalizarEscritorio(
+        (window.getEscritoriosSync ? window.getEscritoriosSync() : []).map(e => e.id).find(e => t.includes(e)) || ''
+      );
       return {
-        titulo:       texto.split(' ').slice(0, 7).join(' ').replace(/^\w/, c => c.toUpperCase()),
-        descricao:    texto.length > 50 ? texto : '',
+        titulo:       texto.split(' ').slice(0, 8).join(' ').replace(/^\w/, c => c.toUpperCase()),
+        descricao:    texto.length > 60 ? texto : '',
         prioridade:   t.includes('urgente') ? 'urgente' : t.includes('baixa') ? 'baixa' : 'normal',
         escritorio:   esc,
         departamento: t.includes('contabil') ? 'Contabilidade' : t.includes('payroll') || t.includes('rh') ? 'Payroll' : '',

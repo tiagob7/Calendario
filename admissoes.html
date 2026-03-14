@@ -1094,65 +1094,106 @@ document.addEventListener('authReady', () => {
   VozAI.registarTipo('admissao', {
     titulo: 'Novo processo por voz',
 
-    prompt: `Analisa este texto em português e extrai os dados para uma admissão/cessação.
-Responde APENAS com JSON, sem mais nada.
-Formato: {"nome":"nome completo","numero":"número de colaborador ou vazio","nif":"NIF ou vazio","empresa":"nome da empresa utilizadora ou vazio","categoria":"categoria profissional em texto livre ou vazio","escritorio":"quarteira|albufeira|lisboa|porto ou vazio","dataEntrada":"YYYY-MM-DD ou vazio","valorBase":"só o número ex: 1200 ou vazio","tipo":"admissao|cessacao"}`,
+    prompt: `Analisa este texto em português e extrai os dados para uma admissão ou cessação de colaborador.
+Responde APENAS com um objecto JSON válido, sem texto adicional, sem marcadores de código.
+Usa exactamente estas chaves (deixa em branco "" se não mencionado):
+{
+  "tipo": "admissao" ou "cessacao",
+  "nome": "nome completo do colaborador",
+  "numero": "número de colaborador (só dígitos)",
+  "nif": "NIF (9 dígitos)",
+  "empresa": "nome da empresa utilizadora/cliente",
+  "categoria": "categoria ou função profissional",
+  "escritorio": "quarteira" ou "albufeira" ou "lisboa" ou "porto",
+  "dataEntrada": "data no formato YYYY-MM-DD ou vazio",
+  "dataSaida": "data no formato YYYY-MM-DD ou vazio (só para cessações)",
+  "valorBase": "valor numérico sem símbolo de moeda, ex: 1200.00",
+  "tipoPagamento": "mes" ou "hora"
+}`,
 
     labels: {
-      nome:        'Nome',
-      numero:      'Nº Colaborador',
-      nif:         'NIF',
-      empresa:     'Empresa',
-      categoria:   'Categoria',
-      escritorio:  'Escritório',
-      dataEntrada: 'Data entrada',
-      valorBase:   'Valor base (€)',
-      tipo:        'Tipo',
+      tipo:          'Tipo',
+      nome:          'Nome',
+      numero:        'Nº Colaborador',
+      nif:           'NIF',
+      empresa:       'Empresa',
+      categoria:     'Categoria',
+      escritorio:    'Escritório',
+      dataEntrada:   'Data entrada',
+      dataSaida:     'Data saída',
+      valorBase:     'Valor base (€)',
+      tipoPagamento: 'Tipo pagamento',
     },
 
-    fullFields: ['empresa'],
+    fullFields: ['empresa', 'categoria'],
 
     preencher(d) {
-      if (d.nome)       document.getElementById('fNome').value = d.nome;
-      if (d.numero)     document.getElementById('fNumero').value = d.numero;
-      if (d.nif)        document.getElementById('fNif').value = d.nif;
+      // Tipo (admissao / cessacao) — chama a função da página
+      if (d.tipo && typeof selTipo === 'function') {
+        selTipo(d.tipo === 'cessacao' ? 'cessacao' : 'admissao');
+      }
+
+      // Campos de texto simples
+      if (d.nome)     document.getElementById('fNome').value    = d.nome.trim();
+      if (d.numero)   document.getElementById('fNumero').value  = String(d.numero).trim();
+      if (d.nif)      document.getElementById('fNif').value     = String(d.nif).trim();
+
       const fEmp = document.getElementById('fEmpresa');
-      if (d.empresa && fEmp) fEmp.value = d.empresa;
+      if (d.empresa && fEmp) fEmp.value = d.empresa.trim();
+
       const fCat = document.getElementById('fCategoria');
-      if (d.categoria && fCat) fCat.value = d.categoria;
+      if (d.categoria && fCat) fCat.value = d.categoria.trim();
+
       const fVal = document.getElementById('fValorBase');
-      if (d.valorBase && fVal) fVal.value = d.valorBase;
-      if (d.dataEntrada) {
-        const fData = document.getElementById('fDataEntrada');
-        if (fData) { fData.value = d.dataEntrada; if (typeof updatePrioPreview === 'function') updatePrioPreview(); }
+      if (d.valorBase && fVal) fVal.value = String(d.valorBase).replace(/[^0-9.]/g, '');
+
+      // Datas
+      const fDataE = document.getElementById('fDataEntrada');
+      if (d.dataEntrada && fDataE) {
+        fDataE.value = d.dataEntrada;
+        if (typeof updatePrioPreview === 'function') updatePrioPreview();
       }
-      if (d.escritorio) {
-        const sel = document.getElementById('fEscritorioAdm');
-        if (sel) [...sel.options].forEach(o => { if (o.value === d.escritorio.toLowerCase()) sel.value = o.value; });
+      const fDataS = document.getElementById('fDataSaida');
+      if (d.dataSaida && fDataS) {
+        fDataS.value = d.dataSaida;
+        if (typeof updatePrioPreview === 'function') updatePrioPreview();
       }
-      if (d.tipo === 'cessacao' && typeof selTipo === 'function') selTipo('cessacao');
+
+      // Escritório — normalização robusta via helper do VozAI
+      const escId = VozAI.normalizarEscritorio(d.escritorio);
+      if (escId) VozAI.setSelect('fEscritorioAdm', escId);
+
+      // Tipo de pagamento — chama a função da página
+      if (d.tipoPagamento && typeof selPagamento === 'function') {
+        const tp = String(d.tipoPagamento).toLowerCase();
+        selPagamento(tp === 'hora' ? 'hora' : 'mes');
+      }
     },
 
     simular(texto) {
       const t    = texto.toLowerCase();
       const nome = (texto.match(/\b([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][a-záéíóúàâêôãõç]+(?:\s+[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][a-záéíóúàâêôãõç]+)+)\b/) || [])[1] || '';
-      const esc  = (window.getEscritoriosSync ? window.getEscritoriosSync() : []).map(e => e.id).find(e => t.includes(e)) || '';
-      const data = (texto.match(/\b(\d{4}-\d{2}-\d{2}|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\b/) || [])[1] || '';
-      const num  = (texto.match(/(?:n[uúº°]mero|n[oº]\.?)\s*(\d+)/i) || [])[1] || '';
-      const empM = texto.match(/(?:empresa|para\s+(?:a\s+)?empresa)\s+([A-Za-zÀ-ÿ0-9 &,\.]+?)(?:\s+(?:base|categoria|nif|n[uú]mero|escritório|€|\d))/i);
-      const catM = texto.match(/categoria\s+([A-Za-zÀ-ÿ ]+?)(?:\s+(?:base|empresa|nif|escritório|€|\d|$))/i);
-      const valM = texto.match(/(?:base\s+|salário\s+)?([\d][\d\s]*(?:[.,]\d{1,2})?)\s*€/i) || texto.match(/base\s+([\d][\d\s]*(?:[.,]\d{1,2})?)/i);
-      const nif  = (texto.match(/\b(\d{9})\b/) || [])[1] || '';
+      const esc  = VozAI.normalizarEscritorio(
+        (window.getEscritoriosSync ? window.getEscritoriosSync() : []).map(e => e.id).find(e => t.includes(e)) || ''
+      );
+      const dataE = (texto.match(/\b(\d{4}-\d{2}-\d{2})\b/) || [])[1] || '';
+      const num   = (texto.match(/(?:n[uúº°]mero|n[oº]\.?)\s*(\d+)/i) || [])[1] || '';
+      const empM  = texto.match(/(?:empresa|para\s+(?:a\s+)?empresa)\s+([A-Za-zÀ-ÿ0-9 &,\.]+?)(?:\s+(?:base|categoria|nif|n[uú]mero|escritório|€|\d))/i);
+      const catM  = texto.match(/categoria\s+([A-Za-zÀ-ÿ ]+?)(?:\s+(?:base|empresa|nif|escritório|€|\d|$))/i);
+      const valM  = texto.match(/(?:base\s+|salário\s+)?([\d][\d\s]*(?:[.,]\d{1,2})?)\s*€/i) || texto.match(/base\s+([\d][\d\s]*(?:[.,]\d{1,2})?)/i);
+      const nif   = (texto.match(/\b(\d{9})\b/) || [])[1] || '';
       return {
+        tipo:          t.includes('cessa') || t.includes('saída') || t.includes('saida') ? 'cessacao' : 'admissao',
         nome,
-        numero:     num,
+        numero:        num,
         nif,
-        empresa:    empM ? empM[1].trim() : '',
-        categoria:  catM ? catM[1].trim() : '',
-        escritorio: esc,
-        dataEntrada: data,
-        valorBase:  valM ? valM[1].replace(/\s/g,'').replace(',','.') : '',
-        tipo:       t.includes('cessa') || t.includes('saída') || t.includes('saida') ? 'cessacao' : 'admissao',
+        empresa:       empM ? empM[1].trim() : '',
+        categoria:     catM ? catM[1].trim() : '',
+        escritorio:    esc,
+        dataEntrada:   dataE,
+        dataSaida:     '',
+        valorBase:     valM ? valM[1].replace(/\s/g, '').replace(',', '.') : '',
+        tipoPagamento: t.includes(' hora') || t.includes('horário') ? 'hora' : 'mes',
       };
     },
   });

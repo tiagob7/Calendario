@@ -90,6 +90,45 @@
     });
   }
 
+  // ── Helpers partilhados ─────────────────────────────────
+
+  /**
+   * Tenta fazer match de um valor devolvido pelo modelo com um ID de escritório
+   * válido, ignorando maiúsculas, acentos e palavras extra.
+   * Ex: "Lisboa (escritório)" → "lisboa"  |  "Porto" → "porto"
+   */
+  function normalizarEscritorio(valor) {
+    if (!valor) return '';
+    const lista = window.getEscritoriosSync ? window.getEscritoriosSync() : [];
+    const limpar = s => s.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remover acentos
+      .replace(/[^a-z0-9]/g, ' ')                       // só letras e números
+      .trim();
+    const v = limpar(valor);
+    // 1. match exacto no id
+    const exacto = lista.find(e => e.id === v);
+    if (exacto) return exacto.id;
+    // 2. id contido no valor ou valor contido no id
+    const parcial = lista.find(e => v.includes(limpar(e.id)) || limpar(e.id).includes(v));
+    if (parcial) return parcial.id;
+    // 3. match no nome do escritório
+    const porNome = lista.find(e => v.includes(limpar(e.nome)) || limpar(e.nome).includes(v));
+    if (porNome) return porNome.id;
+    return '';
+  }
+
+  /**
+   * Define um select pelo value, ignorando maiúsculas.
+   */
+  function setSelect(id, valor) {
+    if (!valor) return;
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const v = valor.toLowerCase().trim();
+    const opt = [...sel.options].find(o => o.value.toLowerCase() === v);
+    if (opt) sel.value = opt.value;
+  }
+
   // ── Estado interno ──────────────────────────────────────
   let _tipoAtual    = null;
   let _tipos        = {};        // registo de tipos: { [nome]: config }
@@ -299,9 +338,10 @@
     },
   };
 
-  // Expõe globalmente — acesso interno ao _processar usa a variável de closure
-  // mas precisamos de a expor para o retry inline do HTML
-  VozAI._transcricaoRef = () => _transcricao;
+  // Expõe globalmente
+  VozAI._transcricaoRef     = () => _transcricao;
+  VozAI.normalizarEscritorio = normalizarEscritorio;
+  VozAI.setSelect            = setSelect;
 
   window.VozAI = VozAI;
 
