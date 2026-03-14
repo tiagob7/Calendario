@@ -12,6 +12,7 @@ Calendario/                    ← pasta raiz do teu repositório GitHub
 ├── auth.js                    ← módulo de autenticação partilhado
 ├── auditoria.js               ← módulo de audit log partilhado
 ├── config-escritorios.js      ← lista de escritórios (lida do Firestore)
+├── utils.js                   ← utilitários partilhados
 │
 ├── login.html                 ← página de login/registo (pública)
 ├── reclamacao-publica.html    ← portal do trabalhador (público, sem login)
@@ -85,9 +86,26 @@ Com a extensão "Live Server" no VS Code:
 | Ficheiro | Função |
 |---|---|
 | `firebase-init.js` | Inicializa o Firebase (evita duplicações). Expõe `window.firebaseAuth` e `window.firebaseDb`. |
+| `utils.js` | Utilitários partilhados: `escHtml()`, `toast()`, `setStatus()`, `fmtShort()`, `fmtDateFull()`, `fmtData()`, `fmtDataHora()`, `confirmar()`. Incluir antes de `auth.js` em todas as páginas. |
 | `auth.js` | Verifica sessão em todas as páginas protegidas. Redireciona para `login.html` se não autenticado. Expõe `window.userProfile`, `window.isAdmin()`, `window.temPermissao()`, `window.escritorioAtivo()`. Injeta a mini-navbar com nome, role e botão logout. |
-| `auditoria.js` | Módulo de audit log. Expõe `window.registarAuditoria()`. Calcula automaticamente o diff antes/depois. Deve ser incluído depois de `auth.js` em todas as páginas protegidas. |
+| `auditoria.js` | Módulo de audit log. Expõe `window.registarAuditoria()`. Calcula automaticamente o diff antes/depois. Incluir depois de `auth.js` em todas as páginas protegidas. |
 | `config-escritorios.js` | Carrega a lista de escritórios do Firestore (`config/escritorios`). Expõe `window.loadEscritorios()`, `window.getEscritoriosSync()`, `window.nomeEscritorio()` e `window.escritoriosValidos()`. |
+
+**Ordem de carregamento obrigatória em cada página protegida:**
+```html
+<!-- 1. SDKs Firebase (CDN) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- 2. Módulos partilhados -->
+<script src="firebase-init.js"></script>
+<script src="utils.js"></script>
+<script src="auth.js"></script>
+<script src="auditoria.js"></script>
+<script src="config-escritorios.js"></script>
+```
+
+> **Nota:** `admissoes.html`, `tarefas.html` e `reclamacoes.html` usam também o SDK `firebase-storage-compat.js` (para anexos) e ainda têm a configuração Firebase inline — duplicação a limpar.
 
 ### Páginas públicas (sem login)
 
@@ -108,69 +126,59 @@ Com a extensão "Live Server" no VS Code:
 
 **`dashboard.html`**
 - Painel geral com resumo de todos os módulos
-- Painéis com drag-and-drop (layout personalizável e guardado localmente)
-- Cada painel pode ser alargado/estreitado individualmente
-- Mostra: comunicados recentes, tarefas ativas, processos de admissão/cessação, reclamações em aberto
-- Admin: filtro de escritório na navbar (ver todos ou filtrar por um)
-- Colaborador: vê apenas dados do seu escritório
+- Painéis com drag-and-drop (layout personalizável, guardado localmente)
+- Mostra: comunicados recentes, tarefas ativas, admissões/cessações, reclamações em aberto
+- 6 listeners com `.limit()` e gestão de `unsubscribe` via `unsubFns[]`
+- Admin: filtro de escritório; Colaborador: vê só o seu escritório
 
 **`tarefas.html`**
-- Listagem e criação de tarefas
-- Filtro por escritório (dinâmico)
+- Listagem e criação de tarefas, filtro por escritório
 - Permissões: `criarTarefas`, `resolverTarefas`
-- Audit log: criação, atualização de estado, eliminação ✔
+- Audit log: criação, estado, eliminação ✔
+- Listener com `.limit(200)` + `unsubscribe` no `beforeunload`
 
 **`comunicados.html`**
-- Comunicados internos por escritório
-- Só quem tem `gerirComunicados` (ou admin) vê o botão "Novo comunicado"
-- Filtro por escritório (dinâmico)
-- ⚠️ Audit log ainda não implementado neste módulo
+- Comunicados internos, filtro por escritório
+- Só quem tem `gerirComunicados` (ou admin) pode criar
+- Audit log: criação, arquivar/restaurar, eliminação ✔
+- Listener com `.limit(200)`
 
 **`admissoes.html`**
-- Processos de admissão e cessação de colaboradores
-- Suporte a anexos de ficheiros
+- Processos de admissão e cessação, suporte a anexos
 - Permissões: `criarAdmissoes`, `resolverAdmissoes`
-- Filtro por escritório (dinâmico)
-- Audit log: criação, atualização, mudança de estado, eliminação ✔
+- Audit log: criação, atualização, estado, eliminação ✔
+- Listener com `.limit(200)` + `unsubscribe` no `beforeunload`
 
 **`reclamacoes.html`**
-- Área interna de gestão das reclamações de horas
-- Exportação para Excel e PDF
-- Suporte a anexos de ficheiros
+- Gestão interna de reclamações de horas, exportação Excel/PDF, anexos
 - Permissão: `criarReclamacoes`
-- Filtro por escritório (dinâmico)
-- Audit log: criação, atualização, eliminação ✔
+- Audit log: criação, estado, eliminação ✔
+- Listener com `.limit(200)` + `unsubscribe` no `beforeunload`
 
 **`calendario.html`**
-- Calendário de carga de trabalho por escritório
+- Calendário de carga de trabalho por escritório, navegação por mês
+- Editor de intensidade por departamento, eventos e cores
 - Permissão de edição: `editarCalendario`
-- Lê o escritório ativo dinamicamente; admin pode alternar entre escritórios
+- Audit log: intensidade, eventos, departamentos ✔
 
 ### Páginas de administração (só admins)
 
 **`definicoes.html`**
-- Hub de administração com acesso rápido a:
-  - Gestão de utilizadores (preview + link para `utilizadores.html`)
-  - Gestão de escritórios (edição inline da lista no Firestore)
-  - Gestão de calendários (link para `gerir-calendarios.html`)
-  - Auditoria (link para `auditoria.html`)
+- Hub de administração: utilizadores, escritórios, calendários, auditoria
 
 **`utilizadores.html`**
-- Listagem completa de utilizadores com filtros por role e escritório
-- Edição de role, escritório, função e estado (ativo/inativo)
-- Gestão individual de permissões granulares
-- Audit log: alterações de permissão ✔ (via `auditoria.js`)
+- Listagem, edição de role/escritório/função/estado e permissões granulares
+- Audit log: permissões ✔
+- Listener com `.limit(500)` + `unsubscribe` no `beforeunload`
 
 **`gerir-calendarios.html`**
-- Publicar feriados nacionais em múltiplos calendários de uma vez
-- Publicar eventos personalizados em múltiplos calendários
-- Apagar eventos em massa
-- Ver e pesquisar eventos por escritório
+- Publicar feriados e eventos em múltiplos calendários de uma vez
+- Apagar eventos em massa, ver/pesquisar por escritório
+- Operações protegidas com `try/catch/finally` — botões sempre reativados
 
 **`auditoria.html`**
-- Histórico completo de alterações em todos os módulos
-- Filtros por módulo, ação, escritório e intervalo de datas
-- Mostra diff campo a campo (antes → depois)
+- Histórico completo com filtros e diff campo a campo
+- Paginação com `startAfter` (carrega por páginas)
 - Acesso restrito a admins
 
 ---
@@ -187,7 +195,7 @@ Com a extensão "Live Server" no VS Code:
 | `editarCalendario` | Editar eventos no calendário de trabalho |
 | `criarReclamacoes` | Criar reclamações de horas na área interna |
 
-Os admins têm todas as permissões automaticamente (sem necessidade de as ativar).
+Os admins têm todas as permissões automaticamente.
 
 ---
 
@@ -195,33 +203,36 @@ Os admins têm todas as permissões automaticamente (sem necessidade de as ativa
 
 | Coleção / Documento | Conteúdo |
 |---|---|
-| `utilizadores/{uid}` | Perfil do utilizador: nome, email, escritório, role, ativo, permissoes, etc. |
-| `tarefas/{id}` | Tarefas com escritório, estado, criadoPor, etc. |
-| `comunicados/{id}` | Comunicados com escritório e estado |
-| `admissoes/{id}` | Processos de admissão/cessação com escritório |
-| `reclamacoes/{id}` | Reclamações de horas com períodos, turnos e ficheiros |
-| `config/escritorios` | Lista de escritórios: `{ lista: [{id, nome, cor, default}] }` |
-| `auditoria/{id}` | Entradas do audit log com diff, módulo, ação, uid, ts |
+| `utilizadores/{uid}` | Perfil: nome, email, escritório, role, ativo, permissoes |
+| `tarefas_todo/{id}` | Tarefas com escritório, estado, ordemChegada, criadoPor |
+| `comunicados/{id}` | Comunicados com escritório, destinosEscritorio, tipo, arquivado |
+| `admissoes/{id}` | Processos com escritório, estado, ficheiros |
+| `reclamacoes_horas/{id}` | Reclamações com períodos, turnos, histórico, ficheiros |
+| `calendarios/{id}` | Calendário por escritório/ano/mês — ID: `calendario_{esc}_{ano}_{mm}` |
+| `config/escritorios` | Lista: `{ lista: [{id, nome, cor, default}] }` |
+| `auditoria/{id}` | Entradas do log com diff, módulo, ação, uid, ts |
 
-Todos os documentos criados a partir de agora incluem:
-- `escritorio` — ex: `"lisboa"`, `"porto"`, `"albufeira"`, `"quarteira"`
-- `criadoPor` — UID do utilizador que criou
-
----
-
-## ⚠️ Estado atual e pontos de atenção
-
-- **Audit log em `comunicados.html`** — ainda não implementado (os restantes módulos já têm).
-- **Audit log em `calendario.html`** — ainda não implementado.
-- **`reclamacao-publica.html`** — página pública sem autenticação; qualquer pessoa com o link pode aceder. Confirma que o link não está exposto publicamente se não for essa a intenção.
-- **Documentos antigos sem `escritorio`** — continuam a aparecer apenas para admins. Para os tornar visíveis a colaboradores, edita o campo `escritorio` manualmente no Firestore.
+Todos os documentos incluem `escritorio` (ex: `"lisboa"`) e `criadoPor` (UID).
 
 ---
 
-## ✅ Próximos passos sugeridos
+## ⚠️ Pontos de atenção actuais
 
-- [ ] Adicionar audit log a `comunicados.html`
-- [ ] Adicionar audit log a `calendario.html`
-- [ ] Rever exposição pública de `reclamacao-publica.html`
+- **Firebase config inline** em `admissoes.html`, `tarefas.html` e `reclamacoes.html` — ainda têm o bloco `firebaseConfig` no HTML além de usarem os SDKs. Funciona, mas é duplicação desnecessária.
+- **`reclamacao-publica.html`** — página sem autenticação nem rate limiting. Qualquer pessoa com o link pode submeter reclamações.
+- **`console.log()` em `utilizadores.html`** — linha de debug que imprime emails de todos os utilizadores na consola do browser. Remover antes de produção.
+- **`auditoria.html` e `utilizadores.html` sem `@media` queries** — sem estilos adaptados para mobile.
+- **CSS duplicado** — `:root`, `.btn`, `.toast`, `.field-label` e ~20 outras classes repetem-se em todos os ficheiros. Extrair para `styles.css` reduziria cerca de 1000 linhas no total.
+- **Documentos antigos sem `escritorio`** — aparecem apenas para admins. Editar manualmente no Firestore se necessário.
+
+---
+
+## ✅ Próximos passos sugeridos (por prioridade)
+
+- [ ] Remover `firebaseConfig` inline de `admissoes.html`, `tarefas.html`, `reclamacoes.html`
+- [ ] Remover `console.log()` de `utilizadores.html`
+- [ ] Extrair CSS partilhado para `styles.css`
+- [ ] Adicionar `@media` queries a `auditoria.html` e `utilizadores.html`
+- [ ] Implementar Firestore Security Rules
+- [ ] Adicionar rate limiting a `reclamacao-publica.html`
 - [ ] Migrar documentos antigos sem campo `escritorio`
-- [ ] Testar fluxo completo com utilizador colaborador (sem permissões de admin)
