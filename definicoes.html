@@ -6,7 +6,7 @@
 <title>Definições</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@600;700;800&display=swap');
-:root{--bg:#f4f4f6;--surface:#fff;--surface2:#f7f7f9;--border:#e2e2e8;--text:#1a1a22;--muted:#8888a0;--accent:#2563eb;--red:#dc2626;--green:#16a34a;}
+:root{--bg:#f4f4f6;--surface:#fff;--surface2:#f7f7f9;--border:#e2e2e8;--text:#1a1a22;--muted:#8888a0;--accent:#2563eb;--red:#dc2626;--green:#16a34a;--amber:#d97706;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;}
 .page{max-width:900px;margin:0 auto;padding:32px 20px 60px;}
@@ -26,6 +26,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 .blue  {background:#eff6ff;color:#2563eb;}
 .purple{background:#f5f3ff;color:#7c3aed;}
 .green {background:#f0fdf4;color:#16a34a;}
+.amber {background:#fffbeb;color:#d97706;}
 .def-card-title{font-family:'Manrope',sans-serif;font-weight:800;font-size:14px;letter-spacing:-.02em;}
 .def-card-desc{font-size:11px;color:var(--muted);line-height:1.7;}
 .def-card-link{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;margin-top:2px;}
@@ -153,6 +154,24 @@ tr:last-child td{border-bottom:none;}
       </div>
       <span class="def-card-link">
         Gerir calendários
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg>
+      </span>
+    </a>
+
+    <!-- Auditoria -->
+    <a class="def-card" href="auditoria.html">
+      <div class="def-card-icon amber">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+          <path d="M8 2a6 6 0 100 12A6 6 0 008 2z"/>
+          <path d="M8 5v3.5l2.5 1.5"/>
+        </svg>
+      </div>
+      <div>
+        <div class="def-card-title">Auditoria</div>
+        <div class="def-card-desc">Histórico detalhado de todas as alterações — quem mudou o quê e quando.</div>
+      </div>
+      <span class="def-card-link">
+        Ver histórico
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg>
       </span>
     </a>
