@@ -369,6 +369,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="utils.js"></script>
 <script>
 firebase.initializeApp({
   apiKey:"AIzaSyBbTDfCCC9o5oxMSMRsvCUC50Iu6L0aqT8",
@@ -925,12 +926,8 @@ function resetForm() {
 }
 
 // ── HELPERS ──
-function escHtml(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-function fmtData(ts) { if (!ts) return '—'; return new Date(ts).toLocaleDateString('pt-PT', { day:'2-digit', month:'2-digit', year:'numeric' }); }
-function fmtDataHora(ts) { if (!ts) return '—'; const d = new Date(ts); return d.toLocaleDateString('pt-PT', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' + d.toLocaleTimeString('pt-PT', {hour:'2-digit',minute:'2-digit'}); }
 function estadoClass(e) { return (e || 'nova').replace(/-/g, ''); }
 function estadoPillClass(e) { const c = estadoClass(e); return c === 'aguardaproc' ? 'aguarda-proc' : c === 'semfundamento' ? 'sem-fundamento' : c; }
-function toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2800); }
 
 // ── INIT: carregar escritórios ──
 const ESCRITORIOS_FALLBACK = [

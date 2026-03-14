@@ -556,6 +556,7 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 </script>
+<script src="utils.js"></script>
 <script src="auth.js"></script>
 <script src="config-escritorios.js"></script>
 <script src="auditoria.js"></script>
@@ -578,10 +579,6 @@ let filtroEscritorio = '';
 let pendingFilesAdm = [];
 
 // ── FIREBASE ──
-function setStatus(msg, color) {
-  const el = document.getElementById('syncStatus');
-  if (el) { el.textContent = msg; el.style.color = color || 'var(--muted)'; }
-}
 
 function startSync() {
   setStatus('A ligar…', '#f59e0b');
@@ -996,10 +993,6 @@ document.getElementById('pinModal').addEventListener('click', function(e){ if(e.
 document.getElementById('pinInput').addEventListener('keydown', e => { if(e.key==='Enter') checkPin(); });
 
 // ── UTILS ──
-function escHtml(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
 
 function fmtDate(dateStr) {
   if (!dateStr) return '—';
@@ -1007,12 +1000,6 @@ function fmtDate(dateStr) {
   return `${d}/${m}/${y}`;
 }
 
-function fmtDateFull(ts) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  return d.toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'})
-    + ' às ' + d.toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
-}
 
 function fmtMoney(val) {
   const n = parseFloat(val);
@@ -1085,12 +1072,6 @@ function fmtBytes(b) {
   return (b / 1048576).toFixed(1) + ' MB';
 }
 
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2800);
-}
 
 // ── INIT — aguarda autenticação ──
 document.addEventListener('authReady', ({ detail }) => {

@@ -352,6 +352,7 @@ firebase.initializeApp({
   appId:"1:596069405321:web:275bb9da220206d3da6c58"
 });
 </script>
+<script src="utils.js"></script>
 <script src="auth.js"></script>
 <script src="config-escritorios.js"></script>
 <script src="auditoria.js"></script>
@@ -684,9 +685,6 @@ function fmtBytes(b) {
   if (b < 1048576) return Math.round(b / 1024) + ' KB';
   return (b / 1048576).toFixed(1) + ' MB';
 }
-function escHtml(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
 
 // ── AUTH ──
 document.addEventListener('authReady',({detail})=>{
@@ -815,8 +813,6 @@ async function deleteRec(id){
 }
 
 // ── HELPERS ──
-function setStatus(msg,color){const el=document.getElementById('syncStatus');if(el){el.textContent=msg;el.style.color=color||'var(--muted)';}}
-function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
 function selCanal(c){selCanalVal=c;document.querySelectorAll('.canal-pill').forEach(b=>b.classList.toggle('sel',b.dataset.c===c));}
 function setFiltro(f){filtroEstado=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.f===f));render();}
 function limparForm(){
@@ -827,8 +823,6 @@ function limparForm(){
   Object.keys(PS).forEach(k=>delete PS[k]); periodoCount=0;
   adicionarPeriodo();
 }
-function fmtData(ts){if(!ts)return'—';return new Date(ts).toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric'});}
-function fmtDataHora(ts){if(!ts)return'—';const d=new Date(ts);return d.toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});}
 function estadoClass(e){return(e||'nova').replace(/-/g,'');}
 function estadoPillClass(e){const c=estadoClass(e);return c==='aguardaproc'?'aguarda-proc':c==='semfundamento'?'sem-fundamento':c;}
 

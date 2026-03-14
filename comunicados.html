@@ -210,6 +210,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-init.js"></script>
+<script src="utils.js"></script>
 <script src="auth.js"></script>
 <script src="auditoria.js"></script>
 <script src="config-escritorios.js"></script>
@@ -291,10 +292,6 @@ document.addEventListener('authReady', ({ detail }) => {
   }, err => { console.error(err); setStatus('Erro', '#dc2626'); });
 });
 
-function setStatus(msg, color) {
-  const el = document.getElementById('syncStatus');
-  if (el) { el.textContent = msg; el.style.color = color || 'var(--muted)'; }
-}
 
 function toggleForm() {
   document.getElementById('formPanel').classList.toggle('open');
@@ -452,10 +449,6 @@ function setFiltroEscritorioCom(val) {
 }
 function toggleCard(id) { if(expandedIds.has(id)) expandedIds.delete(id); else expandedIds.add(id); renderList(); }
 function selTipo(t) { selTipoVal=t; document.querySelectorAll('.tipo-pill').forEach(b=>b.classList.toggle('sel',b.dataset.t===t)); }
-function escHtml(str) { if(!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function fmtShort(ts) { if(!ts) return ''; const diff=Date.now()-ts; if(diff<60000) return 'agora mesmo'; if(diff<3600000) return Math.floor(diff/60000)+' min atrás'; if(diff<86400000) return Math.floor(diff/3600000)+'h atrás'; const d=new Date(ts); return d.toLocaleDateString('pt-PT',{day:'2-digit',month:'short'}); }
-function fmtDateFull(ts) { if(!ts) return ''; const d=new Date(ts); return d.toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'})+' às '+d.toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}); }
-function toast(msg) { const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2800); }
 
 // Escritorios destino — multi-select
 function toggleEscDestino(code, btn) {

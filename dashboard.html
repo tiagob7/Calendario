@@ -464,6 +464,7 @@ h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 
 <!-- Inicialização partilhada + auth module -->
 <script src="firebase-init.js"></script>
+<script src="utils.js"></script>
 <script src="auth.js"></script>
 <script src="config-escritorios.js"></script>
 
@@ -826,10 +827,6 @@ function checkAllLoaded() {
     'Actualizado às ' + now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
 }
 
-function setStatus(msg, color) {
-  const el = document.getElementById('syncStatus');
-  if (el) { el.textContent = msg; el.style.color = color || 'var(--muted)'; }
-}
 
 // ── RENDER ALL ──
 function renderAll() {
@@ -1296,10 +1293,6 @@ function renderActivity() {
 }
 
 // ── UTILS ──
-function escHtml(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
 
 // ── RECLAMAÇÕES ──
 const ESTADOS_ATIVOS_REC = ['nova','verificacao','enviada','confirmada','aguarda-proc'];
@@ -1468,15 +1461,6 @@ function _execGlobalSearch(q) {
   }).join('');
 }
 
-function fmtShort(ts) {
-  if (!ts) return '';
-  const diff = Date.now() - ts;
-  if (diff < 60000)    return 'agora mesmo';
-  if (diff < 3600000)  return Math.floor(diff / 60000) + ' min atrás';
-  if (diff < 86400000) return Math.floor(diff / 3600000) + 'h atrás';
-  const d = new Date(ts);
-  return d.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' });
-}
 </script>
 </body>
 </html>
