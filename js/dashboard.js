@@ -1,5 +1,21 @@
 const db = firebase.firestore();
 
+// ── Dark mode ──
+function toggleDarkMode() {
+  const isDark = document.documentElement.classList.toggle('dark');
+  localStorage.setItem('darkMode', isDark ? '1' : '0');
+  document.querySelectorAll('.dark-toggle-icon').forEach(el => {
+    el.textContent = isDark ? '☀️' : '🌙';
+  });
+}
+// Inicializar ícone do botão com base no estado actual
+(function() {
+  const isDark = document.documentElement.classList.contains('dark');
+  document.querySelectorAll('.dark-toggle-icon').forEach(el => {
+    el.textContent = isDark ? '☀️' : '🌙';
+  });
+})();
+
 // ══════════════════════════════════════════════
 // LAYOUT — drag & drop + toggle largura
 // ══════════════════════════════════════════════

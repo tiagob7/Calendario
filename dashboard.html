@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard — Painel Geral</title>
 <link rel="stylesheet" href="css/dashboard.css">
+<script>if(localStorage.getItem('darkMode')==='1')document.documentElement.classList.add('dark');</script>
 </head>
 <body>
 
@@ -29,6 +30,10 @@
       </svg>
       <span>Definições</span>
     </a>
+    <!-- dark mode toggle -->
+    <button id="darkModeToggle" onclick="toggleDarkMode()" title="Alternar modo escuro" style="margin-left:4px;">
+      <span class="dark-toggle-icon">🌙</span>
+    </button>
     <!-- admin: filtro de escritório (pills) -->
     <div id="adminEscritorioPills" style="display:none;gap:4px;flex-wrap:wrap;align-items:center;"></div>
   </div>
@@ -96,7 +101,9 @@
 
   <!-- KPI ROW -->
   <div class="kpi-row" id="kpiRow">
-    <div class="kpi-card"><div class="loading">A carregar…</div></div>
+    <div class="kpi-card"><div class="skeleton skeleton-line" style="width:40px;height:32px;margin-bottom:6px;border-radius:6px;"></div><div class="skeleton skeleton-line w-3/4" style="height:8px;"></div></div>
+    <div class="kpi-card"><div class="skeleton skeleton-line" style="width:40px;height:32px;margin-bottom:6px;border-radius:6px;"></div><div class="skeleton skeleton-line w-1/2" style="height:8px;"></div></div>
+    <div class="kpi-card"><div class="skeleton skeleton-line" style="width:40px;height:32px;margin-bottom:6px;border-radius:6px;"></div><div class="skeleton skeleton-line w-3/4" style="height:8px;"></div></div>
   </div>
 
   <!-- MAIN GRID -->
@@ -110,7 +117,7 @@
         <a class="panel-link" href="comunicados.html">Ver todos →</a>
         <button class="panel-width-btn" onclick="toggleWidth(this)" title="Alternar largura">⇔</button>
       </div>
-      <div id="comList" class="com-grid"><div class="loading">A carregar…</div></div>
+      <div id="comList" class="com-grid"><div class="loading-skeleton" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;"><div class="skeleton skeleton-line" style="height:10px;width:75%;"></div><div class="skeleton skeleton-line" style="height:10px;width:55%;"></div><div class="skeleton skeleton-line" style="height:10px;width:85%;"></div></div></div>
     </div>
 
     <!-- TAREFAS ACTIVAS -->
@@ -121,7 +128,7 @@
         <a class="panel-link" href="tarefas.html">Ver todas →</a>
         <button class="panel-width-btn" onclick="toggleWidth(this)" title="Alternar largura">⇔</button>
       </div>
-      <div id="tasksList"><div class="loading">A carregar…</div></div>
+      <div id="tasksList"><div class="loading-skeleton" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;"><div class="skeleton skeleton-line" style="height:10px;width:75%;"></div><div class="skeleton skeleton-line" style="height:10px;width:55%;"></div><div class="skeleton skeleton-line" style="height:10px;width:85%;"></div></div></div>
       <div class="progress-wrap" id="progressWrap" style="display:none;">
         <div class="progress-row">
           <span>Progresso geral</span>
@@ -139,7 +146,7 @@
         <a class="panel-link" href="admissoes.html">Ver todos →</a>
         <button class="panel-width-btn" onclick="toggleWidth(this)" title="Alternar largura">⇔</button>
       </div>
-      <div id="admList"><div class="loading">A carregar…</div></div>
+      <div id="admList"><div class="loading-skeleton" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;"><div class="skeleton skeleton-line" style="height:10px;width:75%;"></div><div class="skeleton skeleton-line" style="height:10px;width:55%;"></div><div class="skeleton skeleton-line" style="height:10px;width:85%;"></div></div></div>
     </div>
 
     <!-- RECLAMAÇÕES EM ABERTO -->
@@ -153,7 +160,7 @@
         </div>
         <button class="panel-width-btn" onclick="toggleWidth(this)" title="Alternar largura">⇔</button>
       </div>
-      <div id="recList"><div class="loading">A carregar…</div></div>
+      <div id="recList"><div class="loading-skeleton" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;"><div class="skeleton skeleton-line" style="height:10px;width:75%;"></div><div class="skeleton skeleton-line" style="height:10px;width:55%;"></div><div class="skeleton skeleton-line" style="height:10px;width:85%;"></div></div></div>
     </div>
 
     <!-- CALENDÁRIO MINI -->
@@ -164,7 +171,7 @@
         <a class="panel-link" href="calendario.html">Editar →</a>
         <button class="panel-width-btn" onclick="toggleWidth(this)" title="Alternar largura">⇔</button>
       </div>
-      <div id="calMini"><div class="loading">A carregar…</div></div>
+      <div id="calMini"><div class="loading-skeleton" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;"><div class="skeleton skeleton-line" style="height:10px;width:75%;"></div><div class="skeleton skeleton-line" style="height:10px;width:55%;"></div><div class="skeleton skeleton-line" style="height:10px;width:85%;"></div></div></div>
     </div>
 
     <!-- EVENTOS DO CALENDÁRIO -->
@@ -175,7 +182,7 @@
         <a class="panel-link" href="calendario.html">Ver calendário →</a>
         <button class="panel-width-btn" onclick="toggleWidth(this)" title="Alternar largura">⇔</button>
       </div>
-      <div id="evList"><div class="loading">A carregar…</div></div>
+      <div id="evList"><div class="loading-skeleton" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;"><div class="skeleton skeleton-line" style="height:10px;width:75%;"></div><div class="skeleton skeleton-line" style="height:10px;width:55%;"></div><div class="skeleton skeleton-line" style="height:10px;width:85%;"></div></div></div>
     </div>
 
     <!-- ACTIVIDADE RECENTE -->
@@ -185,7 +192,7 @@
         <span class="panel-title">⚡ Actividade recente</span>
         <button class="panel-width-btn" onclick="toggleWidth(this)" title="Alternar largura">⇔</button>
       </div>
-      <div id="activityList"><div class="loading">A carregar…</div></div>
+      <div id="activityList"><div class="loading-skeleton" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;"><div class="skeleton skeleton-line" style="height:10px;width:75%;"></div><div class="skeleton skeleton-line" style="height:10px;width:55%;"></div><div class="skeleton skeleton-line" style="height:10px;width:85%;"></div></div></div>
     </div>
 
   </div>
