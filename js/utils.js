@@ -151,3 +151,71 @@ window.fmtDataHora = function fmtDataHora(ts) {
     });
   };
 })();
+
+// ── Indicador de offline / reconnection ─────────────────
+(function () {
+  let banner = null;
+  let hideTimer = null;
+
+  const CSS = `
+    #_offlineBanner {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 9500;
+      font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: .04em;
+      padding: 9px 20px; text-align: center;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transform: translateY(100%); transition: transform .25s ease;
+      pointer-events: none;
+    }
+    #_offlineBanner.show { transform: translateY(0); pointer-events: auto; }
+    #_offlineBanner.offline { background: #d97706; color: #fff; }
+    #_offlineBanner.online  { background: #16a34a; color: #fff; }
+    html.dark #_offlineBanner.offline { background: #92400e; }
+    html.dark #_offlineBanner.online  { background: #14532d; }
+    ._ob-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.8);
+      flex-shrink: 0;
+    }
+    ._ob-dot.pulse { animation: obPulse 1.2s ease-in-out infinite; }
+    @keyframes obPulse { 0%,100%{opacity:.3} 50%{opacity:1} }
+  `;
+
+  function injetar() {
+    if (document.getElementById('_offlineBanner')) return;
+    const style = document.createElement('style');
+    style.textContent = CSS;
+    document.head.appendChild(style);
+
+    banner = document.createElement('div');
+    banner.id = '_offlineBanner';
+    document.body.appendChild(banner);
+  }
+
+  function mostrarOffline() {
+    injetar();
+    clearTimeout(hideTimer);
+    banner.className = 'offline show';
+    banner.innerHTML = '<span class="_ob-dot pulse"></span>Sem ligação — os dados podem não estar actualizados';
+  }
+
+  function mostrarOnline() {
+    if (!banner) return; // nunca ficou offline, não há banner
+    clearTimeout(hideTimer);
+    banner.className = 'online show';
+    banner.innerHTML = '<span class="_ob-dot"></span>Ligação restaurada';
+    hideTimer = setTimeout(() => {
+      banner.classList.remove('show');
+    }, 2500);
+  }
+
+  window.addEventListener('offline', mostrarOffline);
+  window.addEventListener('online',  mostrarOnline);
+
+  // Estado inicial (ex: página carregada sem rede)
+  if (!navigator.onLine) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', mostrarOffline);
+    } else {
+      mostrarOffline();
+    }
+  }
+})();
