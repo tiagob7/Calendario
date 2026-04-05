@@ -3,15 +3,19 @@ let roleFilter = '';
 let escritorioFilter = '';
 let searchFilter = '';
 
-const PERMS_DEF = [
-  { key: 'criarTarefas', label: 'Criar Tarefas' },
-  { key: 'resolverTarefas', label: 'Resolver Tarefas' },
-  { key: 'gerirComunicados', label: 'Gerir Comunicados' },
-  { key: 'criarAdmissoes', label: 'Criar Admissoes' },
-  { key: 'resolverAdmissoes', label: 'Resolver Admissoes' },
-  { key: 'editarCalendario', label: 'Editar Calendario' },
-  { key: 'criarReclamacoes', label: 'Reclamacoes de Horas' },
-];
+const PERMS_DEF = (window.getPermissionDefinitions ? window.getPermissionDefinitions() : [])
+  .filter(def => ![
+    'modules.tarefas.view',
+    'modules.comunicados.view',
+    'modules.calendario.view',
+    'modules.admissoes.view',
+    'modules.reclamacoes.view',
+    'modules.escalas.view',
+    'modules.utilizadores.manage',
+    'modules.definicoes.manage',
+    'modules.gerir-calendarios.manage',
+    'modules.auditoria.view',
+  ].includes(def.key));
 
 function fmtDateShort(ts) {
   if (!ts) return '-';
@@ -191,7 +195,7 @@ function renderUsers() {
 
     tbody.appendChild(tr);
 
-    const perms = u.permissoes || {};
+    const permsProfile = { ...u, permissoes: u.permissoes || {} };
     const trPerms = document.createElement('tr');
     trPerms.className = 'perms-row';
     trPerms.id = 'permsRow_' + u.uid;
@@ -201,7 +205,7 @@ function renderUsers() {
       innerHtml = '<span class="perm-all-badge">Admin - todas as permissoes ativas</span>';
     } else {
       innerHtml = PERMS_DEF.map(p => {
-        const checked = perms[p.key] === true;
+        const checked = window.temPermissaoNoPerfil ? window.temPermissaoNoPerfil(permsProfile, p.key) : false;
         return `<div class="perm-item ${checked ? 'on' : ''}" id="permItem_${u.uid}_${p.key}">
           <input type="checkbox" id="perm_${u.uid}_${p.key}" ${checked ? 'checked' : ''} onchange="setPermissao('${u.uid}','${p.key}',this.checked)">
           <label for="perm_${u.uid}_${p.key}">${p.label}</label>

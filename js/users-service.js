@@ -1,14 +1,4 @@
 (function() {
-  const DEFAULT_PERMISSIONS = {
-    criarTarefas: false,
-    resolverTarefas: false,
-    gerirComunicados: false,
-    criarAdmissoes: false,
-    resolverAdmissoes: false,
-    editarCalendario: false,
-    criarReclamacoes: false,
-  };
-
   function getDb() {
     if (typeof firebase === 'undefined' || !firebase.firestore) return null;
     return firebase.firestore();
@@ -18,6 +8,31 @@
     const db = getDb();
     if (!db) throw new Error('Firestore indisponivel.');
     return db.collection('utilizadores');
+  }
+
+  function getDefaultPermissions() {
+    if (typeof window.createDefaultPermissions === 'function') {
+      return window.createDefaultPermissions();
+    }
+    return { modules: {} };
+  }
+
+  function normalizePermissions(value) {
+    if (typeof window.normalizePermissions === 'function') {
+      return window.normalizePermissions(value);
+    }
+    return value || getDefaultPermissions();
+  }
+
+  function getLegacyKeys(permission) {
+    const defs = typeof window.getPermissionDefinitions === 'function'
+      ? window.getPermissionDefinitions()
+      : [];
+    const canonical = typeof window.resolvePermissionKey === 'function'
+      ? window.resolvePermissionKey(permission)
+      : permission;
+    const found = defs.find(def => def.key === canonical);
+    return found && Array.isArray(found.legacyKeys) ? found.legacyKeys.slice() : [];
   }
 
   function buildProfile(data) {
@@ -37,16 +52,16 @@
       ativo: data.ativo !== false,
       criadoEm: data.criadoEm || Date.now(),
       ultimoAcesso: data.ultimoAcesso || Date.now(),
-      permissoes: {
-        ...DEFAULT_PERMISSIONS,
-        ...(data.permissoes || {}),
-      },
+      permissoes: normalizePermissions(data.permissoes || getDefaultPermissions()),
     };
   }
 
   async function listAll() {
     const snap = await usersCollection().get();
-    return snap.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
+    return snap.docs.map(doc => {
+      const data = doc.data();
+      return { uid: doc.id, ...data, permissoes: normalizePermissions(data.permissoes) };
+    });
   }
 
   function listenAll(options) {
@@ -55,7 +70,10 @@
     if (cfg.limit) query = query.limit(cfg.limit);
 
     return query.onSnapshot(snap => {
-      const users = snap.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
+      const users = snap.docs.map(doc => {
+        const data = doc.data();
+        return { uid: doc.id, ...data, permissoes: normalizePermissions(data.permissoes) };
+      });
       if (typeof cfg.onData === 'function') cfg.onData(users, snap);
     }, err => {
       if (typeof cfg.onError === 'function') cfg.onError(err);
@@ -69,8 +87,18 @@
 
   async function setPermission(uid, permission, value) {
     if (!permission) throw new Error('Permissao em falta.');
+
+    const canonical = typeof window.resolvePermissionKey === 'function'
+      ? window.resolvePermissionKey(permission)
+      : permission;
+
     const patch = {};
-    patch['permissoes.' + permission] = !!value;
+    patch['permissoes.' + canonical] = !!value;
+
+    getLegacyKeys(permission).forEach(legacyKey => {
+      patch['permissoes.' + legacyKey] = !!value;
+    });
+
     await update(uid, patch);
   }
 
@@ -124,7 +152,7 @@
   }
 
   window.UsersService = {
-    DEFAULT_PERMISSIONS: { ...DEFAULT_PERMISSIONS },
+    DEFAULT_PERMISSIONS: getDefaultPermissions(),
     buildProfile,
     listAll,
     listenAll,

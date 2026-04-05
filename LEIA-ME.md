@@ -215,6 +215,20 @@ Quando fores criar uma ferramenta nova, a ideia agora e esta:
 3. Carregar a stack comum da app.
 4. Usar a mesma logica de escritorio ativo e permissao.
 
+### Permissoes por modulo
+
+A app passou a suportar permissoes canonicas por modulo, por exemplo:
+
+- `modules.tarefas.view`
+- `modules.tarefas.create`
+- `modules.tarefas.resolve`
+- `modules.comunicados.manage`
+- `modules.admissoes.create`
+- `modules.admissoes.resolve`
+- `modules.calendario.edit`
+
+As permissoes antigas continuam a funcionar por compatibilidade, mas o padrao novo para modulos futuros deve usar as chaves `modules.<modulo>.<acao>`.
+
 ### Exemplo minimo
 
 Se criares um modulo novo `frota.html`:

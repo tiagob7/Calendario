@@ -1,6 +1,5 @@
-// auth.js - autenticacao partilhada
-// Foco: sessao, perfil, permissao e eventos authReady.
-// A camada de plataforma visual/nav fica em js/app-platform.js.
+// auth.js - autenticacao, sessao e permissoes
+// Navbar e bootstrap visual vivem em js/app-platform.js.
 
 window.currentUser = null;
 window.userProfile = null;
@@ -10,6 +9,146 @@ window.userProfile = null;
     document.documentElement.classList.add('dark');
   }
 })();
+
+const PERMISSION_DEFINITIONS = [
+  { key: 'modules.tarefas.view', label: 'Ver Tarefas' },
+  { key: 'modules.tarefas.create', label: 'Criar Tarefas', legacyKeys: ['criarTarefas'] },
+  { key: 'modules.tarefas.resolve', label: 'Resolver Tarefas', legacyKeys: ['resolverTarefas'] },
+  { key: 'modules.comunicados.view', label: 'Ver Comunicados' },
+  { key: 'modules.comunicados.manage', label: 'Gerir Comunicados', legacyKeys: ['gerirComunicados'] },
+  { key: 'modules.calendario.view', label: 'Ver Calendario' },
+  { key: 'modules.calendario.edit', label: 'Editar Calendario', legacyKeys: ['editarCalendario'] },
+  { key: 'modules.admissoes.view', label: 'Ver Admissoes' },
+  { key: 'modules.admissoes.create', label: 'Criar Admissoes', legacyKeys: ['criarAdmissoes'] },
+  { key: 'modules.admissoes.resolve', label: 'Resolver Admissoes', legacyKeys: ['resolverAdmissoes'] },
+  { key: 'modules.reclamacoes.view', label: 'Ver Reclamacoes' },
+  { key: 'modules.reclamacoes.manage', label: 'Gerir Reclamacoes', legacyKeys: ['criarReclamacoes'] },
+  { key: 'modules.escalas.view', label: 'Ver Escalas' },
+  { key: 'modules.escalas.manage', label: 'Gerir Escalas' },
+  { key: 'modules.utilizadores.manage', label: 'Gerir Utilizadores' },
+  { key: 'modules.definicoes.manage', label: 'Gerir Definicoes' },
+  { key: 'modules.gerir-calendarios.manage', label: 'Gerir Calendarios' },
+  { key: 'modules.auditoria.view', label: 'Ver Auditoria' },
+];
+
+const LEGACY_PERMISSION_MAP = PERMISSION_DEFINITIONS.reduce((acc, def) => {
+  (def.legacyKeys || []).forEach(legacyKey => {
+    acc[legacyKey] = def.key;
+  });
+  return acc;
+}, {});
+
+function clone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function getByPath(obj, path) {
+  return String(path || '')
+    .split('.')
+    .reduce((acc, part) => (acc && Object.prototype.hasOwnProperty.call(acc, part) ? acc[part] : undefined), obj);
+}
+
+function setByPath(obj, path, value) {
+  const parts = String(path || '').split('.');
+  let ref = obj;
+  while (parts.length > 1) {
+    const part = parts.shift();
+    if (!ref[part] || typeof ref[part] !== 'object') ref[part] = {};
+    ref = ref[part];
+  }
+  ref[parts[0]] = value;
+}
+
+function createDefaultPermissions() {
+  const perms = {
+    modules: {
+      tarefas: { view: true, create: false, resolve: false },
+      comunicados: { view: true, manage: false },
+      calendario: { view: true, edit: false },
+      admissoes: { view: true, create: false, resolve: false },
+      reclamacoes: { view: true, manage: false },
+      escalas: { view: true, manage: false },
+      utilizadores: { manage: false },
+      definicoes: { manage: false },
+      'gerir-calendarios': { manage: false },
+      auditoria: { view: false },
+    },
+  };
+
+  PERMISSION_DEFINITIONS.forEach(def => {
+    const canonicalValue = getByPath(perms, def.key);
+    (def.legacyKeys || []).forEach(legacyKey => {
+      perms[legacyKey] = canonicalValue === true;
+    });
+  });
+
+  return perms;
+}
+
+function normalizePermissions(input) {
+  const normalized = createDefaultPermissions();
+  const source = input && typeof input === 'object' ? input : {};
+
+  if (source.modules && typeof source.modules === 'object') {
+    Object.keys(source.modules).forEach(moduleKey => {
+      const moduleValue = source.modules[moduleKey];
+      if (!moduleValue || typeof moduleValue !== 'object') return;
+      Object.keys(moduleValue).forEach(actionKey => {
+        if (typeof moduleValue[actionKey] === 'boolean') {
+          setByPath(normalized, ['modules', moduleKey, actionKey].join('.'), moduleValue[actionKey]);
+        }
+      });
+    });
+  }
+
+  PERMISSION_DEFINITIONS.forEach(def => {
+    const canonicalFromSource = getByPath(source, def.key);
+    if (typeof canonicalFromSource === 'boolean') {
+      setByPath(normalized, def.key, canonicalFromSource);
+    }
+
+    (def.legacyKeys || []).forEach(legacyKey => {
+      if (typeof source[legacyKey] === 'boolean') {
+        setByPath(normalized, def.key, source[legacyKey]);
+      }
+    });
+
+    const finalValue = getByPath(normalized, def.key) === true;
+    (def.legacyKeys || []).forEach(legacyKey => {
+      normalized[legacyKey] = finalValue;
+    });
+  });
+
+  return normalized;
+}
+
+window.getPermissionDefinitions = function() {
+  return clone(PERMISSION_DEFINITIONS);
+};
+
+window.resolvePermissionKey = function(permissionKey) {
+  return LEGACY_PERMISSION_MAP[permissionKey] || permissionKey;
+};
+
+window.createDefaultPermissions = createDefaultPermissions;
+window.normalizePermissions = normalizePermissions;
+
+window.temPermissaoNoPerfil = function(profile, permissionKey) {
+  if (!profile) return false;
+  if (profile.role === 'admin') return true;
+
+  const canonicalKey = window.resolvePermissionKey(permissionKey);
+  const permissions = normalizePermissions(profile.permissoes);
+  const value = getByPath(permissions, canonicalKey);
+
+  if (typeof value === 'boolean') return value;
+
+  if (typeof permissions[permissionKey] === 'boolean') {
+    return permissions[permissionKey];
+  }
+
+  return false;
+};
 
 const overlay = document.createElement('div');
 overlay.id = 'authOverlay';
@@ -22,9 +161,8 @@ window.isAdmin = function() {
   return window.userProfile && window.userProfile.role === 'admin';
 };
 
-window.temPermissao = function(perm) {
-  if (window.isAdmin()) return true;
-  return !!(window.userProfile && window.userProfile.permissoes && window.userProfile.permissoes[perm] === true);
+window.temPermissao = function(permissionKey) {
+  return window.temPermissaoNoPerfil(window.userProfile, permissionKey);
 };
 
 window.setFiltroEscritorio = function(escritorioId) {
@@ -60,15 +198,7 @@ function getBasicProfile(user) {
     ativo: true,
     criadoEm: Date.now(),
     ultimoAcesso: Date.now(),
-    permissoes: {
-      criarTarefas: false,
-      resolverTarefas: false,
-      gerirComunicados: false,
-      criarAdmissoes: false,
-      resolverAdmissoes: false,
-      editarCalendario: false,
-      criarReclamacoes: false,
-    },
+    permissoes: createDefaultPermissions(),
   };
 }
 
@@ -93,7 +223,11 @@ firebase.auth().onAuthStateChanged(async user => {
   }
 
   if (snap && snap.exists) {
-    window.userProfile = snap.data();
+    const rawProfile = snap.data();
+    window.userProfile = {
+      ...rawProfile,
+      permissoes: normalizePermissions(rawProfile.permissoes),
+    };
 
     if (window.userProfile.ativo === false && window.userProfile.role !== 'admin') {
       await firebase.auth().signOut();
