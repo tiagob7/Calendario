@@ -309,16 +309,17 @@ async function criarUtilizador() {
   }
 }
 
-document.addEventListener('authReady', ({ detail }) => {
+window.bootProtectedPage({
+  activePage: 'utilizadores',
+  moduleId: 'utilizadores',
+  requireAdmin: true,
+}, ({ profile }) => {
   // proteger rota — só admin
   if (!window.isAdmin || !window.isAdmin()) {
     window.location.href = 'dashboard.html';
     return;
   }
 
-  window.renderNavbar('dashboard');
-
-  const profile = detail.profile;
   const me = profile ? (profile.nomeCompleto || profile.nome || profile.email || '') : '';
   const meInfo = document.getElementById('meInfo');
   if (meInfo) meInfo.textContent = 'Sessão iniciada como Admin: ' + me;

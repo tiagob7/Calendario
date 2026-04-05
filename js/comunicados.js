@@ -7,11 +7,10 @@ let escDestinosSel = ['todos'];
 const TIPO_LABEL = { geral:'Geral', urgente:'Urgente', info:'Info', aviso:'Aviso' };
 const TIPO_EMOJI = { geral:'📢', urgente:'🚨', info:'ℹ️', aviso:'⚠️' };
 
-document.addEventListener('authReady', ({ detail }) => {
-  window.renderNavbar('comunicados');
-  const profile    = detail.profile;
-  const isAdmin    = window.isAdmin();
-  const escritorio = window.escritorioAtivo();
+window.bootProtectedPage({
+  activePage: 'comunicados',
+  moduleId: 'comunicados',
+}, ({ profile, isAdmin, escritorio }) => {
 
   // botão novo comunicado para quem tem permissão; preencher autor
   if (window.temPermissao('gerirComunicados')) {

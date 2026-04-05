@@ -33,6 +33,48 @@
     return '';
   };
 
+  window.bootProtectedPage = function(options, onReady) {
+    const cfg = options || {};
+
+    document.addEventListener('authReady', function handleProtectedPage(event) {
+      const detail = event && event.detail ? event.detail : {};
+      const profile = detail.profile || window.userProfile || null;
+      const isAdmin = window.isAdmin ? window.isAdmin() : false;
+
+      if (cfg.moduleId && typeof window.userCanAccessModule === 'function' && !window.userCanAccessModule(cfg.moduleId, profile)) {
+        if (typeof cfg.onDenied === 'function') {
+          cfg.onDenied({ user: detail.user || window.currentUser || null, profile, isAdmin, escritorio: '' });
+        } else {
+          window.location.href = cfg.redirectTo || 'dashboard.html';
+        }
+        return;
+      }
+
+      if (cfg.requireAdmin && !isAdmin) {
+        if (typeof cfg.onDenied === 'function') {
+          cfg.onDenied({ user: detail.user || window.currentUser || null, profile, isAdmin, escritorio: '' });
+        } else {
+          window.location.href = cfg.redirectTo || 'dashboard.html';
+        }
+        return;
+      }
+
+      if (cfg.renderNavbar !== false && cfg.activePage) {
+        window.renderNavbar(cfg.activePage);
+      }
+
+      const context = {
+        user: detail.user || window.currentUser || null,
+        profile,
+        isAdmin,
+        escritorio: window.escritorioAtivo(),
+        moduleId: cfg.moduleId || cfg.activePage || '',
+      };
+
+      if (typeof onReady === 'function') onReady(context);
+    }, { once: true });
+  };
+
   window.renderNavbar = function(activePage) {
     if (activePage === 'dashboard') return;
 

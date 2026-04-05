@@ -12,12 +12,10 @@ const PRIO_LABEL = { urgente:'Urgente', normal:'Normal', baixa:'Baixa' };
 
 let filterEscritorio = '';
 
-document.addEventListener('authReady', ({ detail }) => {
-  window.renderNavbar('tarefas');
-
-  const profile    = detail.profile;
-  const isAdmin    = window.isAdmin();
-  const escritorio = window.escritorioAtivo();
+window.bootProtectedPage({
+  activePage: 'tarefas',
+  moduleId: 'tarefas',
+}, ({ profile, isAdmin, escritorio }) => {
 
   // mostrar/esconder form de criar tarefa
   const canCreate = window.temPermissao('criarTarefas');

@@ -37,14 +37,15 @@ function ordenarEscritorios() {
     .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome, 'pt-PT'));
 }
 
-document.addEventListener('authReady', () => {
-  window.renderNavbar('definicoes');
-  if (!window.isAdmin()) {
+window.bootProtectedPage({
+  activePage: 'definicoes',
+  moduleId: 'definicoes',
+  requireAdmin: true,
+  onDenied() {
     document.querySelector('.page').innerHTML =
       '<div style="text-align:center;padding:80px 20px;font-size:13px;color:var(--muted);">Acesso restrito a administradores.</div>';
-    return;
-  }
-
+  },
+}, () => {
   db = firebase.firestore();
   renderColorSwatches();
 
