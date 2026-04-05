@@ -4,14 +4,6 @@ const CORES = [
   '#6366f1', '#059669', '#ea580c', '#9333ea',
 ];
 
-const ESC_DEFAULT = [
-  { id: 'quarteira', nome: 'Quarteira', cor: '#2563eb', default: true,  ativo: true, ordem: 10 },
-  { id: 'albufeira', nome: 'Albufeira', cor: '#7c3aed', default: false, ativo: true, ordem: 20 },
-  { id: 'lisboa',    nome: 'Lisboa',    cor: '#db2777', default: false, ativo: true, ordem: 30 },
-  { id: 'porto',     nome: 'Porto',     cor: '#16a34a', default: false, ativo: true, ordem: 40 },
-];
-
-let db;
 let paineis = { Utilizadores: false, Escritorios: false };
 let escritoriosData = [];
 let utilizadoresAll = [];
@@ -19,22 +11,8 @@ let escEditandoId = null;
 let escApagarId = null;
 let corSel = CORES[0];
 
-function normalizarEscritorio(item, index) {
-  return {
-    id: String(item.id || '').trim().toLowerCase(),
-    nome: item.nome || item.id || '',
-    cor: item.cor || CORES[0],
-    default: !!item.default,
-    ativo: item.ativo !== false,
-    ordem: Number.isFinite(item.ordem) ? item.ordem : (index + 1) * 10,
-  };
-}
-
 function ordenarEscritorios() {
-  escritoriosData = escritoriosData
-    .map(normalizarEscritorio)
-    .filter(e => e.id)
-    .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome, 'pt-PT'));
+  escritoriosData = (window.OfficesService ? window.OfficesService.normalizeList(escritoriosData) : escritoriosData.slice());
 }
 
 window.bootProtectedPage({
@@ -46,7 +24,6 @@ window.bootProtectedPage({
       '<div style="text-align:center;padding:80px 20px;font-size:13px;color:var(--muted);">Acesso restrito a administradores.</div>';
   },
 }, () => {
-  db = firebase.firestore();
   renderColorSwatches();
 
   document.getElementById('escNome').addEventListener('input', function() {
@@ -91,9 +68,10 @@ function togglePainel(nome) {
 async function carregarUtilizadores() {
   const body = document.getElementById('utilizadoresBody');
   try {
-    const snap = await db.collection('utilizadores').get();
-    const users = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-      .sort((a, b) => (a.nomeCompleto || '').localeCompare(b.nomeCompleto || ''));
+    utilizadoresAll = await window.UsersService.listAll();
+    const users = utilizadoresAll
+      .slice()
+      .sort((a, b) => (a.nomeCompleto || a.nome || '').localeCompare((b.nomeCompleto || b.nome || ''), 'pt-PT'));
 
     if (!users.length) {
       body.innerHTML = '<p style="font-size:11px;color:var(--muted);text-align:center;padding:16px 0;">Sem utilizadores.</p>';
@@ -106,9 +84,9 @@ async function carregarUtilizadores() {
           <thead><tr><th>Nome</th><th>Email</th><th>Escritorio</th><th>Role</th><th>Estado</th></tr></thead>
           <tbody>${users.map(u => `
             <tr>
-              <td>${u.nomeCompleto || u.nome || '—'}</td>
-              <td style="color:var(--muted);">${u.email || '—'}</td>
-              <td style="text-transform:capitalize;">${window.nomeEscritorio ? window.nomeEscritorio(u.escritorio) : (u.escritorio || '—')}</td>
+              <td>${u.nomeCompleto || u.nome || '-'}</td>
+              <td style="color:var(--muted);">${u.email || '-'}</td>
+              <td style="text-transform:capitalize;">${window.nomeEscritorio ? window.nomeEscritorio(u.escritorio) : (u.escritorio || '-')}</td>
               <td><span class="badge ${u.role === 'admin' ? 'badge-admin' : 'badge-colab'}">${u.role === 'admin' ? 'Admin' : 'Colaborador'}</span></td>
               <td><span class="badge ${u.ativo !== false ? 'badge-ativo' : 'badge-inativo'}">${u.ativo !== false ? 'Ativo' : 'Inativo'}</span></td>
             </tr>`).join('')}
@@ -116,9 +94,8 @@ async function carregarUtilizadores() {
         </table>
       </div>
       <div style="margin-top:14px;text-align:right;">
-        <a href="utilizadores.html" class="btn btn-primary">Gerir utilizadores →</a>
+        <a href="utilizadores.html" class="btn btn-primary">Gerir utilizadores -></a>
       </div>`;
-    utilizadoresAll = users;
   } catch (e) {
     body.innerHTML = `<p style="font-size:11px;color:#dc2626;text-align:center;padding:16px 0;">Erro: ${e.message}</p>`;
   }
@@ -126,23 +103,13 @@ async function carregarUtilizadores() {
 
 async function carregarEscritorios() {
   const wrap = document.getElementById('escritoriosList');
-  wrap.innerHTML = '<p style="font-size:11px;color:var(--muted);text-align:center;padding:16px 0;">A carregar…</p>';
+  wrap.innerHTML = '<p style="font-size:11px;color:var(--muted);text-align:center;padding:16px 0;">A carregar...</p>';
 
   try {
-    const snap = await db.collection('config').doc('escritorios').get();
-    if (snap.exists && snap.data().lista?.length) {
-      escritoriosData = snap.data().lista.map(normalizarEscritorio);
-    } else {
-      escritoriosData = JSON.parse(JSON.stringify(ESC_DEFAULT));
-      await db.collection('config').doc('escritorios').set({ lista: escritoriosData });
-    }
-
-    if (!utilizadoresAll.length) {
-      const usSnap = await db.collection('utilizadores').get();
-      utilizadoresAll = usSnap.docs.map(d => d.data());
-    }
+    escritoriosData = await window.OfficesService.load({ includeInactive: true });
+    utilizadoresAll = utilizadoresAll.length ? utilizadoresAll : await window.UsersService.listAll();
   } catch (e) {
-    escritoriosData = JSON.parse(JSON.stringify(ESC_DEFAULT));
+    escritoriosData = window.OfficesService ? window.OfficesService.DEFAULT_OFFICES.slice() : [];
   }
 
   ordenarEscritorios();
@@ -151,6 +118,8 @@ async function carregarEscritorios() {
 
 function renderLista() {
   const wrap = document.getElementById('escritoriosList');
+  if (!wrap) return;
+
   if (!escritoriosData.length) {
     wrap.innerHTML = '<p style="font-size:11px;color:var(--muted);text-align:center;padding:16px 0;">Nenhum escritorio.</p>';
     return;
@@ -174,7 +143,7 @@ function renderLista() {
           <button class="btn btn-danger btn-sm" onclick="pedirApagar('${esc.id}','${esc.nome}',${n})">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px;"><path d="M3 5h10l-1 9H4L3 5z"/><path d="M1 5h14M6 5V3h4v2"/></svg>
             Apagar
-          </button>` : `<span style="font-size:9px;color:#bbb;padding:0 6px;">base</span>`}
+          </button>` : '<span style="font-size:9px;color:#bbb;padding:0 6px;">base</span>'}
         </div>
       </div>`;
   }).join('');
@@ -222,26 +191,24 @@ async function guardarEscritorio() {
 
   const btn = document.getElementById('btnGuardar');
   btn.disabled = true;
-  btn.textContent = 'A guardar…';
+  btn.textContent = 'A guardar...';
 
   try {
-    if (escEditandoId) {
-      const idx = escritoriosData.findIndex(e => e.id === escEditandoId);
-      if (idx !== -1) {
-        escritoriosData[idx] = { ...escritoriosData[idx], nome, cor: corSel, ativo, ordem };
-      }
-    } else {
-      if (escritoriosData.find(e => e.id === id)) {
-        toast('Ja existe um escritorio com esse ID.');
-        btn.disabled = false;
-        btn.textContent = 'Guardar';
-        return;
-      }
-      escritoriosData.push({ id, nome, cor: corSel, default: false, ativo, ordem });
+    if (!escEditandoId && escritoriosData.find(e => e.id === id)) {
+      toast('Ja existe um escritorio com esse ID.');
+      btn.disabled = false;
+      btn.textContent = 'Guardar';
+      return;
     }
 
-    ordenarEscritorios();
-    await db.collection('config').doc('escritorios').set({ lista: escritoriosData });
+    escritoriosData = await window.OfficesService.upsert({
+      id: escEditandoId || id,
+      nome,
+      cor: corSel,
+      ativo,
+      ordem,
+      default: escritoriosData.find(e => e.id === (escEditandoId || id) && e.default === true) ? true : false,
+    });
     fecharModal();
     renderLista();
   } catch (e) {
@@ -268,9 +235,8 @@ async function confirmarApagar() {
   btn.disabled = true;
 
   try {
-    escritoriosData = escritoriosData.filter(e => e.id !== escApagarId);
-    ordenarEscritorios();
-    await db.collection('config').doc('escritorios').set({ lista: escritoriosData });
+    escritoriosData = await window.OfficesService.remove(escApagarId);
+    utilizadoresAll = await window.UsersService.listAll();
     fecharModal();
     renderLista();
   } catch (e) {

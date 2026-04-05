@@ -57,6 +57,8 @@ A app passou a ter uma camada comum para suportar modulos novos sem repetir logi
 | Ficheiro | Funcao |
 |---|---|
 | `js/module-registry.js` | Registry central dos modulos da app, com id, rota, grupo, ordem e regras de visibilidade |
+| `js/users-service.js` | Servico comum de utilizadores, com criacao de contas, updates, permissoes e listeners |
+| `js/offices-service.js` | Servico comum de escritorios, com leitura, escrita, ordenacao e remocao com cleanup |
 | `js/config-escritorios.js` | Servico comum de escritorios, com cache, escritorio default, escritorios ativos e helpers de consulta |
 | `js/app-platform.js` | Camada de plataforma para navbar, escritorio ativo, bootstrap comum de paginas protegidas e integracao da navegacao com o registry |
 | `js/auth.js` | Autenticacao, sessao e helpers de permissao |
@@ -113,6 +115,8 @@ Calendario/
 |   |-- utils.js
 |   |-- auth.js
 |   |-- auditoria.js
+|   |-- users-service.js
+|   |-- offices-service.js
 |   |-- config-escritorios.js
 |   |-- module-registry.js
 |   |-- app-platform.js
@@ -158,6 +162,7 @@ Ordem recomendada:
 <script src="js/utils.js"></script>
 <script src="js/module-registry.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/offices-service.js"></script>
 <script src="js/config-escritorios.js"></script>
 <script src="js/app-platform.js"></script>
 
@@ -168,7 +173,8 @@ Ordem recomendada:
 Notas:
 
 - `module-registry.js` define os modulos e a sua ordem/visibilidade.
-- `config-escritorios.js` resolve a configuracao de escritorios.
+- `offices-service.js` guarda a logica principal de escritorios.
+- `config-escritorios.js` funciona como camada de compatibilidade para a API global ja usada pelos modulos.
 - `app-platform.js` cola a navegacao, o escritorio ativo e o bootstrap das paginas ao resto da app.
 
 ### Bootstrap comum
