@@ -1,13 +1,13 @@
-// Configuração partilhada de escritórios
-// Lê a lista de escritórios de Firestore (config/escritorios)
-// e expõe helpers globais para o resto da app.
+// Configuracao partilhada de escritorios
+// Le a lista de escritorios de Firestore (config/escritorios)
+// e expoe helpers globais para o resto da app.
 
 (function() {
   const DEFAULT_ESCRITORIOS = [
-    { id: 'quarteira', nome: 'Quarteira', cor: '#2563eb', default: true },
-    { id: 'albufeira', nome: 'Albufeira', cor: '#7c3aed', default: true },
-    { id: 'lisboa',    nome: 'Lisboa',    cor: '#db2777', default: true },
-    { id: 'porto',     nome: 'Porto',     cor: '#16a34a', default: true },
+    { id: 'quarteira', nome: 'Quarteira', cor: '#2563eb', default: true,  ativo: true, ordem: 10 },
+    { id: 'albufeira', nome: 'Albufeira', cor: '#7c3aed', default: false, ativo: true, ordem: 20 },
+    { id: 'lisboa',    nome: 'Lisboa',    cor: '#db2777', default: false, ativo: true, ordem: 30 },
+    { id: 'porto',     nome: 'Porto',     cor: '#16a34a', default: false, ativo: true, ordem: 40 },
   ];
 
   let cache = null;
@@ -15,12 +15,18 @@
 
   function normalizarLista(lista) {
     if (!Array.isArray(lista) || !lista.length) return DEFAULT_ESCRITORIOS.slice();
-    return lista.map(e => ({
-      id: String(e.id || '').trim().toLowerCase(),
-      nome: e.nome || e.id || '',
-      cor: e.cor || '#2563eb',
-      default: !!e.default,
-    })).filter(e => e.id);
+
+    return lista
+      .map((e, index) => ({
+        id: String(e.id || '').trim().toLowerCase(),
+        nome: e.nome || e.id || '',
+        cor: e.cor || '#2563eb',
+        default: !!e.default,
+        ativo: e.ativo !== false,
+        ordem: Number.isFinite(e.ordem) ? e.ordem : (index + 1) * 10,
+      }))
+      .filter(e => e.id)
+      .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome, 'pt-PT'));
   }
 
   function capitalizarId(id) {
@@ -34,15 +40,22 @@
     return id.charAt(0).toUpperCase() + id.slice(1);
   }
 
-  // Carrega do Firestore (uma vez) e guarda em cache
-  window.loadEscritorios = function loadEscritorios() {
-    if (promise) return promise;
-    if (cache) return Promise.resolve(cache);
+  function getLista(options) {
+    const cfg = options || {};
+    const lista = (cache || DEFAULT_ESCRITORIOS).slice();
+    if (cfg.includeInactive) return lista;
+    return lista.filter(e => e.ativo !== false);
+  }
+
+  window.loadEscritorios = function loadEscritorios(options) {
+    const cfg = options || {};
+
+    if (promise) return promise.then(() => getLista(cfg));
+    if (cache) return Promise.resolve(getLista(cfg));
 
     if (typeof firebase === 'undefined' || !firebase.firestore) {
-      // Firebase ainda não pronto — devolve defaults
       cache = DEFAULT_ESCRITORIOS.slice();
-      return Promise.resolve(cache);
+      return Promise.resolve(getLista(cfg));
     }
 
     const db = firebase.firestore();
@@ -56,22 +69,20 @@
         } else {
           cache = DEFAULT_ESCRITORIOS.slice();
         }
-        return cache;
+        return getLista(cfg);
       })
       .catch(() => {
         cache = DEFAULT_ESCRITORIOS.slice();
-        return cache;
+        return getLista(cfg);
       });
 
     return promise;
   };
 
-  // Versão síncrona — pode devolver defaults se ainda não carregou
-  window.getEscritoriosSync = function getEscritoriosSync() {
-    return cache ? cache.slice() : DEFAULT_ESCRITORIOS.slice();
+  window.getEscritoriosSync = function getEscritoriosSync(options) {
+    return getLista(options).slice();
   };
 
-  // Nome legível para um ID de escritório
   window.nomeEscritorio = function nomeEscritorio(id) {
     if (!id) return '';
     const lista = cache || DEFAULT_ESCRITORIOS;
@@ -80,10 +91,36 @@
     return capitalizarId(id);
   };
 
-  // Lista simples de IDs válidos (baseada na cache ou defaults)
   window.escritoriosValidos = function escritoriosValidos() {
-    const lista = cache || DEFAULT_ESCRITORIOS;
-    return lista.map(e => e.id);
+    return getLista().map(e => e.id);
+  };
+
+  window.escritorioExiste = function escritorioExiste(id, options) {
+    if (!id) return false;
+    return getLista(options).some(e => e.id === id);
+  };
+
+  window.getEscritorioDefault = function getEscritorioDefault(options) {
+    const lista = getLista(options);
+    return lista.find(e => e.default) || lista[0] || null;
+  };
+
+  window.getEscritoriosAtivosSync = function getEscritoriosAtivosSync() {
+    return getLista().slice();
+  };
+
+  window.getEscritoriosDisponiveisParaUser = function getEscritoriosDisponiveisParaUser(profile, options) {
+    const user = profile || window.userProfile || null;
+    const lista = getLista(options);
+
+    if (!user) return [];
+    if (user.role === 'admin') return lista;
+
+    if (user.escritorio && lista.some(e => e.id === user.escritorio)) {
+      return lista.filter(e => e.id === user.escritorio);
+    }
+
+    const fallback = window.getEscritorioDefault(options);
+    return fallback ? [fallback] : [];
   };
 })();
-

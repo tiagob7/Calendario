@@ -1,5 +1,39 @@
 const db = firebase.firestore();
 
+function renderDashboardModuleNav() {
+  if (typeof window.getAppModules !== 'function') return;
+
+  let host = document.getElementById('dashboardModulesNav');
+  if (!host) {
+    const nav = document.querySelector('.nav-links');
+    const searchWrap = document.getElementById('globalSearchWrap');
+    if (!nav) return;
+
+    host = document.createElement('div');
+    host.id = 'dashboardModulesNav';
+    host.style.display = 'flex';
+    host.style.gap = '8px';
+    host.style.flexWrap = 'wrap';
+
+    [...nav.querySelectorAll('.nav-link')].forEach(link => link.remove());
+    if (searchWrap) nav.insertBefore(host, searchWrap);
+    else nav.prepend(host);
+  }
+
+  const modules = window.getAppModules({
+    group: 'main',
+    forDashboardNav: true,
+    profile: window.userProfile,
+  });
+
+  host.innerHTML = modules.map(m => `
+    <a class="nav-link" href="${m.href}">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">${m.icon}</svg>
+      ${m.label}
+    </a>
+  `).join('');
+}
+
 // ── Dark mode ──
 function toggleDarkMode() {
   const isDark = document.documentElement.classList.toggle('dark');
@@ -146,6 +180,7 @@ document.addEventListener('authReady', ({ detail }) => {
 
   // mini-header não é injetado no dashboard — renderNavbar('dashboard') é no-op
   window.renderNavbar('dashboard');
+  renderDashboardModuleNav();
 
   // user info + logout no canto superior direito
   const isAdmin = window.isAdmin();

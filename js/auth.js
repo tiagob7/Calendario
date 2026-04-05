@@ -6,6 +6,11 @@
 window.currentUser  = null;
 window.userProfile  = null;
 
+function _appModulesByGroup(group) {
+  if (typeof window.getAppModules !== 'function') return [];
+  return window.getAppModules({ group, forNav: true, profile: window.userProfile });
+}
+
 // ── Dark mode: restaurar preferência guardada ──
 (function(){
   if (localStorage.getItem('darkMode') === '1') {
@@ -33,9 +38,17 @@ window.temPermissao = function(perm) {
 
 window.escritorioAtivo = function() {
   if (window.isAdmin()) {
-    return sessionStorage.getItem('filtroEscritorio') || 'todos';
+    const saved = sessionStorage.getItem('filtroEscritorio') || 'todos';
+    if (saved === 'todos') return saved;
+    if (window.escritorioExiste && window.escritorioExiste(saved)) return saved;
+    return 'todos';
   }
-  return window.userProfile ? window.userProfile.escritorio : '';
+  if (window.userProfile && window.userProfile.escritorio) return window.userProfile.escritorio;
+  if (window.getEscritorioDefault) {
+    const fallback = window.getEscritorioDefault();
+    return fallback ? fallback.id : '';
+  }
+  return '';
 };
 
 window.setFiltroEscritorio = function(e) {
