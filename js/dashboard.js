@@ -921,7 +921,7 @@ function renderReclamacoes() {
 
   // Ocultar painel se sem permissão ou sem dados
   const wrap = document.getElementById('reclamacoesPanelWrap');
-  const canSee = window.isAdmin() || window.temPermissao('criarReclamacoes');
+  const canSee = window.isAdmin() || window.temPermissao('modules.reclamacoes.view');
   if (wrap) wrap.style.display = canSee ? '' : 'none';
 
   const container = document.getElementById('recList');

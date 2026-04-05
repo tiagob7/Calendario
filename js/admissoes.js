@@ -519,12 +519,12 @@ document.addEventListener('authReady', ({ detail }) => {
   }
 
   // mostrar/esconder form de criar processo
-  const canCriarAdm = window.temPermissao('criarAdmissoes');
+  const canCriarAdm = window.temPermissao('modules.admissoes.create');
   const formPanelEl = document.querySelector('.form-panel');
   if (formPanelEl) formPanelEl.style.display = canCriarAdm ? '' : 'none';
 
   // mostrar/esconder botão "Modo Gestor"
-  const canResolverAdm = window.temPermissao('resolverAdmissoes');
+  const canResolverAdm = window.temPermissao('modules.admissoes.resolve');
   const btnGestor = document.getElementById('btnGestor');
   if (btnGestor && !canResolverAdm) btnGestor.style.display = 'none';
 
@@ -533,7 +533,7 @@ document.addEventListener('authReady', ({ detail }) => {
   if (btnVozAdm && !isAdmin) btnVozAdm.style.display = 'none';
 
   // Modo gestor automático para quem tem permissão de resolver + admin
-  if (isAdmin || window.temPermissao('resolverAdmissoes')) {
+  if (isAdmin || window.temPermissao('modules.admissoes.resolve')) {
     isGestor = true;
     const btn = document.getElementById('btnGestor');
     if (btn) {

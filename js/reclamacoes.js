@@ -330,7 +330,7 @@ function fmtBytes(b) {
 // ── AUTH ──
 document.addEventListener('authReady',({detail})=>{
   window.renderNavbar('reclamacoes');
-  const profile=detail.profile,isAdmin=window.isAdmin(),canCreate=window.temPermissao('criarReclamacoes');
+  const profile=detail.profile,isAdmin=window.isAdmin(),canCreate=window.temPermissao('modules.reclamacoes.manage');
   if(profile) document.getElementById('userName').textContent=profile.nomeCompleto||profile.nome||profile.email||'?';
   if(canCreate){document.getElementById('formPanel').style.display='';adicionarPeriodo();}
   filtroEscritorio=isAdmin?'':(profile?(profile.escritorio||''):'');
@@ -502,7 +502,7 @@ function render(){
     const eCard=estadoClass(eKey);
     const hist=r.historico||[];
     const periodos=r.periodos||[];
-    const podeGerir=isAdmin||window.temPermissao('criarReclamacoes');
+    const podeGerir=isAdmin||window.temPermissao('modules.reclamacoes.manage');
     const periodosHTML=periodos.length?`
       <table class="periodos-table">
         <thead><tr><th>Mês/Ano</th><th>Dias</th><th>Turnos</th><th>Total</th><th>🌙 Noc.</th><th>📅 Fer.</th></tr></thead>

@@ -13,7 +13,7 @@ window.bootProtectedPage({
 }, ({ profile, isAdmin, escritorio }) => {
 
   // botão novo comunicado para quem tem permissão; preencher autor
-  if (window.temPermissao('gerirComunicados')) {
+  if (window.temPermissao('modules.comunicados.manage')) {
     document.getElementById('btnNovoCom').classList.add('show');
     if (profile) document.getElementById('fAutor').value = profile.nomeCompleto || profile.nome || '';
   }
@@ -191,7 +191,7 @@ function renderUrgenteBanner() {
 function renderList() {
   const container = document.getElementById('comunicadosList');
   const filtered = getFiltered();
-  const canGerir = window.temPermissao && window.temPermissao('gerirComunicados');
+  const canGerir = window.temPermissao && window.temPermissao('modules.comunicados.manage');
   document.getElementById('countBadge').textContent=filtered.length+' comunicado'+(filtered.length!==1?'s':'');
   if (!filtered.length) { container.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><p>Nenhum comunicado encontrado.</p></div>'; return; }
   container.innerHTML='';

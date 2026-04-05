@@ -18,7 +18,7 @@ window.bootProtectedPage({
 }, ({ profile, isAdmin, escritorio }) => {
 
   // mostrar/esconder form de criar tarefa
-  const canCreate = window.temPermissao('criarTarefas');
+  const canCreate = window.temPermissao('modules.tarefas.create');
   const formPanel = document.querySelector('.novo-pedido-panel');
   if (formPanel) formPanel.style.display = canCreate ? '' : 'none';
 
@@ -260,7 +260,7 @@ function renderList() {
   document.getElementById('countBadge').textContent=filtered.length+' tarefa'+(filtered.length!==1?'s':'');
   if (!filtered.length) { container.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18M8 14h4M8 18h8"/></svg><p>Nenhuma tarefa encontrada.</p></div>'; return; }
   container.innerHTML='';
-  const canResolve = window.temPermissao && window.temPermissao('resolverTarefas');
+  const canResolve = window.temPermissao && window.temPermissao('modules.tarefas.resolve');
   filtered.forEach((task,idx)=>{
     const isOpen=expandedIds.has(task.id), isDone=task.estado==='concluido'||task.estado==='cancelado';
     const estadoKey=task.estado||'aguardar';

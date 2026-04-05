@@ -907,7 +907,7 @@ document.addEventListener('authReady', async ({ detail }) => {
   _calEscritorio = escritorio;
 
   // Esconder botão de editar para quem não tem permissão
-  if (!window.temPermissao('editarCalendario')) {
+  if (!window.temPermissao('modules.calendario.edit')) {
     const editBtn = document.getElementById('editToggleBtn');
     if (editBtn) editBtn.style.display = 'none';
   }
