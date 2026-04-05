@@ -68,14 +68,6 @@
         icon: '<circle cx="8" cy="8" r="6.5"/><path d="M8 5v4"/><circle cx="8" cy="11.5" r=".6" fill="currentColor"/>',
       },
       {
-        id: 'escalas',
-        label: 'Escalas',
-        href: 'escalas.html',
-        order: 60,
-        requiredPermissions: ['modules.escalas.view'],
-        icon: '<rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M5 8h6M5 5h6M5 11h4"/>',
-      },
-      {
         id: 'definicoes',
         label: 'Defini&ccedil;&otilde;es',
         href: 'definicoes.html',

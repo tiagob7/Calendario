@@ -5,7 +5,6 @@
     comunicados: 'Comunicados',
     admissoes: 'Admiss&otilde;es',
     reclamacoes: 'Reclama&ccedil;&otilde;es de Horas',
-    escalas: 'Escalas',
     definicoes: 'Defini&ccedil;&otilde;es',
     utilizadores: 'Utilizadores',
     'gerir-calendarios': 'Gerir Calend&aacute;rios',
