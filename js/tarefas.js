@@ -73,7 +73,7 @@ window.bootProtectedPage({
   if (filterEscritorio && fe) fe.value = filterEscritorio;
 
   // carregar tudo (filtro é feito no cliente para permitir ver outros escritórios)
-  col = db.collection('tarefas_todo');
+  col = window.TasksService.proxy();
 
   setStatus('A ligar…', '#f59e0b');
   const unsubTarefas = col.orderBy('ordemChegada', 'asc').limit(200).onSnapshot(snap => {

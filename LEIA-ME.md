@@ -30,6 +30,7 @@ Sistema interno de gestao multi-escritorio para RH e operacoes, construido em HT
 - **Storage:** Firebase Storage
 - **Tempo real:** listeners Firestore com `onSnapshot()`
 - **UI partilhada:** scripts globais carregados por pagina
+- **Seguranca:** `firestore.rules` com controlo por utilizador, permissao e escritorio
 
 ---
 
@@ -59,6 +60,8 @@ A app passou a ter uma camada comum para suportar modulos novos sem repetir logi
 | `js/module-registry.js` | Registry central dos modulos da app, com id, rota, grupo, ordem e regras de visibilidade |
 | `js/users-service.js` | Servico comum de utilizadores, com criacao de contas, updates, permissoes e listeners |
 | `js/offices-service.js` | Servico comum de escritorios, com leitura, escrita, ordenacao e remocao com cleanup |
+| `js/tasks-service.js` | Servico de dominio para tarefas |
+| `js/comunicados-service.js` | Servico de dominio para comunicados |
 | `js/config-escritorios.js` | Servico comum de escritorios, com cache, escritorio default, escritorios ativos e helpers de consulta |
 | `js/app-platform.js` | Camada de plataforma para navbar, escritorio ativo, bootstrap comum de paginas protegidas e integracao da navegacao com o registry |
 | `js/auth.js` | Autenticacao, sessao e helpers de permissao |
@@ -117,6 +120,8 @@ Calendario/
 |   |-- auditoria.js
 |   |-- users-service.js
 |   |-- offices-service.js
+|   |-- tasks-service.js
+|   |-- comunicados-service.js
 |   |-- config-escritorios.js
 |   |-- module-registry.js
 |   |-- app-platform.js
@@ -144,6 +149,14 @@ Calendario/
 |-- gerir-calendarios.html
 `-- auditoria.html
 ```
+
+Tambem existe agora:
+
+- `firestore.rules`
+- `firebase.json`
+- `templates/module-template.html`
+- `templates/module-template.js`
+- `templates/module-template.css`
 
 ---
 
@@ -174,8 +187,21 @@ Notas:
 
 - `module-registry.js` define os modulos e a sua ordem/visibilidade.
 - `offices-service.js` guarda a logica principal de escritorios.
+- `tasks-service.js` e `comunicados-service.js` sao os primeiros services de dominio e mostram o padrao para extrair Firestore das paginas.
 - `config-escritorios.js` funciona como camada de compatibilidade para a API global ja usada pelos modulos.
 - `app-platform.js` cola a navegacao, o escritorio ativo e o bootstrap das paginas ao resto da app.
+
+### Firestore Rules
+
+O projeto passa a ter uma base inicial em [firestore.rules](C:/Users/Tiago/Documents/GitHub/CalendarioGPT/Calendario/firestore.rules) com estas ideias:
+
+- leitura/escrita apenas para utilizadores autenticados
+- perfil de utilizador como fonte de verdade para `role`, `ativo` e `permissoes`
+- controlo por modulo
+- controlo por escritorio quando aplicavel
+- fallback legacy para as permissoes antigas durante a migracao
+
+Estas rules sao uma primeira base e devem ser revistas antes de deploy final, especialmente para anexos, auditoria e colecoes que ainda nao foram totalmente migradas para services.
 
 ### Bootstrap comum
 
@@ -260,8 +286,15 @@ Se criares um modulo novo `frota.html`:
    - `window.temPermissao()`
    - `window.escritorioAtivo()`
    - `window.loadEscritorios()`
-    - `window.renderNavbar()`
+   - `window.renderNavbar()`
    - `window.bootProtectedPage()`
+
+5. Se o modulo tiver dados proprios, criar um service dedicado em `js/<modulo>-service.js`.
+
+6. Podes partir do template em:
+   - [module-template.html](C:/Users/Tiago/Documents/GitHub/CalendarioGPT/Calendario/templates/module-template.html)
+   - [module-template.js](C:/Users/Tiago/Documents/GitHub/CalendarioGPT/Calendario/templates/module-template.js)
+   - [module-template.css](C:/Users/Tiago/Documents/GitHub/CalendarioGPT/Calendario/templates/module-template.css)
 
 Isto faz com que o novo modulo entre na mesma logica de navegacao e segmentacao.
 

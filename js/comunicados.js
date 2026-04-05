@@ -61,7 +61,7 @@ window.bootProtectedPage({
   document.getElementById('pageSubtitle').textContent =
     filtroEscritorio ? (window.nomeEscritorio ? window.nomeEscritorio(filtroEscritorio) : filtroEscritorio) : 'Todos os escritórios';
 
-  col = db.collection('comunicados');
+  col = window.ComunicadosService.proxy();
   // carregar tudo, filtrar no cliente (para poder ver outros escritórios)
   let query = col.orderBy('criadoEm', 'desc').limit(200);
 
