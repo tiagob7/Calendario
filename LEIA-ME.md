@@ -152,7 +152,9 @@ Calendario/
 
 Tambem existe agora:
 
+- `.firebaserc`
 - `firestore.rules`
+- `storage.rules`
 - `firebase.json`
 - `templates/module-template.html`
 - `templates/module-template.js`
@@ -202,6 +204,29 @@ O projeto passa a ter uma base inicial em [firestore.rules](C:/Users/Tiago/Docum
 - fallback legacy para as permissoes antigas durante a migracao
 
 Estas rules sao uma primeira base e devem ser revistas antes de deploy final, especialmente para anexos, auditoria e colecoes que ainda nao foram totalmente migradas para services.
+
+### Firebase CLI
+
+O workspace ja ficou preparado para o projeto Firebase:
+
+- `projectId`: `calendario-trabalho-39a6c`
+- default local em [/.firebaserc](C:/Users/Tiago/Documents/GitHub/CalendarioGPT/Calendario/.firebaserc)
+- config em [firebase.json](C:/Users/Tiago/Documents/GitHub/CalendarioGPT/Calendario/firebase.json)
+
+Comandos uteis:
+
+```bash
+cmd /c firebase login --reauth
+cmd /c firebase use calendario-trabalho-39a6c
+cmd /c firebase deploy --only firestore:rules
+cmd /c firebase deploy --only storage
+```
+
+Se quiseres testar localmente:
+
+```bash
+cmd /c firebase emulators:start --only firestore,storage
+```
 
 ### Bootstrap comum
 
