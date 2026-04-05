@@ -1,5 +1,5 @@
 const db  = firebase.firestore();
-const col = db.collection('reclamacoes_horas');
+const col = window.ReclamacoesService.proxy();
 const storage = firebase.storage();
 window._files = {};
 
@@ -315,8 +315,7 @@ async function deleteFicheiro(docId, index) {
   const f = (window._files[docId] || [])[index];
   if (!f || !await confirmar({ titulo: 'Remover este anexo?', btnOk: 'Remover', perigo: true })) return;
   try {
-    if (f.path) await storage.ref(f.path).delete().catch(() => {});
-    await col.doc(docId).update({ ficheiros: firebase.firestore.FieldValue.arrayRemove(f) });
+    await window.ReclamacoesService.removeFile(docId, f);
     toast('Ficheiro removido.');
   } catch(e) { toast('Erro ao remover.'); }
 }
@@ -404,10 +403,8 @@ async function submitReclamacao(){
       for (const file of pendingFiles) {
         const path = `reclamacoes/${docRef.id}/${Date.now()}_${file.name}`;
         try {
-          const ref = storage.ref(path);
-          const snap = await ref.put(file);
-          const url = await snap.ref.getDownloadURL();
-          ficheiros.push({ nome: file.name, url, tamanho: file.size, criadoEm: Date.now(), path });
+          const uploaded = await window.ReclamacoesService.uploadFiles(docRef.id, [file]);
+          if (uploaded.length) ficheiros.push(uploaded[0]);
         } catch(e) { console.error(e); toast('Erro ao carregar: ' + file.name); }
       }
       if (ficheiros.length) await docRef.update({ ficheiros });
