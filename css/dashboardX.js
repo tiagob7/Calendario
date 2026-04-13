@@ -34,135 +34,6 @@ function renderDashboardModuleNav() {
   `).join('');
 }
 
-function simplifyDashboardChrome() {
-  const subtitleEditBtn = document.getElementById('dashboardEditBtn');
-  const layoutPresets = document.getElementById('layoutPresets');
-  const layoutResetBtn = document.getElementById('layoutResetBtn');
-  const navLinks = document.querySelector('.nav-links');
-  const topbarBtn = document.getElementById('userAdminBtn');
-  const topbar = document.querySelector('.dash-topbar');
-  let modulesWrap = document.getElementById('dashModulesWrap');
-  let modulesBtn = document.getElementById('dashModulesBtn');
-  let backdrop = document.getElementById('sidebarBackdrop');
-
-  if (subtitleEditBtn) subtitleEditBtn.remove();
-  if (layoutPresets) layoutPresets.remove();
-  if (layoutResetBtn) layoutResetBtn.remove();
-
-  if (navLinks) {
-    navLinks.querySelectorAll('.nav-link').forEach(link => link.remove());
-    navLinks.style.justifyContent = 'flex-end';
-  }
-
-  if (topbarBtn) {
-    topbarBtn.style.display = 'inline-flex';
-    topbarBtn.removeAttribute('href');
-    topbarBtn.onclick = function(event) {
-      event.preventDefault();
-      if (typeof window.openDashboardEditor === 'function') window.openDashboardEditor();
-    };
-    topbarBtn.innerHTML = `
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:12px;height:12px;">
-        <path d="M11.5 2.5l2 2M3 13l2.7-.5L13 5.2 10.8 3 3.5 10.3 3 13z"></path>
-        <path d="M9.5 4.5l2 2"></path>
-      </svg>
-      Personalizar
-    `;
-  }
-
-  if (topbar && !modulesBtn) {
-    modulesBtn = document.createElement('button');
-    modulesBtn.id = 'dashModulesBtn';
-    modulesBtn.className = 'dash-modules-btn';
-    modulesBtn.type = 'button';
-    modulesBtn.innerHTML = `
-      <svg viewBox="0 0 16 16"><path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"></path></svg>
-      Módulos
-    `;
-    modulesBtn.onclick = function() {
-      toggleSidebar();
-    };
-    topbar.insertBefore(modulesBtn, topbar.firstChild);
-  }
-
-  if (!backdrop) {
-    backdrop = document.createElement('div');
-    backdrop.id = 'sidebarBackdrop';
-    backdrop.className = 'sidebar-backdrop';
-    backdrop.onclick = function() {
-      if (typeof window.closeSidebarMenu === 'function') window.closeSidebarMenu();
-    };
-    document.body.appendChild(backdrop);
-  }
-
-  modulesBtn = document.getElementById('dashModulesBtn');
-  if (topbar && modulesBtn && !modulesWrap) {
-    const mainModules = typeof window.getAppModules === 'function'
-      ? window.getAppModules({ group: 'main', forNav: true, profile: window.userProfile })
-      : [];
-    const adminModules = typeof window.getAppModules === 'function'
-      ? window.getAppModules({ group: 'admin', forNav: true, profile: window.userProfile })
-      : [];
-
-    modulesWrap = document.createElement('div');
-    modulesWrap.id = 'dashModulesWrap';
-    modulesWrap.className = 'dash-modules-wrap';
-    modulesBtn.parentNode.insertBefore(modulesWrap, modulesBtn);
-    modulesWrap.appendChild(modulesBtn);
-    modulesWrap.insertAdjacentHTML('beforeend', `
-      <div class="dash-modules-menu" id="dashModulesMenu">
-        <div class="dash-modules-group">Principal</div>
-        <a class="dash-modules-item active" href="dashboard.html">
-          <span class="dash-modules-icon">
-            <svg viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" rx="1.2"></rect><rect x="9" y="2" width="5" height="5" rx="1.2"></rect><rect x="2" y="9" width="5" height="5" rx="1.2"></rect><rect x="9" y="9" width="5" height="5" rx="1.2"></rect></svg>
-          </span>
-          <span class="dash-modules-copy">
-            <span class="dash-modules-label">Dashboard</span>
-            <span class="dash-modules-sub">Pagina atual</span>
-          </span>
-        </a>
-        ${mainModules.map(module => `
-          <a class="dash-modules-item" href="${module.href}">
-            <span class="dash-modules-icon">
-              <svg viewBox="0 0 16 16">${module.icon || ''}</svg>
-            </span>
-            <span class="dash-modules-copy">
-              <span class="dash-modules-label">${module.label}</span>
-              <span class="dash-modules-sub">Abrir modulo</span>
-            </span>
-          </a>
-        `).join('')}
-        ${adminModules.length ? `
-          <div class="dash-modules-group">Gestao</div>
-          ${adminModules.map(module => `
-            <a class="dash-modules-item" href="${module.href}">
-              <span class="dash-modules-icon">
-                <svg viewBox="0 0 16 16">${module.icon || ''}</svg>
-              </span>
-              <span class="dash-modules-copy">
-                <span class="dash-modules-label">${module.label}</span>
-                <span class="dash-modules-sub">Abrir modulo</span>
-              </span>
-            </a>
-          `).join('')}
-        ` : ''}
-      </div>
-    `);
-  }
-
-  if (modulesBtn) {
-    modulesBtn.onclick = function(event) {
-      if (typeof window.toggleMobileModulesMenu === 'function') {
-        window.toggleMobileModulesMenu(event);
-      }
-    };
-  }
-
-  if (backdrop && window.innerWidth <= 600) {
-    backdrop.remove();
-  }
-}
-
 // ── Dark mode ──
 function toggleDarkMode() {
   const isDark = document.documentElement.classList.toggle('dark');
@@ -309,7 +180,7 @@ document.addEventListener('authReady', ({ detail }) => {
 
   // mini-header não é injetado no dashboard — renderNavbar('dashboard') é no-op
   window.renderNavbar('dashboard');
-  simplifyDashboardChrome();
+  renderDashboardModuleNav();
 
   // user info + logout no canto superior direito
   const isAdmin = window.isAdmin();
