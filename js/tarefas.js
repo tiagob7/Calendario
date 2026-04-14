@@ -72,27 +72,51 @@ window.bootProtectedPage({
   }
   if (filterEscritorio && fe) fe.value = filterEscritorio;
 
-  // carregar tudo (filtro é feito no cliente para permitir ver outros escritórios)
+  // Carregar tarefas com onSnapshot (tempo real — colaboração ativa).
+  // Otimização: se houver um escritório selecionado, filtra no servidor (.where)
+  // para não transferir documentos de outros escritórios desnecessariamente.
+  // Limite reduzido para 100 (suficiente para uma lista de gestão diária).
   col = window.TasksService.proxy();
 
   setStatus('A ligar…', '#f59e0b');
-  const unsubTarefas = col.orderBy('ordemChegada', 'asc').limit(200).onSnapshot(snap => {
-    tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    render();
-    setStatus('✓ Sincronizado', '#16a34a');
-    setTimeout(() => setStatus(''), 3000);
-  }, err => {
-    console.error('tarefas (orderBy):', err);
-    // Fallback sem orderBy — evita página em branco se o índice falhar
-    const unsubFallback = col.limit(200).onSnapshot(snap => {
+
+  // Construir query com filtro no servidor quando possível
+  function buildTarefasQuery() {
+    let q = col;
+    if (filterEscritorio) {
+      // Filtro no servidor: só carrega tarefas deste escritório
+      q = q.where('escritorio', '==', filterEscritorio);
+    }
+    return q.orderBy('ordemChegada', 'asc').limit(100);
+  }
+
+  function subscribeTarefas() {
+    if (window._tarefasUnsub) window._tarefasUnsub();
+    const q = buildTarefasQuery();
+    const unsub = q.onSnapshot(snap => {
       tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       render();
       setStatus('✓ Sincronizado', '#16a34a');
       setTimeout(() => setStatus(''), 3000);
-    }, err2 => { console.error('tarefas fallback:', err2); setStatus('Erro de ligação', '#dc2626'); });
-    window._tarefasUnsub = unsubFallback;
-  });
-  window._tarefasUnsub = unsubTarefas;
+    }, err => {
+      console.error('tarefas (orderBy):', err);
+      // Fallback sem orderBy — evita página em branco se o índice falhar
+      let qFallback = col;
+      if (filterEscritorio) qFallback = qFallback.where('escritorio', '==', filterEscritorio);
+      const unsubFallback = qFallback.limit(100).onSnapshot(snap => {
+        tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        render();
+        setStatus('✓ Sincronizado', '#16a34a');
+        setTimeout(() => setStatus(''), 3000);
+      }, err2 => { console.error('tarefas fallback:', err2); setStatus('Erro de ligação', '#dc2626'); });
+      window._tarefasUnsub = unsubFallback;
+    });
+    window._tarefasUnsub = unsub;
+  }
+
+  subscribeTarefas();
+  // Expor para re-subscrever quando o filtro de escritório mudar
+  window._tarefasResubscribe = subscribeTarefas;
   window.addEventListener('beforeunload', () => { if (window._tarefasUnsub) window._tarefasUnsub(); });
 });
 
@@ -227,7 +251,12 @@ function setFilterEscritorio(val) {
     ? (window.nomeEscritorio ? window.nomeEscritorio(val) : val)
     : 'Todos os escritórios';
   document.getElementById('pageSubtitle').textContent = nome;
-  renderList();
+  // Re-subscrever com novo filtro no servidor (evita carregar escritórios desnecessários)
+  if (window._tarefasResubscribe) {
+    window._tarefasResubscribe();
+  } else {
+    renderList();
+  }
 }
 
 function render() {
