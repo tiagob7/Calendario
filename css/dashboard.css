@@ -327,20 +327,9 @@ a { text-decoration: none; color: inherit; }
 .sidebar.collapsed ~ .sidebar-toggle svg { transform: rotate(180deg); }
 
 /* ════════════════════════════════════════════════════════════════
-   MAIN WRAP — tudo à direita da sidebar
+   LAYOUT — app-shell-main é o wrapper (injectado pelo app-platform)
    ════════════════════════════════════════════════════════════════ */
-.main-wrap {
-  margin-left: var(--sidebar-w);
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  transition: var(--t-layout);
-}
-
-.sidebar.collapsed ~ .sidebar-toggle ~ .main-wrap {
-  margin-left: var(--sidebar-w-col);
-}
+/* app-shell-main já tem margin-left:240px via app-platform.js */
 
 /* ════════════════════════════════════════════════════════════════
    TOPBAR (substitui o mini-header injetado pelo auth.js)
@@ -1579,7 +1568,6 @@ html.dark .rec-kpi-chip.aguarda-proc { background: #0a2020; color: #2dd4bf; bord
   .sidebar .sidebar-link-badge,
   .sidebar .nav-group-label { opacity: 0; width: 0; overflow: hidden; }
   .sidebar .sidebar-link { justify-content: center; }
-  .main-wrap { margin-left: var(--sidebar-w-col); }
   .sidebar-toggle { left: calc(var(--sidebar-w-col) - 13px); }
 }
 
@@ -1611,10 +1599,6 @@ html.dark .rec-kpi-chip.aguarda-proc { background: #0a2020; color: #2dd4bf; bord
   .sidebar,
   .sidebar-toggle,
   .sidebar-backdrop { display: none !important; }
-  .main-wrap,
-  .sidebar.collapsed ~ .sidebar-toggle ~ .main-wrap {
-    margin-left: 0;
-  }
   .dashboard-editor { width: 100vw; }
   .dashboard-editor-header,
   .dashboard-editor-footer,
