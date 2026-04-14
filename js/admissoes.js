@@ -1,5 +1,10 @@
 const GESTOR_PIN = '9005';
 const db      = firebase.firestore();
+
+function toggleFormAdm() {
+  const panel = document.getElementById('formAdmissoes');
+  if (panel) panel.classList.toggle('open');
+}
 const col     = window.AdmissoesService.proxy();
 const storage = firebase.storage();
 window._files = {};
@@ -163,6 +168,9 @@ async function submitProcesso() {
     pendingFilesAdm = [];
     renderPendingFilesAdmList();
     resetForm();
+    // Fechar o painel após submeter com sucesso
+    const fp = document.getElementById('formAdmissoes');
+    if (fp) fp.classList.remove('open');
     startSync(); // recarregar lista
     toast('✓ Processo submetido!');
   } catch(e) {

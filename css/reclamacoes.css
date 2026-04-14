@@ -1,4 +1,5 @@
 /* ── CSS específico de reclamacoes.html ── */
+.page{max-width:1320px;}
 
 /* Stats específicas */
 .stat-chip.s-total .stat-val{color:var(--text);}

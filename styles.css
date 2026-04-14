@@ -61,7 +61,16 @@ h1{font-family:'Poppins',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,2
 
 /* ── Painel de formulário ────────────────────────────────── */
 .form-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px 28px;margin-bottom:22px;box-shadow:0 1px 6px rgba(0,0,0,.06);}
-.panel-title{font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.panel-title{font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;margin-bottom:0;display:flex;align-items:center;gap:8px;}
+
+/* ── Painel colapsável ─────────────────────────────────────── */
+.panel-title.panel-toggle{cursor:pointer;user-select:none;padding:4px 0;}
+.panel-title.panel-toggle:hover{opacity:.72;}
+.panel-toggle-chevron{margin-left:auto;display:flex;align-items:center;color:var(--muted);transition:transform .3s ease;}
+.form-panel.open .panel-toggle-chevron,.novo-pedido-panel.open .panel-toggle-chevron{transform:rotate(180deg);}
+.form-panel-body{overflow:hidden;max-height:0;opacity:0;transition:max-height .35s cubic-bezier(.4,0,.2,1),opacity .25s ease;}
+.form-panel.open .form-panel-body,.novo-pedido-panel.open .form-panel-body{max-height:3000px;opacity:1;}
+.form-panel.open .panel-title,.novo-pedido-panel.open .panel-title{margin-bottom:18px;}
 
 /* ── Controlos / filtros ─────────────────────────────────── */
 .controls-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}

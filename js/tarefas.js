@@ -1,5 +1,10 @@
 const db = firebase.firestore();
 const storage = firebase.storage();
+
+function toggleFormTarefas() {
+  const panel = document.getElementById('formTarefas');
+  if (panel) panel.classList.toggle('open');
+}
 let col;
 let tasks = [], selPrioVal = 'normal', sortMode = 'prio', filterMode = 'activos', filterPessoa = '';
 let pendingFiles = [];
@@ -17,9 +22,9 @@ window.bootProtectedPage({
   moduleId: 'tarefas',
 }, ({ profile, isAdmin, escritorio }) => {
 
-  // mostrar/esconder form de criar tarefa
+  // mostrar/esconder form de criar tarefa (colapsado por defeito quando visível)
   const canCreate = window.temPermissao('modules.tarefas.create');
-  const formPanel = document.querySelector('.novo-pedido-panel');
+  const formPanel = document.getElementById('formTarefas');
   if (formPanel) formPanel.style.display = canCreate ? '' : 'none';
 
   // botão VOZ — visível apenas para admins
@@ -171,6 +176,9 @@ async function submitTarefa() {
     document.getElementById('fTitulo').value    = '';
     document.getElementById('fDescricao').value = '';
     selPrio('normal');
+    // Fechar o painel após submeter com sucesso
+    const fp = document.getElementById('formTarefas');
+    if (fp) fp.classList.remove('open');
     toast('✓ Tarefa adicionada em ' + destino.charAt(0).toUpperCase() + destino.slice(1) + '!');
   } catch(e) { console.error(e); toast('Erro ao adicionar.'); }
 }
