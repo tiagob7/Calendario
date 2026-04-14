@@ -941,10 +941,10 @@
   };
 
   window.renderNavbar = function(activePage) {
-    if (activePage === 'dashboard') return;
-
     const pageEl = document.querySelector('.page');
     if (!pageEl) return;
+
+    const isDashboard = activePage === 'dashboard';
 
     ensureShellStyles();
     document.body.classList.add('app-shell-active');
@@ -954,9 +954,10 @@
     let main = document.getElementById('appShellMain');
     let topbar = document.getElementById('appShellTopbar');
 
-    if (!sidebar || !toggle || !main || !topbar) {
+    if (!sidebar || !toggle || !main || (!topbar && !isDashboard)) {
       const wrapper = document.createElement('div');
-      wrapper.innerHTML = buildSidebarHtml(activePage) + `<div class="app-shell-main" id="appShellMain">${buildTopbarHtml(activePage)}</div>`;
+      wrapper.innerHTML = buildSidebarHtml(activePage) +
+        `<div class="app-shell-main" id="appShellMain">${isDashboard ? '' : buildTopbarHtml(activePage)}</div>`;
 
       sidebar = wrapper.querySelector('#appShellSidebar');
       toggle = wrapper.querySelector('#appShellToggle');
@@ -966,11 +967,19 @@
       document.body.insertBefore(sidebar, document.body.firstChild);
       document.body.insertBefore(toggle, sidebar.nextSibling);
       document.body.insertBefore(main, toggle.nextSibling);
+
+      if (isDashboard) {
+        // Dashboard tem topbar própria — movê-la para app-shell-main antes do .page
+        const dashTopbar = document.querySelector('.dash-topbar');
+        if (dashTopbar) main.appendChild(dashTopbar);
+      }
       main.appendChild(pageEl);
     } else {
       sidebar.outerHTML = buildSidebarHtml(activePage).trim();
       toggle.outerHTML = `<button class="app-shell-toggle" id="appShellToggle" type="button" title="Recolher menu" onclick="window.toggleSidebar()"><svg viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg></button>`;
-      topbar.outerHTML = buildTopbarHtml(activePage).trim();
+      if (!isDashboard && topbar) {
+        topbar.outerHTML = buildTopbarHtml(activePage).trim();
+      }
 
       sidebar = document.getElementById('appShellSidebar');
       toggle = document.getElementById('appShellToggle');
