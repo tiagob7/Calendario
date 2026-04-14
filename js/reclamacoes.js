@@ -1,7 +1,12 @@
 const db  = firebase.firestore();
-const col = db.collection('reclamacoes_horas');
+const col = window.ReclamacoesService.proxy();
 const storage = firebase.storage();
 window._files = {};
+
+function toggleFormRec() {
+  const panel = document.getElementById('formPanel');
+  if (panel) panel.classList.toggle('open');
+}
 
 let recs=[], filtroEstado='ativos', filtroEscritorio='', selCanalVal='email';
 const expandedIds = new Set();
@@ -315,8 +320,7 @@ async function deleteFicheiro(docId, index) {
   const f = (window._files[docId] || [])[index];
   if (!f || !await confirmar({ titulo: 'Remover este anexo?', btnOk: 'Remover', perigo: true })) return;
   try {
-    if (f.path) await storage.ref(f.path).delete().catch(() => {});
-    await col.doc(docId).update({ ficheiros: firebase.firestore.FieldValue.arrayRemove(f) });
+    await window.ReclamacoesService.removeFile(docId, f);
     toast('Ficheiro removido.');
   } catch(e) { toast('Erro ao remover.'); }
 }
@@ -330,9 +334,13 @@ function fmtBytes(b) {
 // ── AUTH ──
 document.addEventListener('authReady',({detail})=>{
   window.renderNavbar('reclamacoes');
-  const profile=detail.profile,isAdmin=window.isAdmin(),canCreate=window.temPermissao('criarReclamacoes');
+  const profile=detail.profile,isAdmin=window.isAdmin(),canCreate=window.temPermissao('modules.reclamacoes.manage');
   if(profile) document.getElementById('userName').textContent=profile.nomeCompleto||profile.nome||profile.email||'?';
-  if(canCreate){document.getElementById('formPanel').style.display='';adicionarPeriodo();}
+  if(canCreate){
+    // Mostrar o painel colapsado por defeito (utilizador expande quando quiser)
+    document.getElementById('formPanel').style.display='';
+    adicionarPeriodo();
+  }
   filtroEscritorio=isAdmin?'':(profile?(profile.escritorio||''):'');
   window.loadEscritorios().then(lista=>{
     const fEsc=document.getElementById('fEscritorio');
@@ -404,10 +412,8 @@ async function submitReclamacao(){
       for (const file of pendingFiles) {
         const path = `reclamacoes/${docRef.id}/${Date.now()}_${file.name}`;
         try {
-          const ref = storage.ref(path);
-          const snap = await ref.put(file);
-          const url = await snap.ref.getDownloadURL();
-          ficheiros.push({ nome: file.name, url, tamanho: file.size, criadoEm: Date.now(), path });
+          const uploaded = await window.ReclamacoesService.uploadFiles(docRef.id, [file]);
+          if (uploaded.length) ficheiros.push(uploaded[0]);
         } catch(e) { console.error(e); toast('Erro ao carregar: ' + file.name); }
       }
       if (ficheiros.length) await docRef.update({ ficheiros });
@@ -415,7 +421,11 @@ async function submitReclamacao(){
     }
     pendingFiles = [];
     renderPendingFilesList();
-    limparForm(); toast('✓ Reclamação registada com sucesso!');
+    limparForm();
+    // Fechar o painel após submeter com sucesso
+    const fp = document.getElementById('formPanel');
+    if (fp) fp.classList.remove('open');
+    toast('✓ Reclamação registada com sucesso!');
   }catch(e){console.error(e);toast('Erro ao registar.');}
   finally{if(btn) btn.disabled=false;}
 }
@@ -502,7 +512,7 @@ function render(){
     const eCard=estadoClass(eKey);
     const hist=r.historico||[];
     const periodos=r.periodos||[];
-    const podeGerir=isAdmin||window.temPermissao('criarReclamacoes');
+    const podeGerir=isAdmin||window.temPermissao('modules.reclamacoes.manage');
     const periodosHTML=periodos.length?`
       <table class="periodos-table">
         <thead><tr><th>Mês/Ano</th><th>Dias</th><th>Turnos</th><th>Total</th><th>🌙 Noc.</th><th>📅 Fer.</th></tr></thead>

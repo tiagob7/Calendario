@@ -90,6 +90,25 @@
       </span>
     </a>
 
+    <!-- Seed de Dados -->
+    <a class="def-card" href="seed.html">
+      <div class="def-card-icon red">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+          <ellipse cx="8" cy="11" rx="5" ry="3"/>
+          <path d="M8 11V5"/>
+          <path d="M8 5C8 5 5.5 3 3 3c0 2.5 2 4 5 4s5-1.5 5-4c-2.5 0-5 2-5 2z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="def-card-title">Seed de Dados</div>
+        <div class="def-card-desc">Carregar dados de teste no Firestore. Apenas para administradores.</div>
+      </div>
+      <span class="def-card-link">
+        Abrir seed
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg>
+      </span>
+    </a>
+
   </div>
 
   <!-- PAINEL UTILIZADORES -->
@@ -147,6 +166,12 @@
     <input type="text" class="form-input" id="escId" placeholder="ex: faro, setubal, braga…">
     <label class="field-label">Cor</label>
     <div class="color-swatches" id="colorSwatches"></div>
+    <label class="field-label">Ordem na lista</label>
+    <input type="number" class="form-input" id="escOrdem" min="1" step="1" placeholder="10">
+    <label class="field-label" style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;">
+      <input type="checkbox" id="escAtivo" checked>
+      Escritório ativo para os módulos e filtros da app
+    </label>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
       <button class="btn btn-primary" id="btnGuardar" onclick="guardarEscritorio()">Guardar</button>
@@ -171,7 +196,14 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-init.js"></script>
 <script src="js/utils.js"></script>
+<script src="js/module-registry.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/users-service.js"></script>
+<script src="js/offices-service.js"></script>
+<script src="js/config-escritorios.js"></script>
+<script src="js/app-platform.js"></script>
 <script src="js/definicoes.js"></script>
 </body>
 </html>
+
+

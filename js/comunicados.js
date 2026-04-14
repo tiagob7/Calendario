@@ -7,14 +7,32 @@ let escDestinosSel = ['todos'];
 const TIPO_LABEL = { geral:'Geral', urgente:'Urgente', info:'Info', aviso:'Aviso' };
 const TIPO_EMOJI = { geral:'📢', urgente:'🚨', info:'ℹ️', aviso:'⚠️' };
 
-document.addEventListener('authReady', ({ detail }) => {
-  window.renderNavbar('comunicados');
-  const profile    = detail.profile;
-  const isAdmin    = window.isAdmin();
-  const escritorio = window.escritorioAtivo();
+// ── Cache de comunicados ──────────────────────────────────────────────────────
+// TTL de 5 min: comunicados mudam com pouca frequência.
+// Ao criar/arquivar/eliminar, o cache é invalidado para forçar nova leitura.
+const _comCache = { data: null, ts: 0, escritorio: '__uninit__' };
+const COM_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+function _comCacheValid(escritorio) {
+  return (
+    _comCache.data !== null &&
+    _comCache.escritorio === (escritorio || '') &&
+    (Date.now() - _comCache.ts) < COM_CACHE_TTL
+  );
+}
+
+function _invalidateComCache() {
+  _comCache.ts = 0;
+  _comCache.data = null;
+}
+
+window.bootProtectedPage({
+  activePage: 'comunicados',
+  moduleId: 'comunicados',
+}, ({ profile, isAdmin, escritorio }) => {
 
   // botão novo comunicado para quem tem permissão; preencher autor
-  if (window.temPermissao('gerirComunicados')) {
+  if (window.temPermissao('modules.comunicados.manage')) {
     document.getElementById('btnNovoCom').classList.add('show');
     if (profile) document.getElementById('fAutor').value = profile.nomeCompleto || profile.nome || '';
   }
@@ -62,17 +80,34 @@ document.addEventListener('authReady', ({ detail }) => {
   document.getElementById('pageSubtitle').textContent =
     filtroEscritorio ? (window.nomeEscritorio ? window.nomeEscritorio(filtroEscritorio) : filtroEscritorio) : 'Todos os escritórios';
 
-  col = db.collection('comunicados');
-  // carregar tudo, filtrar no cliente (para poder ver outros escritórios)
-  let query = col.orderBy('criadoEm', 'desc').limit(200);
+  col = window.ComunicadosService.proxy();
 
-  setStatus('A ligar…', '#f59e0b');
-  query.onSnapshot(snap => {
-    comunicados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    render();
-    setStatus('✓ Sincronizado', '#16a34a');
-    setTimeout(() => setStatus(''), 3000);
-  }, err => { console.error(err); setStatus('Erro', '#dc2626'); });
+  // Carregar comunicados com cache (substitui o onSnapshot permanente).
+  // — Se o cache estiver fresco para este escritório, serve direto.
+  // — Caso contrário, faz .get() ao Firestore e guarda no cache.
+  // — Filtros adicionais (arquivado, tipo) continuam a ser feitos no cliente
+  //   para não exigir índices compostos.
+  function carregarComunicados() {
+    if (_comCacheValid(filtroEscritorio)) {
+      comunicados = _comCache.data;
+      render();
+      return;
+    }
+    setStatus('A carregar…', '#f59e0b');
+    col.orderBy('criadoEm', 'desc').limit(200).get()
+      .then(snap => {
+        comunicados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        _comCache.data = comunicados;
+        _comCache.ts = Date.now();
+        _comCache.escritorio = filtroEscritorio || '';
+        render();
+        setStatus('✓ Carregado', '#16a34a');
+        setTimeout(() => setStatus(''), 3000);
+      })
+      .catch(err => { console.error(err); setStatus('Erro', '#dc2626'); });
+  }
+
+  carregarComunicados();
 });
 
 
@@ -102,6 +137,7 @@ async function submitComunicado() {
       criadoPor: window.currentUser ? window.currentUser.uid : ''
     };
     const docRef = await col.add(dados);
+    _invalidateComCache(); // novo documento → forçar re-leitura
     await registarAuditoria({
       modulo: 'comunicados',
       acao:   'criado',
@@ -120,6 +156,7 @@ async function submitComunicado() {
 async function toggleArquivado(id, current) {
   try {
     await col.doc(id).update({ arquivado: !current });
+    _invalidateComCache(); // estado alterado → forçar re-leitura
     const com = comunicados.find(c => c.id === id);
     await registarAuditoria({
       modulo: 'comunicados',
@@ -137,6 +174,7 @@ async function deleteComunicado(id) {
   try {
     const com = comunicados.find(c => c.id === id);
     await col.doc(id).delete();
+    _invalidateComCache(); // documento eliminado → forçar re-leitura
     await registarAuditoria({
       modulo: 'comunicados',
       acao:   'eliminado',
@@ -192,7 +230,7 @@ function renderUrgenteBanner() {
 function renderList() {
   const container = document.getElementById('comunicadosList');
   const filtered = getFiltered();
-  const canGerir = window.temPermissao && window.temPermissao('gerirComunicados');
+  const canGerir = window.temPermissao && window.temPermissao('modules.comunicados.manage');
   document.getElementById('countBadge').textContent=filtered.length+' comunicado'+(filtered.length!==1?'s':'');
   if (!filtered.length) { container.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><p>Nenhum comunicado encontrado.</p></div>'; return; }
   container.innerHTML='';

@@ -1,67 +1,168 @@
 # Algartempo — Gestão Interna
 
-Sistema interno de gestão multi-escritório para RH e operações. Construído com JavaScript puro + Firebase (sem framework).
+Sistema interno de gestão multi-escritório para RH e operações, construído em HTML/CSS/JavaScript puro com Firebase.
 
 ---
 
-## Funcionalidades
+## O que esta app faz
 
 | Módulo | Descrição |
 |---|---|
-| **Dashboard** | Painel geral com painéis drag-and-drop, filtro por escritório, pesquisa global |
+| **Dashboard** | Painel geral com KPIs, layout personalizável, pesquisa global e temas de cor |
 | **Tarefas** | Criação, filtro, estado e prioridade de tarefas por escritório |
-| **Comunicados** | Comunicados internos por tipo (Geral, Urgente, Info, Aviso) |
-| **Admissões** | Processos de admissão e cessação com anexos e "Modo Gestor" |
-| **Reclamações** | Gestão de reclamações de horas, exportação Excel/PDF, anexos |
+| **Comunicados** | Comunicados internos por tipo e por destino |
+| **Admissões** | Processos de admissão e cessação com anexos e modo gestor |
+| **Reclamações** | Gestão de reclamações de horas com exportação e anexos |
 | **Calendário** | Editor de carga de trabalho por escritório/departamento/mês |
 | **Escalas** | Gestão de escalas de trabalho |
-| **Portal Público** | Submissão de reclamações sem login (acesso por código pessoal) |
-| **Utilizadores** | Gestão de contas, roles e 7 permissões granulares |
-| **Auditoria** | Histórico completo com diff campo a campo e paginação |
-| **Voz (IA)** | Preenchimento de formulários por voz via Claude AI |
+| **Utilizadores** | Criação de contas, roles e permissões granulares |
+| **Definições** | Gestão de escritórios, seed de dados e acesso a módulos administrativos |
+| **Gerir Calendários** | Publicação e manutenção dos calendários |
+| **Auditoria** | Histórico das alterações da app |
 
 ---
 
-## Stack Tecnológico
+## Stack
 
-- **Frontend:** HTML5, CSS3, JavaScript ES6+ (sem framework)
+- **Frontend:** HTML5, CSS3, JavaScript ES6+ sem framework
+- **Fontes:** Inter (corpo/UI) + Poppins (títulos/headings)
 - **Auth:** Firebase Authentication (Email/Password)
-- **Base de dados:** Firestore (real-time via `.onSnapshot()`)
-- **Storage:** Firebase Storage (anexos)
-- **IA:** Claude API (entrada por voz — `js/voz-ai.js`)
-- **Tipografia:** DM Mono + Manrope (Google Fonts)
+- **Base de dados:** Firestore
+- **Storage:** Firebase Storage
+- **Tempo real:** listeners Firestore com `onSnapshot()`
+- **UI partilhada:** scripts globais carregados por página
+- **Segurança:** `firestore.rules` com controlo por utilizador, permissão e escritório
 
 ---
 
-## Estrutura de Ficheiros
+## Visual e temas
 
+### Sistema de fontes
+
+Toda a app usa:
+- **Inter** — corpo de texto, inputs, botões, labels
+- **Poppins** — títulos (`h1`, headings de painéis, nomes em negrito)
+
+### Tokens de cor base
+
+```css
+--bg: #f1f5f9      /* fundo da página */
+--surface: #fff    /* cards e painéis */
+--border: #e2e8f0  /* bordas */
+--text: #0f172a    /* texto principal */
+--muted: #94a3b8   /* texto secundário */
+--accent: #0284c7  /* cor de ação (muda com o tema) */
 ```
-Calendario/
+
+### Temas de cor
+
+O dashboard tem um personalizador com 4 temas. O tema ativo é guardado em Firestore (`preferencias.dashboard.themePreset`) e aplicado em todas as páginas via atributo `data-theme` no `<html>`.
+
+| Tema | Accent | Sidebar |
+|---|---|---|
+| `default` | Sky blue `#0284c7` | Navy `#0f172a` |
+| `forest` | Teal `#0f766e` | Dark teal `#12312b` |
+| `sunset` | Orange `#c2410c` | Dark brown `#3c1f12` |
+| `violet` | Violet `#7c3aed` | Dark purple `#21163d` |
+
+O ficheiro `js/dashboard-customizer.js` gere a selecção e persistência do tema.
+
+### Arquitectura CSS
+
+Existem duas estratégias de CSS conforme a página:
+
+**Páginas que carregam `styles.css`** (base partilhada):
+`tarefas`, `admissoes`, `reclamacoes`, `utilizadores`, `auditoria`, `seed`
+
+**Páginas com CSS standalone** (têm o seu próprio `@import` e `:root`):
+`comunicados`, `calendario`, `gerir-calendarios`, `escalas`, `definicoes`
+
+Ambas as estratégias têm os blocos `[data-theme]` para que a cor de destaque mude com o tema seleccionado. Os ficheiros CSS standalone também incluem estes overrides directamente.
+
+### Botões primários
+
+Todos os botões de acção primária usam `background: var(--accent)`, que muda automaticamente com o tema. Nunca usar `background: var(--text)` para botões de acção.
+
+---
+
+## Arquitetura atual
+
+### 1. Base comum da app
+
+| Ficheiro | Função |
+|---|---|
+| `js/firebase-init.js` | Inicialização do Firebase |
+| `js/utils.js` | Utilitários partilhados (datas, UI, strings) |
+| `js/auth.js` | Autenticação, sessão e helpers de permissão |
+| `js/auditoria.js` | Registo de alterações no Firestore |
+| `js/users-service.js` | Serviço de utilizadores (CRUD, listeners, permissões) |
+| `js/offices-service.js` | Serviço de escritórios (CRUD, ordenação, cleanup) |
+| `js/tasks-service.js` | Serviço de domínio para tarefas |
+| `js/comunicados-service.js` | Serviço de domínio para comunicados |
+| `js/config-escritorios.js` | Cache e helpers de escritório activo |
+| `js/module-registry.js` | Registry central dos módulos (navegação, ordem, visibilidade) |
+| `js/app-platform.js` | Bootstrap, navbar, sidebar, topbar e listeners de plataforma |
+| `js/dashboard-customizer.js` | Gestão de temas de cor e personalização do dashboard |
+
+### 2. Entidades nucleares
+
+Os dois pilares da app são **Utilizadores** e **Escritórios**. Qualquer módulo novo deve encaixar na mesma lógica de:
+
+- autenticação e sessão
+- permissões por role/utilizador
+- escritório activo como âmbito
+- navegação via module registry
+- auditoria de alterações
+
+### 3. Shell da app
+
+O `app-platform.js` injeta automaticamente em todas as páginas protegidas:
+
+- **Sidebar** esquerda com navegação por módulo (cor muda com tema)
+- **Topbar** com título da página, escritório activo e avatar do utilizador
+- **Menu mobile** de módulos
+
+O item activo na sidebar usa cores adaptadas ao tema seleccionado.
+
+---
+
+## Estrutura principal de ficheiros
+
+```text
+hub-algartempo/
 │
-├── styles.css                    ← CSS global partilhado
+├── styles.css                  ← base partilhada (Inter, tokens, temas, componentes)
+├── login.html
+├── dashboard.html
+├── seed.html
 │
-├── css/                          ← CSS específico por página
+├── css/
 │   ├── login.css
 │   ├── dashboard.css
-│   ├── tarefas.css
-│   ├── comunicados.css
-│   ├── admissoes.css
-│   ├── reclamacoes.css
-│   ├── calendario.css
-│   ├── escalas.css
-│   ├── definicoes.css
-│   ├── utilizadores.css
-│   ├── gerir-calendarios.css
-│   └── auditoria.css
+│   ├── comunicados.css         ← standalone (tem :root próprio + temas)
+│   ├── calendario.css          ← standalone
+│   ├── gerir-calendarios.css   ← standalone
+│   ├── escalas.css             ← standalone
+│   ├── definicoes.css          ← standalone
+│   ├── tarefas.css             ← usa styles.css como base
+│   ├── admissoes.css           ← usa styles.css como base
+│   ├── reclamacoes.css         ← usa styles.css como base
+│   ├── utilizadores.css        ← usa styles.css como base
+│   └── auditoria.css           ← usa styles.css como base
 │
-├── js/                           ← JavaScript por módulo
-│   ├── firebase-init.js          ← configuração Firebase (partilhado)
-│   ├── utils.js                  ← utilitários partilhados
-│   ├── auth.js                   ← autenticação e navbar (partilhado)
-│   ├── auditoria.js              ← registo de auditoria (partilhado)
-│   ├── config-escritorios.js     ← lista de escritórios do Firestore
-│   ├── voz-ai.js                 ← integração IA por voz
-│   ├── login.js
+├── js/
+│   ├── firebase-init.js
+│   ├── utils.js
+│   ├── auth.js
+│   ├── auditoria.js
+│   ├── users-service.js
+│   ├── offices-service.js
+│   ├── tasks-service.js
+│   ├── comunicados-service.js
+│   ├── config-escritorios.js
+│   ├── module-registry.js
+│   ├── app-platform.js
+│   ├── dashboard-customizer.js
 │   ├── dashboard.js
 │   ├── tarefas.js
 │   ├── comunicados.js
@@ -74,105 +175,114 @@ Calendario/
 │   ├── gerir-calendarios.js
 │   └── auditoria-page.js
 │
-├── login.html                    ← pública
-├── reclamacao-publica.html       ← pública (sem login)
-├── reclamacao-bot.html           ← portal alternativo (chatbot)
-├── voz-teste.html                ← teste de voz
+├── templates/
+│   ├── module-template.html
+│   ├── module-template.js
+│   └── module-template.css
 │
-├── dashboard.html                ← protegida
-├── tarefas.html
-├── comunicados.html
-├── admissoes.html
-├── reclamacoes.html
-├── calendario.html
-├── escalas.html
-│
-├── definicoes.html               ← só admins
-├── utilizadores.html
-├── gerir-calendarios.html
-└── auditoria.html
+├── firestore.rules
+├── storage.rules
+├── firebase.json
+└── .firebaserc
 ```
 
 ---
 
-## Configuração Firebase
-
-### 1. Ativar Authentication
-
-1. [Firebase Console](https://console.firebase.google.com) → projeto
-2. **Authentication → Sign-in method → Email/Password** → Ativar
-
-### 2. Criar o primeiro Admin
-
-**Via login.html (mais fácil):**
-1. Abre `login.html` → "Criar conta"
-2. Preenche os dados — conta criada como "Colaborador"
-
-**Promover a Admin:**
-1. Firestore → `utilizadores/{uid}` → campo `role`: `"colaborador"` → `"admin"`
-
-**Via Firebase Console:**
-1. Authentication → Users → Add user
-2. Depois promover conforme acima
-
-### 3. Configurar Escritórios
-
-Escritórios por defeito: **Quarteira, Albufeira, Lisboa, Porto**
-
-Para personalizar: `definicoes.html` → Escritórios
-Ou editar diretamente: Firestore → `config/escritorios → lista`
-
----
-
-## Testar Localmente
-
-Com **VS Code + Live Server:**
-1. Abre a pasta no VS Code
-2. Botão direito em `login.html` → "Open with Live Server"
-3. Abre em `http://127.0.0.1:5500/login.html`
-
----
-
-## Ordem de Carregamento (páginas protegidas)
+## Ordem de carregamento nas páginas protegidas
 
 ```html
-<!-- 1. Firebase SDKs -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<!-- 2. CSS específico da página -->
-<link rel="stylesheet" href="css/[pagina].css">
-<!-- 3. Módulos partilhados (esta ordem é obrigatória) -->
+
+<!-- Base comum -->
 <script src="js/firebase-init.js"></script>
 <script src="js/utils.js"></script>
+<script src="js/module-registry.js"></script>
 <script src="js/auth.js"></script>
-<script src="js/auditoria.js"></script>
+<script src="js/offices-service.js"></script>
 <script src="js/config-escritorios.js"></script>
-<!-- 4. Script da página -->
+<script src="js/app-platform.js"></script>
+
+<!-- Módulo da página -->
 <script src="js/[pagina].js"></script>
 ```
 
 ---
 
-## Módulos Partilhados
+## Bootstrap de páginas protegidas
 
-| Ficheiro | Expõe | Função |
-|---|---|---|
-| `js/firebase-init.js` | `window.firebaseAuth`, `window.firebaseDb` | Inicializa Firebase (evita duplicados) |
-| `js/utils.js` | `escHtml`, `toast`, `setStatus`, `fmtShort`, `fmtDateFull`, `fmtData`, `fmtDataHora`, `confirmar` | Utilitários: XSS escape, notificações, formatação de datas, modal de confirmação |
-| `js/auth.js` | `window.userProfile`, `isAdmin()`, `temPermissao()`, `escritorioAtivo()`, `logout()`, `renderNavbar()` | Verifica sessão, redireciona para login, injeta navbar |
-| `js/auditoria.js` | `registarAuditoria(modulo, acao, dados, antes, depois)` | Grava alterações no Firestore com diff automático |
-| `js/config-escritorios.js` | `loadEscritorios()`, `getEscritoriosSync()`, `nomeEscritorio(id)`, `escritoriosValidos()` | Carrega lista de escritórios do Firestore |
+```js
+window.bootProtectedPage({
+  activePage: 'tarefas',
+  moduleId: 'tarefas',
+}, ({ profile, isAdmin, escritorio }) => {
+  // inicialização da página
+});
+```
+
+Para páginas administrativas (apenas admins):
+
+```js
+window.bootProtectedPage({
+  activePage: 'utilizadores',
+  moduleId: 'utilizadores',
+  requireAdmin: true,
+}, ({ profile }) => {
+  // só admins chegam aqui
+});
+```
 
 ---
 
-## Sistema de Permissões
+## Regra para módulos novos
 
-Admins têm todas as permissões automaticamente. Colaboradores têm apenas as permissões atribuídas em `utilizadores.html`.
+1. Criar `[modulo].html`, `js/[modulo].js`, `css/[modulo].css`
+2. Registar em `js/module-registry.js`:
+
+```js
+{
+  id: 'frota',
+  label: 'Frota',
+  href: 'frota.html',
+  group: 'main',
+  order: 70,
+  adminOnly: false,
+  requiredPermissions: [],
+  usesEscritorio: true,
+}
+```
+
+3. Carregar a stack comum antes do script do módulo
+4. Usar `window.bootProtectedPage()` no JS do módulo
+5. Se tiver dados próprios, criar `js/[modulo]-service.js`
+6. Para CSS standalone: copiar o bloco `:root` + `[data-theme]` de um módulo existente
+7. Partir dos templates em `templates/`
+
+---
+
+## APIs globais disponíveis
+
+| API | Função |
+|---|---|
+| `window.userProfile` | Objeto do utilizador autenticado |
+| `window.temPermissao(p)` | Verifica permissão |
+| `window.escritorioAtivo()` | ID do escritório activo |
+| `window.loadEscritorios()` | Lista de escritórios |
+| `window.renderNavbar(page)` | Re-renderiza sidebar + topbar |
+| `window.db` | Referência Firestore |
+| `window.isAdmin()` | Verifica se é admin |
+
+---
+
+## Sistema de permissões
+
+### Permissões actuais (em uso)
 
 | Permissão | Permite |
 |---|---|
-| `criarTarefas` | Criar novas tarefas |
+| `criarTarefas` | Criar tarefas |
 | `resolverTarefas` | Alterar estado de tarefas |
 | `gerirComunicados` | Criar, editar e arquivar comunicados |
 | `criarAdmissoes` | Criar processos de admissão/cessação |
@@ -180,44 +290,90 @@ Admins têm todas as permissões automaticamente. Colaboradores têm apenas as p
 | `editarCalendario` | Editar calendário de trabalho |
 | `criarReclamacoes` | Criar reclamações internas de horas |
 
----
+### Permissões canónicas (para módulos novos)
 
-## Estrutura de Dados (Firestore)
+Padrão: `modules.<modulo>.<acao>`
 
-| Coleção | Campos principais |
-|---|---|
-| `utilizadores/{uid}` | `nome`, `email`, `escritorio`, `role`, `ativo`, `permissoes{}` |
-| `tarefas_todo/{id}` | `titulo`, `estado`, `prioridade`, `escritorio`, `ordemChegada`, `criadoPor` |
-| `comunicados/{id}` | `titulo`, `tipo`, `escritorio`, `destinosEscritorio[]`, `arquivado` |
-| `admissoes/{id}` | `tipo` (admissao/cessacao), `nome`, `estado`, `escritorio`, `ficheiros[]` |
-| `reclamacoes_horas/{id}` | `nif`, `nome`, `periodos[]`, `turnos[]`, `estado`, `ficheiros[]` |
-| `calendarios/{id}` | ID: `calendario_{esc}_{ano}_{mm}` — `intensidade{}`, `eventos[]`, `departamentos{}` |
-| `config/escritorios` | `lista: [{id, nome, cor, default}]` |
-| `auditoria/{id}` | `modulo`, `acao`, `diffAntes{}`, `diffDepois{}`, `criadoPor`, `ts` |
+Exemplos: `modules.frota.view`, `modules.frota.create`, `modules.frota.edit`
 
 ---
 
-## Segurança e Limitações Conhecidas
+## Lógica de escritórios
+
+Guardados em `config/escritorios`. Formato:
+
+```js
+{
+  id: 'quarteira',
+  nome: 'Quarteira',
+  cor: '#0284c7',
+  default: true,
+  ativo: true,
+  ordem: 10
+}
+```
+
+Escritórios inativos não aparecem nos módulos. O escritório default serve de fallback. Novos módulos devem consumir via `loadEscritorios()`, nunca arrays hardcoded.
+
+---
+
+## Firestore Rules
+
+Ficheiro: `firestore.rules`
+
+- Leitura/escrita apenas para utilizadores autenticados
+- Perfil do utilizador como fonte de verdade para `role`, `ativo` e `permissoes`
+- Controlo por módulo e por escritório quando aplicável
+- Fallback legacy para permissões antigas durante migração
+
+Estas rules são uma primeira base e devem ser revistas antes de deploy final.
+
+---
+
+## Firebase CLI
+
+- **projectId:** `hub-algartempo`
+
+```bash
+firebase login --reauth
+firebase use hub-algartempo
+firebase deploy --only firestore:rules
+firebase deploy --only storage
+```
+
+Testar localmente:
+
+```bash
+firebase emulators:start --only firestore,storage
+```
+
+---
+
+## Testar localmente
+
+Com VS Code + Live Server:
+
+1. Abrir a pasta do projeto
+2. Abrir `login.html` com Live Server
+3. Testar a app a partir do browser
+
+---
+
+## Limitações conhecidas
 
 | Item | Estado |
 |---|---|
-| Autenticação Firebase | Ativa em todas as páginas protegidas |
-| Roles e permissões granulares | Implementados no frontend |
-| Firestore Security Rules | **Não configuradas** — implementar antes de produção |
-| Firebase App Check | **Não ativo** — necessário para `reclamacao-publica.html` |
-| Portal público sem login | Rate limiting apenas por sessão (reset ao recarregar) |
-| Documentos antigos sem `escritorio` | Visíveis só para admins; migrar manualmente se necessário |
-
-> **Atenção:** As Firestore Security Rules são obrigatórias antes de colocar em produção. Sem elas, qualquer pessoa com as credenciais Firebase pode ler/escrever na base de dados.
+| Firestore Security Rules | Precisam de endurecimento antes de produção |
+| Permissões | Ainda centradas no frontend |
+| Criação de utilizadores | Feita do lado do cliente admin |
+| Dark mode | Estrutura preparada (classe `.dark`) mas não implementado |
 
 ---
 
-## Próximos Passos
+## Próximos passos recomendados
 
-- [ ] **Firestore Security Rules** — restringir leitura/escrita por role e escritório
-- [ ] **Firebase App Check** — proteger `reclamacao-publica.html` contra bots
-- [ ] **Migração de dados** — adicionar campo `escritorio` a documentos antigos
-- [ ] **Notificações push** — alertar utilizadores sobre novas tarefas/comunicados
-- [ ] **Modo offline** — sincronização quando a ligação é restaurada
-- [ ] **Exportação de relatórios** — expandir para admissões e calendário
-- [ ] **Testes automatizados** — cobertura das funções de negócio críticas
+- [ ] Endurecer Firestore Rules e Storage Rules
+- [ ] Migrar criação de utilizadores para backend/server-side
+- [ ] Evoluir permissões para convenção canónica por módulo
+- [ ] Implementar dark mode (variáveis e lógica de toggle já previstas)
+- [ ] Adicionar testes para fluxos críticos de auth, escritório e permissões

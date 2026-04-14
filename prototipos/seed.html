@@ -398,8 +398,11 @@ html.dark .log-wrap { background: #020617; }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="js/firebase-init.js"></script>
 <script src="js/utils.js"></script>
+<script src="js/module-registry.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/offices-service.js"></script>
 <script src="js/config-escritorios.js"></script>
+<script src="js/app-platform.js"></script>
 
 <script>
 // ── DATA ──
@@ -504,82 +507,49 @@ function activeMods() {
 }
 
 // ── BUILDERS ──
-// utilizadores reais carregados do Firestore
-let utilizadoresSeed = [];
-async function carregarUtilizadoresSeed() {
-  try {
-    const snap = await db.collection('utilizadores').where('ativo','==',true).get();
-    utilizadoresSeed = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
-    log(`  ✓ ${utilizadoresSeed.length} utilizadores carregados para seed`, 'log-info');
-  } catch(e) {
-    log(`  ⚠ Não foi possível carregar utilizadores: ${e.message}`, 'log-warn');
-  }
-}
-
-function rndUser() {
-  if (utilizadoresSeed.length) {
-    const u = rnd(utilizadoresSeed);
-    return { uid: u.uid, nome: u.nomeCompleto || u.nome || u.email || '—' };
-  }
-  return { uid: '', nome: rndNome() };
-}
-
 function buildTarefa(tag) {
-  const escs    = escAtivos();
-  // estados reais usados no tarefas.js
-  const estados = ['aguardar','progresso','pendente','concluido','cancelado'];
+  const escs = escAtivos();
+  const estados = ['aguardar','progresso','pendente','concluido'];
   const prios   = ['urgente','normal','baixa'];
-  const user    = rndUser();
-  const ordem   = Date.now() - rndInt(0,30)*864e5;
   return {
-    titulo:          rnd(TITULOS_TAR),
-    descricao:       rnd(['Enviar até sexta','Ver com o cliente','Urgente — ver email','Confirmar com RH','']),
-    prioridade:      rnd(prios),
-    estado:          rnd(estados),
-    escritorio:      escs.length ? rnd(escs) : '',
-    escritorioOrigem:escs.length ? rnd(escs) : '',
-    solicitante:     user.nome,
-    criadoPor:       user.uid,
-    notas:           rnd(['','','','Verificar com o cliente','Aguardar resposta']),
-    criadaEm:        ordem,
-    ordemChegada:    ordem,
-    arquivada:       false,
+    titulo: rnd(TITULOS_TAR),
+    descricao: rnd(['Enviar até sexta','Ver com o cliente','Urgente — ver email','Confirmar com RH','']),
+    prioridade: rnd(prios),
+    estado: rnd(estados),
+    escritorio: escs.length ? rnd(escs) : '',
+    criadoPor: rndNome(),
+    criadoEm: Date.now()-rndInt(0,30)*864e5,
+    ordemChegada: Date.now()-rndInt(0,30)*864e5,
+    arquivada: false,
     ...(tag ? {_seed:true} : {})
   };
 }
 
 function buildAdmissao(tag) {
-  const escs    = escAtivos();
-  const tipo    = Math.random() > .4 ? 'admissao' : 'cessacao';
-  // estados reais do admissoes.js
-  const estados = ['aguardar','pendente','em_curso','concluido'];
-  const prios   = ['alta','media','baixa'];
-  const user    = rndUser();
-  const base    = {
+  const escs   = escAtivos();
+  const tipo   = Math.random()>.4 ? 'admissao' : 'cessacao';
+  const estados= ['aguardar','pendente','em_curso','concluido'];
+  const prios  = ['alta','media','baixa'];
+  const base   = {
     tipo,
-    nome:             rndNome(),
-    nif:              rndNif(),
-    numero:           String(rndInt(10000,99999)),
-    empresa:          rnd(EMPRESAS),
-    categoria:        rnd(CATEGORIAS),
-    escritorio:       escs.length ? rnd(escs) : '',
-    escritorioOrigem: escs.length ? rnd(escs) : '',
-    estado:           rnd(estados),
-    prioridade:       rnd(prios),
-    notas:            '',
-    submetidoPor:     user.nome,
-    criadoPor:        user.uid,
-    criadoEm:         Date.now() - rndInt(0,60)*864e5,
+    nome:      rndNome(),
+    nif:       rndNif(),
+    numero:    String(rndInt(10000,99999)),
+    empresa:   rnd(EMPRESAS),
+    categoria: rnd(CATEGORIAS),
+    escritorio: escs.length ? rnd(escs) : '',
+    estado:    rnd(estados),
+    prioridade:rnd(prios),
+    criadoPor: rndNome(),
+    criadoEm:  Date.now()-rndInt(0,60)*864e5,
     ...(tag ? {_seed:true} : {})
   };
-  if (tipo === 'admissao') {
-    base.dataEntrada   = rndDate(30, 30);
-    base.valorBase     = String(rndInt(760, 2500)) + '.00';
-    base.valorHora     = '';
-    base.valorMes      = '';
-    base.tipoPagamento = Math.random() > .5 ? 'mes' : 'hora';
+  if (tipo==='admissao') {
+    base.dataEntrada   = rndDate(30,30);
+    base.valorBase     = (rndInt(760,2500)).toFixed(2);
+    base.tipoPagamento = Math.random()>.5 ? 'mes' : 'hora';
   } else {
-    base.dataSaida = rndDate(30, 10);
+    base.dataSaida = rndDate(30,10);
     base.motivo    = rnd(MOTIVOS);
   }
   return base;
@@ -588,7 +558,6 @@ function buildAdmissao(tag) {
 function buildReclamacao(tag) {
   const escs   = escAtivos();
   const estados= ['nova','enviada','confirmada','paga','negada'];
-  const user   = rndUser();
   return {
     nome:       rndNome(),
     nif:        rndNif(),
@@ -604,10 +573,9 @@ function buildReclamacao(tag) {
       horasReclamadas:rndInt(2,24),
       tipoHora:       rnd(['normal','extra','noturna'])
     }],
-    notas:     rnd(NOTAS_REC),
-    registadoPor: user.nome,
-    criadoPor: user.uid,
-    criadoEm:  Date.now() - rndInt(0,45)*864e5,
+    notas:    rnd(NOTAS_REC),
+    criadoPor:rndNome(),
+    criadoEm: Date.now()-rndInt(0,45)*864e5,
     ...(tag ? {_seed:true} : {})
   };
 }
@@ -616,7 +584,6 @@ function buildComunicado(tag) {
   const escs   = escAtivos();
   const tipos  = ['geral','urgente','info','aviso'];
   const estados= ['ativo','arquivado'];
-  const user   = rndUser();
   return {
     titulo:     rnd(TITULOS_COM),
     texto:      rnd(['Por favor confirmar presença até quinta.','Consultar o documento em anexo.','O sistema estará offline das 18h às 20h.','Aplicável a partir de janeiro.','Apresentação na próxima segunda.']),
@@ -624,8 +591,8 @@ function buildComunicado(tag) {
     autor:      rnd(['Direcção','RH','IT','Operações','Administração']),
     escritorios:[escs.length ? rnd(escs) : ''],
     estado:     rnd(estados),
-    criadoPor:  user.uid,
-    criadoEm:   Date.now() - rndInt(0,20)*864e5,
+    criadoPor:  rndNome(),
+    criadoEm:   Date.now()-rndInt(0,20)*864e5,
     ...(tag ? {_seed:true} : {})
   };
 }
@@ -654,10 +621,6 @@ async function runSeed() {
   log(`▶ Seed iniciada — ${n} registos × ${mods.length} módulo(s)`, 'log-info');
   log(`  Escritórios: ${escAtivos().join(', ')}`, 'log-info');
   log(`  Tag _seed: ${tag}`, 'log-info');
-
-  // carregar utilizadores reais para usar nos seeds
-  log('── a carregar utilizadores reais…', 'log-info');
-  await carregarUtilizadoresSeed();
   log('', 'log-info');
 
   let total = 0;
@@ -666,9 +629,8 @@ async function runSeed() {
     let ok = 0;
     for (let i=0; i<n; i++) {
       try {
-        const col = mod === 'reclamacoes' ? 'reclamacoes_horas' : mod;
         const doc = BUILDERS[mod](tag);
-        await db.collection(col).add(doc);
+        await db.collection(mod).add(doc);
         ok++;
       } catch(e) {
         log(`  ✗ erro: ${e.message}`, 'log-err');
@@ -965,3 +927,5 @@ document.addEventListener('authReady', ({ detail }) => {
 </script>
 </body>
 </html>
+
+

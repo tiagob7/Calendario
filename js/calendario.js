@@ -907,7 +907,7 @@ document.addEventListener('authReady', async ({ detail }) => {
   _calEscritorio = escritorio;
 
   // Esconder botão de editar para quem não tem permissão
-  if (!window.temPermissao('editarCalendario')) {
+  if (!window.temPermissao('modules.calendario.edit')) {
     const editBtn = document.getElementById('editToggleBtn');
     if (editBtn) editBtn.style.display = 'none';
   }
@@ -936,7 +936,7 @@ function loadCalendario(escritorio) {
     nomeMes + ' ' + _calAno + ' · Escritório de ' + nomeEscritorio;
 
   CALENDAR_ID = calDocId(escritorio, _calAno, _calMes);
-  docRef = db.collection('calendarios').doc(CALENDAR_ID);
+  docRef = window.CalendarioService.proxy(CALENDAR_ID);
 
   // Limpar estado imediatamente para não mostrar dados do mês anterior enquanto carrega
   departments = departments.map(d => ({ ...d, data: Array(31).fill(0) }));

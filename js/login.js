@@ -2,6 +2,34 @@
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
+function createRegisterPermissions() {
+  if (typeof window.createDefaultPermissions === 'function') {
+    return window.createDefaultPermissions();
+  }
+
+  return {
+    modules: {
+      tarefas: { view: true, create: false, resolve: false },
+      comunicados: { view: true, manage: false },
+      calendario: { view: true, edit: false },
+      admissoes: { view: true, create: false, resolve: false },
+      reclamacoes: { view: true, manage: false },
+      escalas: { view: true, manage: false },
+      utilizadores: { manage: false },
+      definicoes: { manage: false },
+      'gerir-calendarios': { manage: false },
+      auditoria: { view: false }
+    },
+    criarTarefas: false,
+    resolverTarefas: false,
+    gerirComunicados: false,
+    criarAdmissoes: false,
+    resolverAdmissoes: false,
+    editarCalendario: false,
+    criarReclamacoes: false
+  };
+}
+
 // Flag para impedir redirect automático durante o registo
 let isRegistering = false;
 
@@ -118,14 +146,7 @@ async function doRegister() {
       ativo: false,          // inativa até um admin aprovar
       criadoEm: Date.now(),
       ultimoAcesso: Date.now(),
-      permissoes: {
-        criarTarefas: false,
-        resolverTarefas: false,
-        gerirComunicados: false,
-        criarAdmissoes: false,
-        resolverAdmissoes: false,
-        editarCalendario: false
-      }
+      permissoes: createRegisterPermissions()
     });
     // 3. Atualizar display name no Auth
     await cred.user.updateProfile({ displayName: nome + ' ' + apelido });
