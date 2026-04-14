@@ -307,7 +307,7 @@ let errorFlags  = {}; // regista listeners que falharam
 document.addEventListener('authReady', ({ detail }) => {
   const profile = detail.profile;
 
-  // mini-header não é injetado no dashboard — renderNavbar('dashboard') é no-op
+  // Injeta a sidebar app-shell (sem topbar — dashboard tem a sua própria)
   window.renderNavbar('dashboard');
   simplifyDashboardChrome();
 
