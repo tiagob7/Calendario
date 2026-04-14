@@ -44,6 +44,16 @@
         icon: '<path d="M13 2H3a1 1 0 00-1 1v9a1 1 0 001 1h3l2 2 2-2h3a1 1 0 001-1V3a1 1 0 00-1-1z"/>',
       },
       {
+        id: 'chat',
+        label: 'Chat',
+        href: 'chat.html',
+        order: 25,
+        adminOnly: false,
+        requiredPermissions: [],
+        usesEscritorio: false,
+        icon: '<path d="M13 2H3a1 1 0 00-1 1v9a1 1 0 001 1h3l2 2 2-2h3a1 1 0 001-1V3a1 1 0 00-1-1z"/><path d="M6 6h4M6 9h2"/>',
+      },
+      {
         id: 'calendario',
         label: 'Calend&aacute;rio',
         href: 'calendario.html',
@@ -74,6 +84,15 @@
         order: 60,
         requiredPermissions: ['modules.escalas.view'],
         icon: '<rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M5 8h6M5 5h6M5 11h4"/>',
+      },
+      {
+        id: 'clientes',
+        label: 'Clientes',
+        href: 'clientes.html',
+        order: 65,
+        requiredPermissions: ['modules.clientes.view'],
+        usesEscritorio: false,
+        icon: '<rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M5 1v4M11 1v4M2 7h12"/><path d="M5 10h6"/>',
       },
       {
         id: 'definicoes',
@@ -114,6 +133,16 @@
         adminOnly: true,
         requiredPermissions: ['modules.auditoria.view'],
         icon: '<path d="M3 4h10M3 8h8M3 12h6"/><circle cx="13" cy="12" r="2.5"/><path d="M15 14l1.5 1.5"/>',
+      },
+      {
+        id: 'perfis',
+        label: 'Perfis',
+        href: 'perfis.html',
+        group: 'admin',
+        order: 115,
+        adminOnly: false,
+        requiredPermissions: ['modules.perfis.manage'],
+        icon: '<circle cx="5" cy="6" r="2.5"/><circle cx="11" cy="6" r="2.5"/><path d="M1 14c0-2.5 1.8-4 4-4s4 1.5 4 4"/><path d="M9 13c.5-1.5 1.8-3 4-3s4 1.5 4 4"/>',
       },
     ].forEach(upsert);
   }

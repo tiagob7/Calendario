@@ -25,10 +25,14 @@ const PERMISSION_DEFINITIONS = [
   { key: 'modules.reclamacoes.manage', label: 'Gerir Reclamacoes', legacyKeys: ['criarReclamacoes'] },
   { key: 'modules.escalas.view', label: 'Ver Escalas' },
   { key: 'modules.escalas.manage', label: 'Gerir Escalas' },
+  { key: 'modules.clientes.view', label: 'Ver Clientes' },
+  { key: 'modules.clientes.import', label: 'Importar Clientes' },
+  { key: 'modules.clientes.edit', label: 'Editar Clientes' },
   { key: 'modules.utilizadores.manage', label: 'Gerir Utilizadores' },
   { key: 'modules.definicoes.manage', label: 'Gerir Definicoes' },
   { key: 'modules.gerir-calendarios.manage', label: 'Gerir Calendarios' },
   { key: 'modules.auditoria.view', label: 'Ver Auditoria' },
+  { key: 'modules.perfis.manage', label: 'Gerir Perfis' },
 ];
 
 const LEGACY_PERMISSION_MAP = PERMISSION_DEFINITIONS.reduce((acc, def) => {
@@ -68,10 +72,12 @@ function createDefaultPermissions() {
       admissoes: { view: true, create: false, resolve: false },
       reclamacoes: { view: true, manage: false },
       escalas: { view: true, manage: false },
+      clientes: { view: false, import: false, edit: false },
       utilizadores: { manage: false },
       definicoes: { manage: false },
       'gerir-calendarios': { manage: false },
       auditoria: { view: false },
+      perfis: { manage: false },
     },
   };
 
