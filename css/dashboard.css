@@ -113,7 +113,6 @@ body {
   color: var(--text);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  display: flex;
 }
 
 h1, h2, h3 {
