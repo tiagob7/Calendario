@@ -86,7 +86,7 @@
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = event => resolve(event.target.result);
-      reader.onerror = () => reject(new Error('Nao foi possivel ler o ficheiro.'));
+      reader.onerror = () => reject(new Error('Não foi possível ler o ficheiro.'));
       reader.readAsArrayBuffer(file);
     });
   }
@@ -112,11 +112,11 @@
   }
 
   function parseWorkbook(buffer) {
-    if (!window.XLSX) throw new Error('A biblioteca XLSX nao esta disponivel nesta pagina.');
+    if (!window.XLSX) throw new Error('A biblioteca XLSX não está disponível nesta página.');
 
     const workbook = XLSX.read(buffer, { type: 'array', cellDates: false });
     const firstSheetName = workbook.SheetNames[0];
-    if (!firstSheetName) throw new Error('O ficheiro nao contem folhas para importar.');
+    if (!firstSheetName) throw new Error('O ficheiro não contém folhas para importar.');
 
     const worksheet = workbook.Sheets[firstSheetName];
     const matrix = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true, defval: '' });
@@ -281,16 +281,16 @@
       importedAtPreview: Date.now(),
       clients: previewItems,
       ignoredRows: extracted.ignoredRows,
-        summary: {
-          totalClientes: previewItems.length,
-          novos: previewItems.filter(item => !item.isExisting).length,
-          existentes: previewItems.filter(item => item.isExisting).length,
-          ambiguos: previewItems.filter(item => item.isAmbiguous).length,
-          bloqueados: previewItems.filter(item => item.isBlocked).length,
-          linhasIgnoradas: extracted.ignoredRows.length,
-          totalCategorias: previewItems.reduce((acc, item) => acc + item.summary.totalCategorias, 0),
-        },
-      };
+      summary: {
+        totalClientes: previewItems.length,
+        novos: previewItems.filter(item => !item.isExisting).length,
+        existentes: previewItems.filter(item => item.isExisting).length,
+        ambiguos: previewItems.filter(item => item.isAmbiguous).length,
+        bloqueados: previewItems.filter(item => item.isBlocked).length,
+        linhasIgnoradas: extracted.ignoredRows.length,
+        totalCategorias: previewItems.reduce((acc, item) => acc + item.summary.totalCategorias, 0),
+      },
+    };
   }
 
   async function commitBatches(operations) {
@@ -306,7 +306,7 @@
 
   async function applyImport(previewPayload) {
     if (!previewPayload || !Array.isArray(previewPayload.clients) || !previewPayload.clients.length) {
-      throw new Error('Nao existe preview valido para aplicar.');
+      throw new Error('Não existe preview válido para aplicar.');
     }
 
     const importableClients = previewPayload.clients.filter(item => !item.isBlocked);
@@ -337,6 +337,7 @@
       const current = item.clientId ? existingMap.get(item.clientId) : null;
       const ref = current ? collection().doc(current.id) : collection().doc();
       const revision = {
+        tipo: 'importacao',
         importedAt: now,
         importedBy: uid,
         importedByName,
@@ -396,6 +397,132 @@
     };
   }
 
+  function getActorInfo() {
+    const uid = window.currentUser ? window.currentUser.uid : '';
+    const profile = window.userProfile || {};
+    const name = profile.nomeCompleto || profile.nome || (window.currentUser && window.currentUser.email) || '';
+    return { uid, name };
+  }
+
+  async function updateCliente(id, data) {
+    if (!id) throw new Error('ID de cliente em falta.');
+    const now = Date.now();
+    const { uid, name } = getActorInfo();
+
+    const allowed = ['nome', 'numeroCliente', 'grupo', 'escritorioOrigem', 'obs'];
+    const update = { updatedAt: now, updatedBy: uid, updatedByName: name };
+    allowed.forEach(field => {
+      if (data[field] !== undefined) update[field] = data[field];
+    });
+
+    await collection().doc(id).update(update);
+  }
+
+  async function updatePrecos(id, novasLinhas) {
+    if (!id) throw new Error('ID de cliente em falta.');
+    const now = Date.now();
+    const { uid, name } = getActorInfo();
+
+    const precosAtuais = buildCurrentPricesMap(novasLinhas);
+    const revision = {
+      tipo: 'edicao-manual',
+      importedAt: now,
+      importedBy: uid,
+      importedByName: name,
+      sourceFile: 'Edição manual',
+      sourceSheet: '',
+      propostaDataRaw: '',
+      linhas: clone(novasLinhas),
+    };
+
+    const snap = await collection().doc(id).get();
+    if (!snap.exists) throw new Error('Cliente não encontrado.');
+    const current = snap.data();
+    const revisoes = Array.isArray(current.revisoes) ? current.revisoes.slice() : [];
+    revisoes.push(revision);
+
+    await collection().doc(id).update({
+      precosAtuais,
+      revisoes,
+      updatedAt: now,
+      updatedBy: uid,
+      updatedByName: name,
+      ultimaRevisaoResumo: {
+        ...summarizeRevision(novasLinhas),
+        importedAt: now,
+        importedByName: name,
+        sourceFile: 'Edição manual',
+      },
+    });
+  }
+
+  async function criarProposta(id, { nomeProposta, dataPropostaRaw, nota, linhas }) {
+    if (!id) throw new Error('ID de cliente em falta.');
+    const now = Date.now();
+    const { uid, name } = getActorInfo();
+
+    const revision = {
+      tipo: 'proposta',
+      importedAt: now,
+      importedBy: uid,
+      importedByName: name,
+      nomeProposta: nomeProposta || 'Proposta sem nome',
+      propostaDataRaw: dataPropostaRaw || '',
+      nota: nota || '',
+      sourceFile: 'Proposta manual',
+      sourceSheet: '',
+      linhas: clone(linhas || []),
+      aplicada: false,
+    };
+
+    const snap = await collection().doc(id).get();
+    if (!snap.exists) throw new Error('Cliente não encontrado.');
+    const current = snap.data();
+    const revisoes = Array.isArray(current.revisoes) ? current.revisoes.slice() : [];
+    revisoes.push(revision);
+
+    await collection().doc(id).update({
+      revisoes,
+      updatedAt: now,
+      updatedBy: uid,
+      updatedByName: name,
+    });
+  }
+
+  async function aplicarProposta(id, revisaoIndex) {
+    if (!id) throw new Error('ID de cliente em falta.');
+    const now = Date.now();
+    const { uid, name } = getActorInfo();
+
+    const snap = await collection().doc(id).get();
+    if (!snap.exists) throw new Error('Cliente não encontrado.');
+    const current = snap.data();
+    const revisoes = Array.isArray(current.revisoes) ? current.revisoes.slice() : [];
+
+    if (revisaoIndex < 0 || revisaoIndex >= revisoes.length) throw new Error('Índice de revisão inválido.');
+    const proposta = revisoes[revisaoIndex];
+    if (!proposta || proposta.tipo !== 'proposta') throw new Error('A revisão selecionada não é uma proposta.');
+
+    const linhas = proposta.linhas || [];
+    const precosAtuais = buildCurrentPricesMap(linhas);
+
+    revisoes[revisaoIndex] = { ...proposta, aplicada: true, aplicadaAt: now, aplicadaPor: name };
+
+    await collection().doc(id).update({
+      precosAtuais,
+      revisoes,
+      updatedAt: now,
+      updatedBy: uid,
+      updatedByName: name,
+      ultimaRevisaoResumo: {
+        ...summarizeRevision(linhas),
+        importedAt: now,
+        importedByName: name,
+        sourceFile: proposta.nomeProposta || 'Proposta',
+      },
+    });
+  }
+
   function listenAll(options) {
     const cfg = options || {};
     const onData = cfg.onData || function() {};
@@ -433,5 +560,9 @@
     getCliente,
     previewImport,
     applyImport,
+    updateCliente,
+    updatePrecos,
+    criarProposta,
+    aplicarProposta,
   };
 })();
