@@ -503,7 +503,11 @@ function render(){
   renderStats(recs,feEsc);
   document.getElementById('countBadge').textContent=`${lista.length} registo${lista.length!==1?'s':''}`;
   const container=document.getElementById('cardsList');
-  if(!lista.length){container.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg><p>Nenhuma reclamação encontrada.</p></div>`;return;}
+  if(!lista.length){
+    const canCriarRec=window.temPermissao&&window.temPermissao('modules.reclamacoes.manage');
+    container.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg><p>Nenhuma reclamação encontrada.</p>${canCriarRec?'<button class="btn btn-primary btn-sm" onclick="toggleFormRec()">Registar reclamação</button>':''}</div>`;
+    return;
+  }
   container.innerHTML=lista.map((r,i)=>{
     const exp=expandedIds.has(r.id);
     const eKey=r.estado||'nova';
