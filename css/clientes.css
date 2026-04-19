@@ -51,7 +51,7 @@
 }
 
 .clientes-import-title {
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Sora', sans-serif;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: -.02em;
@@ -99,7 +99,7 @@
 .clientes-preview-head h3,
 .clientes-panel-head h2,
 .clientes-detail-main h2 {
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Sora', sans-serif;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: -.02em;
@@ -309,7 +309,7 @@
 }
 
 .cliente-list-title {
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Sora', sans-serif;
   font-size: 13px;
   font-weight: 700;
   line-height: 1.35;
@@ -332,6 +332,7 @@
 .clientes-detail-panel {
   min-width: 0;
   max-height: calc(100vh - 74px);
+  overflow-x: hidden;
   overflow-y: auto;
 }
 
@@ -376,9 +377,10 @@
 }
 
 .clientes-detail-meta .clientes-soft-badge {
-  max-width: 220px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .clientes-back-btn {
@@ -427,7 +429,7 @@
 }
 
 .clientes-section-head h3 {
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Sora', sans-serif;
   font-size: 14px;
   font-weight: 700;
 }
@@ -595,9 +597,9 @@
 }
 
 .clientes-row-remove:hover {
-  background: color-mix(in srgb, #ef4444 12%, var(--surface));
-  border-color: color-mix(in srgb, #ef4444 40%, var(--border));
-  color: #ef4444;
+  background: color-mix(in srgb, var(--red) 12%, var(--surface));
+  border-color: color-mix(in srgb, var(--red) 40%, var(--border));
+  color: var(--red);
 }
 
 .clientes-add-row-btn {

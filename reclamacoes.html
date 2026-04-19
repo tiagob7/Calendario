@@ -6,6 +6,7 @@
 <title>Reclamações de Horas</title>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="css/reclamacoes.css">
+<link rel="stylesheet" href="css/onboarding.css">
 <script>if(localStorage.getItem('darkMode')==='1')document.documentElement.classList.add('dark');</script>
 </head>
 <body>
@@ -38,7 +39,7 @@
       </div>
 
       <div class="divider"></div>
-      <div class="section-label">Períodos reclamados<span class="req">*</span></div>
+      <div class="section-label">Horas em disputa<span class="req">*</span></div>
       <div class="periodos-wrap" id="periodosWrap"></div>
       <button class="btn-add-periodo" onclick="adicionarPeriodo()">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v12M2 8h12"/></svg>
@@ -58,7 +59,7 @@
           </div>
         </div>
         <div class="full"><label class="field-label">Notas internas</label><textarea class="form-textarea" id="fNotas" placeholder="ex: Trabalhador diz que fez turno extra na sexta, não registado no ponto…"></textarea></div>
-        <div><label class="field-label">Registado por</label><div class="user-info-row"><span class="user-info-name" id="userName">A carregar…</span></div></div>
+        <div><label class="field-label">Submetido por</label><div class="user-info-row"><span class="user-info-name" id="userName">A carregar…</span></div></div>
       </div>
       <div class="divider"></div>
       <div class="section-label">Anexos</div>
@@ -84,7 +85,7 @@
   <div class="controls-wrap">
     <div class="controls-row">
       <span class="ctrl-label">Estado:</span>
-      <button class="filter-btn active" data-f="ativos" onclick="setFiltro('ativos')">Ativos</button>
+      <button class="filter-btn active" data-f="ativos" onclick="setFiltro('ativos')">Em aberto</button>
       <button class="filter-btn" data-f="todos" onclick="setFiltro('todos')">Todos</button>
       <button class="filter-btn" data-f="nova" onclick="setFiltro('nova')">Novas</button>
       <button class="filter-btn" data-f="enviada" onclick="setFiltro('enviada')">Enviadas</button>
@@ -128,6 +129,7 @@
 <script src="js/offices-service.js"></script>
 <script src="js/config-escritorios.js"></script>
 <script src="js/app-platform.js"></script>
+<script src="js/onboarding.js"></script>
 <script src="js/auditoria.js"></script>
 <script src="js/reclamacoes-service.js"></script>
 <script src="js/reclamacoes.js"></script>

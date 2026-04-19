@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Comunicados Internos</title>
 <link rel="stylesheet" href="css/comunicados.css">
+<link rel="stylesheet" href="css/onboarding.css">
 <script>if(localStorage.getItem('darkMode')==='1')document.documentElement.classList.add('dark');</script>
 </head>
 <body>
@@ -67,7 +68,7 @@
         <div class="esc-pill-row" id="escDestRow">
           <!-- preenchido dinamicamente via config-escritorios.js -->
         </div>
-        <div class="field-hint">Se não escolheres nada, considera-se apenas o teu escritório. "Todos" torna o comunicado visível em todos os escritórios.</div>
+        <div class="field-hint">Por defeito: apenas o teu escritório. Seleciona «Todos» para enviar a toda a empresa.</div>
       </div>
     </div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
@@ -106,6 +107,7 @@
 <script src="js/offices-service.js"></script>
 <script src="js/config-escritorios.js"></script>
 <script src="js/app-platform.js"></script>
+<script src="js/onboarding.js"></script>
 <script src="js/comunicados-service.js"></script>
 <script src="js/comunicados.js"></script>
 </body>

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard — Painel Geral</title>
 <link rel="stylesheet" href="css/dashboard.css">
+<link rel="stylesheet" href="css/onboarding.css">
 <script>if(localStorage.getItem('darkMode')==='1')document.documentElement.classList.add('dark');</script>
 </head>
 <body>
@@ -83,25 +84,21 @@
       Reclamações
     </a>
     <!-- PESQUISA GLOBAL -->
-    <div style="margin-left:auto;position:relative;" id="globalSearchWrap">
-      <button onclick="toggleGlobalSearch()" id="globalSearchBtn"
-        style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--border);background:var(--surface);border-radius:99px;font-size:12px;font-weight:500;color:var(--muted);font-family:'Inter',sans-serif;cursor:pointer;transition:var(--t);box-shadow:0 1px 3px rgba(0,0,0,.04);"
-        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+    <div class="global-search-wrap" id="globalSearchWrap">
+      <button onclick="toggleGlobalSearch()" id="globalSearchBtn" class="global-search-btn">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5l3.5 3.5"/></svg>
         Pesquisar
       </button>
-      <div id="globalSearchPanel" style="display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:400;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.12);width:340px;padding:14px;">
-        <input type="text" id="globalSearchInput" placeholder="Pesquisar em tarefas, comunicados, reclamações…"
-          style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:12px;padding:8px 12px;border-radius:8px;outline:none;margin-bottom:10px;"
+      <div id="globalSearchPanel" class="global-search-panel" style="display:none;">
+        <input type="text" id="globalSearchInput" class="global-search-input" placeholder="Pesquisar em tarefas, comunicados, reclamações…"
           oninput="doGlobalSearch(this.value)" autocomplete="off">
-        <div id="globalSearchResults" style="max-height:280px;overflow-y:auto;"></div>
-        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <span style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);">Ir para:</span>
-          <a href="tarefas.html" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:500;">Tarefas</a>
-          <a href="comunicados.html" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:500;">Comunicados</a>
-          <a href="reclamacoes.html" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:500;">Reclamações</a>
-          <a href="admissoes.html" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:500;">Admissões</a>
+        <div id="globalSearchResults" class="global-search-results"></div>
+        <div class="global-search-footer">
+          <span class="global-search-goto">Ir para:</span>
+          <a href="tarefas.html" class="global-search-goto-link">Tarefas</a>
+          <a href="comunicados.html" class="global-search-goto-link">Comunicados</a>
+          <a href="reclamacoes.html" class="global-search-goto-link">Reclamações</a>
+          <a href="admissoes.html" class="global-search-goto-link">Admissões</a>
         </div>
       </div>
     </div>
@@ -129,7 +126,7 @@
         <button class="panel-width-btn" onclick="toggleWidth(this)" title="Alternar largura">⇔</button>
       </div>
       <div id="comList" class="com-grid">
-        <div class="loading-skeleton" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;">
+        <div class="loading-skeleton panel-loading">
           <div class="skeleton skeleton-line" style="height:10px;width:75%;"></div>
           <div class="skeleton skeleton-line" style="height:10px;width:55%;"></div>
           <div class="skeleton skeleton-line" style="height:10px;width:85%;"></div>
@@ -146,7 +143,7 @@
         <button class="panel-width-btn" onclick="toggleWidth(this)" title="Alternar largura">⇔</button>
       </div>
       <div id="tasksList">
-        <div class="loading-skeleton" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;">
+        <div class="loading-skeleton panel-loading">
           <div class="skeleton skeleton-line" style="height:10px;width:75%;"></div>
           <div class="skeleton skeleton-line" style="height:10px;width:55%;"></div>
           <div class="skeleton skeleton-line" style="height:10px;width:85%;"></div>
@@ -170,7 +167,7 @@
         <button class="panel-width-btn" onclick="toggleWidth(this)" title="Alternar largura">⇔</button>
       </div>
       <div id="admList">
-        <div class="loading-skeleton" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;">
+        <div class="loading-skeleton panel-loading">
           <div class="skeleton skeleton-line" style="height:10px;width:75%;"></div>
           <div class="skeleton skeleton-line" style="height:10px;width:55%;"></div>
           <div class="skeleton skeleton-line" style="height:10px;width:85%;"></div>
@@ -183,14 +180,14 @@
       <div class="panel-header">
         <span class="drag-handle" title="Arrastar">⠿</span>
         <span class="panel-title"><svg class="panel-title-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><circle cx="12" cy="16" r=".5" fill="currentColor"/></svg>Reclamações em aberto</span>
-        <div style="display:flex;align-items:center;gap:8px;">
+        <div class="panel-header-group">
           <div id="recKpis" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
           <a class="panel-link" href="reclamacoes.html">Ver todas →</a>
         </div>
         <button class="panel-width-btn" onclick="toggleWidth(this)" title="Alternar largura">⇔</button>
       </div>
       <div id="recList">
-        <div class="loading-skeleton" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;">
+        <div class="loading-skeleton panel-loading">
           <div class="skeleton skeleton-line" style="height:10px;width:75%;"></div>
           <div class="skeleton skeleton-line" style="height:10px;width:55%;"></div>
           <div class="skeleton skeleton-line" style="height:10px;width:85%;"></div>
@@ -207,7 +204,7 @@
         <button class="panel-width-btn" onclick="toggleWidth(this)" title="Alternar largura">⇔</button>
       </div>
       <div id="calMini">
-        <div class="loading-skeleton" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;">
+        <div class="loading-skeleton panel-loading">
           <div class="skeleton skeleton-line" style="height:10px;width:75%;"></div>
           <div class="skeleton skeleton-line" style="height:10px;width:55%;"></div>
           <div class="skeleton skeleton-line" style="height:10px;width:85%;"></div>
@@ -224,7 +221,7 @@
         <button class="panel-width-btn" onclick="toggleWidth(this)" title="Alternar largura">⇔</button>
       </div>
       <div id="evList">
-        <div class="loading-skeleton" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;">
+        <div class="loading-skeleton panel-loading">
           <div class="skeleton skeleton-line" style="height:10px;width:75%;"></div>
           <div class="skeleton skeleton-line" style="height:10px;width:55%;"></div>
           <div class="skeleton skeleton-line" style="height:10px;width:85%;"></div>
@@ -240,7 +237,7 @@
         <button class="panel-width-btn" onclick="toggleWidth(this)" title="Alternar largura">⇔</button>
       </div>
       <div id="activityList">
-        <div class="loading-skeleton" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;">
+        <div class="loading-skeleton panel-loading">
           <div class="skeleton skeleton-line" style="height:10px;width:75%;"></div>
           <div class="skeleton skeleton-line" style="height:10px;width:55%;"></div>
           <div class="skeleton skeleton-line" style="height:10px;width:85%;"></div>
@@ -316,6 +313,7 @@
 <script src="js/offices-service.js"></script>
 <script src="js/config-escritorios.js"></script>
 <script src="js/app-platform.js"></script>
+<script src="js/onboarding.js"></script>
 <script src="js/dashboard.js"></script>
 <script src="js/dashboard-customizer.js"></script>
 

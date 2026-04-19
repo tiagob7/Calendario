@@ -6,6 +6,7 @@
 <title>Admissões & Cessações</title>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="css/admissoes.css">
+<link rel="stylesheet" href="css/onboarding.css">
 <script>if(localStorage.getItem('darkMode')==='1')document.documentElement.classList.add('dark');</script>
 </head>
 <body>
@@ -26,7 +27,7 @@
     <div class="stat-chip s-concluido"><span class="stat-val" id="statConc">—</span><span class="stat-lbl">Concluídos</span></div>
     <button class="btn-gestor" id="btnGestor" onclick="openPinModal()">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="8" rx="1.5"/><path d="M5 7V5a3 3 0 016 0v2"/></svg>
-      Modo Gestor
+      Acesso RH
     </button>
   </div>
 
@@ -225,8 +226,8 @@
 <!-- PIN MODAL -->
 <div class="modal-overlay" id="pinModal">
   <div class="modal">
-    <h2>Modo Gestor (RH)</h2>
-    <p>Introduz o PIN para gerir os processos de admissão e cessação.</p>
+    <h2>Acesso RH</h2>
+    <p>Introduz o PIN para continuar.</p>
     <input type="password" inputmode="numeric" maxlength="4" class="pin-input" id="pinInput" placeholder="••••" oninput="onPinInput()">
     <div class="pin-error" id="pinError"></div>
     <div class="modal-footer">
@@ -249,6 +250,7 @@
 <script src="js/offices-service.js"></script>
 <script src="js/config-escritorios.js"></script>
 <script src="js/app-platform.js"></script>
+<script src="js/onboarding.js"></script>
 <script src="js/auditoria.js"></script>
 <script src="js/admissoes-service.js"></script>
 <script src="js/voz-ai.js"></script>

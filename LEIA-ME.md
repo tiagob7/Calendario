@@ -15,6 +15,10 @@ Sistema interno de gestão multi-escritório para RH e operações, construído 
 | **Reclamações** | Gestão de reclamações de horas com exportação e anexos |
 | **Calendário** | Editor de carga de trabalho por escritório/departamento/mês |
 | **Escalas** | Gestão de escalas de trabalho por escritório (sub-coleção Firestore) |
+| **Clientes** | Gestão de clientes (cross-office) |
+| **Férias** | Gestão de pedidos e aprovação de férias por escritório |
+| **Visitas** | Registo e acompanhamento de visitas por escritório |
+| **Despesas** | Registo e gestão de despesas por escritório |
 | **Chat** | Mensagens diretas e grupos entre todos os colaboradores (cross-office) |
 | **Utilizadores** | Criação de contas, roles, perfis e permissões granulares |
 | **Perfis** | Criação e gestão de perfis de permissão reutilizáveis |
@@ -74,7 +78,7 @@ O ficheiro `js/dashboard-customizer.js` gere a selecção e persistência do tem
 Existem duas estratégias de CSS conforme a página:
 
 **Páginas que carregam `styles.css`** (base partilhada):
-`tarefas`, `admissoes`, `reclamacoes`, `utilizadores`, `auditoria`, `seed`, `perfis`, `chat`
+`tarefas`, `admissoes`, `reclamacoes`, `utilizadores`, `auditoria`, `seed`, `perfis`, `chat`, `clientes`, `ferias`, `visitas`, `despesas`
 
 **Páginas com CSS standalone** (têm o seu próprio `@import` e `:root`):
 `comunicados`, `calendario`, `gerir-calendarios`, `escalas`, `definicoes`
@@ -99,6 +103,13 @@ Ambas as estratégias têm os blocos `[data-theme]` para que a cor de destaque m
 | `js/comunicados-service.js` | Serviço de domínio para comunicados |
 | `js/chat-service.js` | Serviço de domínio para chat (conversas, mensagens, lidos) |
 | `js/perfis-service.js` | Serviço de perfis de permissão (`window.PerfisService`) |
+| `js/admissoes-service.js` | Serviço de domínio para admissões |
+| `js/clientes-service.js` | Serviço de domínio para clientes |
+| `js/ferias-service.js` | Serviço de domínio para férias |
+| `js/visitas-service.js` | Serviço de domínio para visitas |
+| `js/despesas-service.js` | Serviço de domínio para despesas |
+| `js/calendario-service.js` | Serviço de domínio para calendários |
+| `js/reclamacoes-service.js` | Serviço de domínio para reclamações |
 | `js/config-escritorios.js` | Cache e helpers de escritório activo |
 | `js/module-registry.js` | Registry central dos módulos (navegação, ordem, visibilidade) |
 | `js/app-platform.js` | Bootstrap, navbar, sidebar, topbar e listeners de plataforma |
@@ -134,6 +145,10 @@ hub-algartempo/
 ├── dashboard.html
 ├── chat.html
 ├── perfis.html
+├── clientes.html
+├── ferias.html
+├── visitas.html
+├── despesas.html
 ├── seed.html
 │
 ├── css/
@@ -141,6 +156,10 @@ hub-algartempo/
 │   ├── dashboard.css
 │   ├── chat.css                ← usa styles.css como base
 │   ├── perfis.css              ← usa styles.css como base
+│   ├── clientes.css            ← usa styles.css como base
+│   ├── ferias.css              ← usa styles.css como base
+│   ├── visitas.css             ← usa styles.css como base
+│   ├── despesas.css            ← usa styles.css como base
 │   ├── comunicados.css         ← standalone (tem :root próprio + temas)
 │   ├── calendario.css          ← standalone
 │   ├── gerir-calendarios.css   ← standalone
@@ -163,6 +182,13 @@ hub-algartempo/
 │   ├── comunicados-service.js
 │   ├── chat-service.js
 │   ├── perfis-service.js
+│   ├── admissoes-service.js
+│   ├── clientes-service.js
+│   ├── ferias-service.js
+│   ├── visitas-service.js
+│   ├── despesas-service.js
+│   ├── calendario-service.js
+│   ├── reclamacoes-service.js
 │   ├── config-escritorios.js
 │   ├── module-registry.js
 │   ├── app-platform.js
@@ -176,6 +202,10 @@ hub-algartempo/
 │   ├── escalas.js
 │   ├── chat.js
 │   ├── perfis.js
+│   ├── clientes.js
+│   ├── ferias.js
+│   ├── visitas.js
+│   ├── despesas.js
 │   ├── definicoes.js
 │   ├── utilizadores.js
 │   ├── gerir-calendarios.js
@@ -372,6 +402,10 @@ Módulos cross-office (como chat) devem declarar `usesEscritorio: false` no modu
 | `reclamacoes_horas/{id}` | Reclamação com `escritorio` | Filtrado por escritório |
 | `calendarios/{id}` | Calendário | Acesso universal |
 | `escalas/{escritorioId}/dias/{YYYY-MM-DD}` | Escala diária | Sub-coleção por escritório |
+| `clientes/{id}` | Dados do cliente | Cross-office |
+| `ferias/{id}` | Pedido de férias com `escritorio` | Filtrado por escritório |
+| `visitas/{id}` | Registo de visita com `escritorio` | Filtrado por escritório |
+| `despesas/{id}` | Despesa com `escritorio` | Filtrado por escritório |
 | `conversas/{id}` | Conversa com `participantes[]` | Cross-office |
 | `conversas/{id}/mensagens/{id}` | Mensagem individual | Imutável após criação |
 | `chat_lidos/{uid}_{conversaId}` | Timestamp de último lido | Por utilizador |

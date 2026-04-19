@@ -6,6 +6,7 @@
 <title>Gestão de Tarefas</title>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="css/tarefas.css">
+<link rel="stylesheet" href="css/onboarding.css">
 <script>if(localStorage.getItem('darkMode')==='1')document.documentElement.classList.add('dark');</script>
 </head>
 <body>
@@ -128,6 +129,7 @@
 <script src="js/offices-service.js"></script>
 <script src="js/config-escritorios.js"></script>
 <script src="js/app-platform.js"></script>
+<script src="js/onboarding.js"></script>
 <script src="js/auditoria.js"></script>
 <script src="js/tasks-service.js"></script>
 <script src="js/tarefas.js"></script>
@@ -148,14 +150,14 @@
           <div class="voz-wave"></div><div class="voz-wave"></div><div class="voz-wave"></div>
           <div class="voz-wave"></div><div class="voz-wave"></div><div class="voz-wave"></div><div class="voz-wave"></div>
         </div>
-        <div class="voz-status" id="vozStatus">Clica para falar</div>
+        <div class="voz-status" id="vozStatus">Prima para gravar</div>
       </div>
       <div class="voz-transcript" id="vozTranscript">
         <span id="vozTranscriptFinal"></span><span class="voz-transcript-interim" id="vozTranscriptInterim"></span>
       </div>
       <div class="voz-loading" id="vozLoading">
         <div class="voz-dots"><span></span><span></span><span></span></div>
-        <p style="font-size:10px;color:var(--muted);margin-top:8px;letter-spacing:.05em;">A Claude está a interpretar…</p>
+        <p style="font-size:10px;color:var(--muted);margin-top:8px;letter-spacing:.05em;">A processar voz…</p>
       </div>
       <div class="voz-fields" id="vozFields"></div>
       <div class="voz-actions" id="vozActions">
