@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reclamações de Horas v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="css/reclamacoes2.css">
+<script>if(localStorage.getItem('darkMode')==='1')document.documentElement.classList.add('dark');</script>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── PAGE HEADER ── -->
+  <div class="page-head">
+    <div>
+      <div class="kicker">Recursos Humanos</div>
+      <h1 class="display">Reclamações de Horas</h1>
+      <p class="lede" id="pageLede">Registo e gestão de reclamações de horas de trabalhadores temporários.</p>
+    </div>
+    <div class="page-actions">
+      <span id="syncStatus" class="sync-status"></span>
+      <button class="btn btn-secondary btn-sm" onclick="exportarExcel()" title="Exportar para Excel" style="display:flex;align-items:center;gap:5px;">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M5 6l2 2 2-2M7 8v4M5 10h4"/></svg>
+        Excel
+      </button>
+      <button class="btn btn-secondary btn-sm" onclick="exportarPDF()" title="Exportar para PDF" style="display:flex;align-items:center;gap:5px;">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V6L9 2z"/><path d="M9 2v4h4"/></svg>
+        PDF
+      </button>
+      <button class="btn btn-primary" id="btnNovaReclamacao" style="display:none" onclick="toggleFormRec()" style="display:flex;align-items:center;gap:6px;">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v12M2 8h12"/></svg>
+        Nova reclamação
+      </button>
+    </div>
+  </div>
+
+  <!-- ── STATS ── -->
+  <div class="stat-grid" id="statsBar">
+    <div class="stat-tile"><div class="stat-lbl">A carregar…</div></div>
+  </div>
+
+  <!-- ── FILTER BAR ── -->
+  <div class="filter-bar">
+    <div class="tabs">
+      <button class="tab-btn active" data-f="ativos"     onclick="setFiltro('ativos')">Em aberto <span class="tab-count" id="tc-ativos"></span></button>
+      <button class="tab-btn"        data-f="todos"      onclick="setFiltro('todos')">Todos <span class="tab-count" id="tc-todos"></span></button>
+      <button class="tab-btn"        data-f="nova"       onclick="setFiltro('nova')">Novas <span class="tab-count" id="tc-nova"></span></button>
+      <button class="tab-btn"        data-f="enviada"    onclick="setFiltro('enviada')">Enviadas <span class="tab-count" id="tc-enviada"></span></button>
+      <button class="tab-btn"        data-f="confirmada" onclick="setFiltro('confirmada')">Confirmadas <span class="tab-count" id="tc-confirmada"></span></button>
+      <button class="tab-btn"        data-f="paga"       onclick="setFiltro('paga')">Pagas <span class="tab-count" id="tc-paga"></span></button>
+      <button class="tab-btn"        data-f="negada"     onclick="setFiltro('negada')">Negadas <span class="tab-count" id="tc-negada"></span></button>
+    </div>
+    <div class="filter-controls">
+      <div class="search-wrap">
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10 10l3.5 3.5"/></svg>
+        <input type="text" class="input-v2 search-input-v2" id="searchInput" placeholder="Pesquisar por nome, NIF ou nº de func…" oninput="render()">
+      </div>
+      <select class="input-v2 select-v2" id="filterEscritorio" onchange="render()"><option value="">Todos os escritórios</option></select>
+      <select class="input-v2 select-v2" id="filterEmpresa" onchange="render()"><option value="">Todas as empresas</option></select>
+    </div>
+  </div>
+
+  <!-- ── LIST ── -->
+  <div class="rec-list-wrap" id="cardsList">
+    <div class="empty-state-v2">
+      <div class="empty-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+      </div>
+      <p>A carregar…</p>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<!-- ════════════════════════════════════════════════
+     DETAIL MODAL
+     ════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="detailModal" onclick="handleDetailOverlayClick(event)">
+  <div class="modal modal-lg" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h2 id="detailModalTitle">Reclamação</h2>
+      <button class="icon-btn" onclick="closeDetail()" title="Fechar">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="detailModalBody"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     FORM MODAL — conteúdo idêntico ao original
+     ════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="formModal" onclick="handleFormOverlayClick(event)">
+  <div class="modal modal-form" onclick="event.stopPropagation()" style="max-height:calc(100vh - 40px);">
+    <div class="modal-head">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v4l2.5 1.5"/></svg>
+      <h2>Nova Reclamação</h2>
+      <button class="icon-btn" onclick="toggleFormRec()" title="Fechar">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-form-scroll">
+      <div class="section-label-v2">Dados do trabalhador temporário</div>
+      <div class="form-grid">
+        <div><label class="field-label">Nº de funcionário</label><input type="text" class="form-input" id="fNumFunc" placeholder="ex: 12345" autocomplete="off"></div>
+        <div><label class="field-label">NIF<span class="req">*</span></label><input type="text" class="form-input" id="fNif" placeholder="ex: 123456789" maxlength="9" autocomplete="off"></div>
+        <div class="full"><label class="field-label">Nome completo<span class="req">*</span></label><input type="text" class="form-input" id="fNome" placeholder="ex: João Silva" autocomplete="off"></div>
+        <div><label class="field-label">Categoria profissional</label><input type="text" class="form-input" id="fCategoria" placeholder="ex: Operador de armazém" autocomplete="off"></div>
+        <div><label class="field-label">Empresa utilizadora<span class="req">*</span></label><input type="text" class="form-input" id="fEmpresa" placeholder="ex: Empresa ABC Lda" autocomplete="off"></div>
+        <div><label class="field-label">Escritório</label><select class="form-select" id="fEscritorio"><option value="">A carregar…</option></select></div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-label-v2">Horas em disputa<span class="req">*</span></div>
+      <div class="periodos-wrap2" id="periodosWrap"></div>
+      <button class="btn-add-periodo" onclick="adicionarPeriodo()">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v12M2 8h12"/></svg>
+        Adicionar período
+      </button>
+
+      <div class="divider"></div>
+      <div class="section-label-v2">Entrada da reclamação</div>
+      <div class="form-grid">
+        <div class="full">
+          <label class="field-label">Canal de entrada<span class="req">*</span></label>
+          <div class="canal-row">
+            <button class="canal-pill sel" data-c="email"     onclick="selCanal('email')">📧 Email</button>
+            <button class="canal-pill"     data-c="telefone"  onclick="selCanal('telefone')">📞 Telefone</button>
+            <button class="canal-pill"     data-c="mensagem"  onclick="selCanal('mensagem')">💬 Mensagem</button>
+            <button class="canal-pill"     data-c="presencial" onclick="selCanal('presencial')">🧑 Presencial</button>
+          </div>
+        </div>
+        <div class="full"><label class="field-label">Notas internas</label><textarea class="form-textarea" id="fNotas" placeholder="ex: Trabalhador diz que fez turno extra na sexta, não registado no ponto…"></textarea></div>
+        <div><label class="field-label">Submetido por</label><div style="font-size:12px;padding:6px 0;color:var(--text-2)"><span id="userName">A carregar…</span></div></div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-label-v2">Anexos</div>
+      <label class="btn-attach">
+        📎 Adicionar ficheiros
+        <input type="file" id="fFicheiros" multiple onchange="onPendingFilesChange(this)">
+      </label>
+      <div id="pendingFilesList" style="margin-top:6px;"></div>
+      <div class="upload-status" id="formUploadStatus"></div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-bottom:4px;">
+        <button class="btn btn-ghost" onclick="limparForm()">Limpar</button>
+        <button class="btn btn-primary" id="btnRegistarReclamacao" onclick="submitReclamacao()">Registar Reclamação</button>
+      </div>
+    </div><!-- /modal-form-scroll -->
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ── Scripts ── -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
+<script src="js/firebase-init.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/module-registry.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/offices-service.js"></script>
+<script src="js/config-escritorios.js"></script>
+<script src="js/app-platform.js"></script>
+<script src="js/auditoria.js"></script>
+<script src="js/reclamacoes-service.js"></script>
+<script src="js/reclamacoes2.js"></script>
+</body>
+</html>
