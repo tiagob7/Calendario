@@ -233,9 +233,14 @@ html.dark {
 
 /* Priority bar */
 .rec-priority { width: 3px; height: 48px; border-radius: 2px; background: var(--border); flex-shrink: 0; }
-.rec-priority.p-alta  { background: var(--red); }
-.rec-priority.p-media { background: var(--amber); }
-.rec-priority.p-baixa { background: var(--green); }
+.rec-priority.p-nova,
+.rec-priority.p-sem-fundamento { background: var(--border-strong); }
+.rec-priority.p-verificacao { background: var(--amber-border); }
+.rec-priority.p-enviada { background: var(--accent-border); }
+.rec-priority.p-confirmada { background: var(--purple-border); }
+.rec-priority.p-aguarda-proc { background: var(--teal-border); }
+.rec-priority.p-paga { background: var(--green-border); }
+.rec-priority.p-negada { background: var(--red-border); }
 
 /* Channel badge */
 .rec-channel {
@@ -251,12 +256,31 @@ html.dark {
 
 /* Row body */
 .rec-body { min-width: 0; }
-.rec-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 3px; }
+.rec-top {
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+}
 .rec-num { font-size: 10px; font-weight: 600; color: var(--text-4); font-family: 'DM Mono', 'JetBrains Mono', monospace; white-space: nowrap; }
-.rec-nome { font-size: 13.5px; font-weight: 600; color: var(--text); }
-.rec-date { font-size: 11px; color: var(--text-4); margin-left: auto; white-space: nowrap; }
+.rec-nome { font-size: 13.5px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rec-status-pill { justify-self: end; }
+.rec-date { font-size: 11px; color: var(--text-4); white-space: nowrap; }
 .rec-sub { font-size: 12px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
 .rec-excerpt { font-size: 12px; color: var(--text-3); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+@media (max-width: 700px) {
+  .rec-top {
+    grid-template-columns: auto minmax(0,1fr) auto;
+    grid-template-areas:
+      "num nome pill"
+      "num date date";
+  }
+  .rec-num { grid-area: num; }
+  .rec-nome { grid-area: nome; }
+  .rec-status-pill { grid-area: pill; }
+  .rec-date { grid-area: date; font-size: 10px; }
+}
 
 /* ── Pills ── */
 .pill {
@@ -372,6 +396,25 @@ html.dark {
 .timeline-step:not(:last-child)::before {
   content: ''; position: absolute; left: 9px; top: 22px; bottom: 0; width: 2px; background: var(--divider);
 }
+.timeline-step::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 34px;
+  top: -6px;
+  z-index: 12;
+  display: none;
+  width: min(320px, calc(100vw - 120px));
+  white-space: pre-line;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-lg);
+  padding: 8px 10px;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.timeline-step:hover::after { display: block; }
 .timeline-dot {
   width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; z-index: 1;
   display: flex; align-items: center; justify-content: center;
@@ -390,11 +433,7 @@ html.dark {
 .timeline-body { flex: 1; padding-top: 1px; }
 .timeline-title { font-size: 12px; font-weight: 600; color: var(--text); }
 .timeline-meta  { font-size: 10px; color: var(--text-3); margin-top: 2px; }
-.timeline-nota  {
-  font-size: 11px; color: var(--text-2); margin-top: 4px;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--r-sm); padding: 5px 8px; line-height: 1.4;
-}
+.timeline-nota  { display: none; }
 
 /* ── Empty state ── */
 .empty-state-v2 { text-align: center; padding: 56px 20px; color: var(--text-3); }
@@ -488,21 +527,37 @@ html.dark {
 .btn-add-periodo:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 
 /* Turnos */
-.turnos-wrap { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.turnos-wrap { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; overflow-x: auto; }
+.turno-head-row {
+  display: grid;
+  grid-template-columns: 90px 90px 64px 64px 64px;
+  gap: 8px;
+  justify-content: end;
+  margin: 8px 32px 0 66px;
+  color: var(--text-3);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 600;
+  min-width: 404px;
+}
 .turno-row { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 8px 10px; }
 .turno-num { font-size: 9px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3); white-space: nowrap; min-width: 44px; }
-.turno-fields { display: flex; align-items: center; gap: 8px; flex: 1; flex-wrap: wrap; }
+.turno-fields { display: grid; grid-template-columns: 90px 90px 64px 64px 64px; gap: 8px; flex: 1; justify-content: end; }
 .turno-sep { font-size: 11px; color: var(--text-3); }
 .turno-input { background: var(--bg-inset); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 11px; padding: 6px 8px; border-radius: var(--r-sm); outline: none; transition: border-color .15s; width: 90px; }
 .turno-input:focus { border-color: var(--accent); }
+.turno-input-total { width: 64px; color: var(--accent); }
 .btn-rm-turno { background: none; border: none; cursor: pointer; color: var(--text-3); font-size: 16px; padding: 0 2px; line-height: 1; flex-shrink: 0; transition: color .15s; }
 .btn-rm-turno:hover { color: var(--red); }
 .btn-add-turno { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border: 1px dashed var(--border); background: transparent; font-family: inherit; font-size: 9px; border-radius: var(--r-sm); cursor: pointer; color: var(--text-3); text-transform: uppercase; letter-spacing: .07em; transition: all .15s; margin-top: 4px; width: fit-content; }
 .btn-add-turno:hover { border-color: var(--accent); color: var(--accent); }
-.turno-extra { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.turno-extra-label { font-size: 9px; color: var(--text-3); white-space: nowrap; }
 .turno-input-sm { background: var(--bg-inset); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 10px; padding: 4px 6px; border-radius: var(--r-sm); outline: none; transition: border-color .15s; width: 64px; }
 .turno-input-sm:focus { border-color: var(--accent); }
+@media(max-width:700px){
+  .turno-head-row { margin-left: 52px; margin-right: 30px; }
+  .turno-fields { min-width: 404px; }
+}
 .periodo-totais { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .total-chip { display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: var(--r-md); font-size: 10px; }
 .total-chip.horas    { background: var(--accent-soft);  border: 1px solid var(--accent-border);  color: var(--accent-ink); }
