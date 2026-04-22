@@ -33,22 +33,15 @@ function getStateTone(estado) {
            confirmada:'purple', 'aguarda-proc':'teal',
            paga:'green', negada:'red', 'sem-fundamento':'neutral' }[estado] || 'neutral';
 }
+function getStatePriority(estado) {
+  if (['negada','sem-fundamento'].includes(estado)) return 'alta';
+  if (['nova','verificacao'].includes(estado)) return 'media';
+  return 'baixa';
+}
 function estadoClass(e) { return (e||'nova').replace(/-/g,''); }
 function estadoPillClass(e) {
   const c = estadoClass(e);
   return c==='aguardaproc'?'aguarda-proc':c==='semfundamento'?'sem-fundamento':c;
-}
-function formatRecCode(seq, pad = false) {
-  const safeSeq = Math.max(1, Number(seq) || 1);
-  return `R-${pad ? String(safeSeq).padStart(2, '0') : safeSeq}`;
-}
-function escAttr(v) {
-  return String(v ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 }
 function setStatus(msg, color) {
   const el = document.getElementById('syncStatus');
@@ -129,12 +122,17 @@ function buildBlockHTML(id, d) {
           Adicionar turno
         </button>
       </div>
-      <div class="turno-head-row">
-        <span>ENTRADA</span>
-        <span>SAÍDA</span>
-        <span>TOTAL</span>
-        <span>NOTURNAS</span>
-        <span>FERIADO</span>
+      <div class="turnos-head">
+        <span></span>
+        <span>Entrada</span>
+        <span></span>
+        <span>Saída</span>
+        <span></span>
+        <span>Total</span>
+        <span></span>
+        <span>🌙 Noturnas</span>
+        <span>📅 Feriado</span>
+        <span></span>
       </div>
       <div class="turnos-wrap" id="turnos-${id}"></div>
     </div>
@@ -242,15 +240,15 @@ function adicionarTurno(pid, d) {
   const n = wrap.children.length + 1;
   row.innerHTML = `
     <span class="turno-num">Turno ${n}</span>
-    <div class="turno-fields">
-      <input type="time" class="turno-input" id="te-${tid}" value="${d?d.entrada:''}" oninput="calcTurno('${pid}','${tid}')">
-      <input type="time" class="turno-input" id="ts-${tid}" value="${d?d.saida:''}" oninput="calcTurno('${pid}','${tid}')">
-      <input type="text" class="turno-input turno-input-total" id="tt-${tid}" value="${d?d.total:''}" placeholder="—" autocomplete="off" title="Total (editável)">
-      <input type="text" class="turno-input-sm" id="tn-${tid}" value="${d?d.noturnas:''}" placeholder="—" oninput="calcTotaisPeriodo('${pid}')" autocomplete="off">
-      <input type="text" class="turno-input-sm" id="tf-${tid}" value="${d?d.feriado:''}" placeholder="—" oninput="calcTotaisPeriodo('${pid}')" autocomplete="off">
-    </div>
-    <button class="btn-rm-turno" onclick="removerTurno('${pid}','${tid}')" title="Remover">×</button>
-    `;
+    <input type="time" class="turno-input" id="te-${tid}" value="${d?d.entrada:''}" oninput="calcTurno('${pid}','${tid}')">
+    <span class="turno-sep">→</span>
+    <input type="time" class="turno-input" id="ts-${tid}" value="${d?d.saida:''}" oninput="calcTurno('${pid}','${tid}')">
+    <span class="turno-sep">=</span>
+    <input type="text" class="turno-input" id="tt-${tid}" value="${d?d.total:''}" placeholder="—" style="color:var(--accent);font-weight:600;" autocomplete="off" title="Total (editável)">
+    <span class="turno-divider"></span>
+    <input type="text" class="turno-input-sm" id="tn-${tid}" value="${d?d.noturnas:''}" placeholder="—" oninput="calcTotaisPeriodo('${pid}')" autocomplete="off">
+    <input type="text" class="turno-input-sm" id="tf-${tid}" value="${d?d.feriado:''}" placeholder="—" oninput="calcTotaisPeriodo('${pid}')" autocomplete="off">
+    <button class="btn-rm-turno" onclick="removerTurno('${pid}','${tid}')" title="Remover">×</button>`;
   wrap.appendChild(row);
   renumTurnos(pid);
 }
@@ -513,7 +511,8 @@ function handleFormOverlayClick(e) {
 // ── MODAL DETALHE ─────────────────────────────────────────────
 function openDetail(id) {
   currentDetailId = id;
-  const r = recs.find(x => x.id === id);
+  const recIdx = recs.findIndex(x => x.id === id);
+  const r = recIdx >= 0 ? recs[recIdx] : null;
   if (!r) return;
   const isAdminUser = window.isAdmin();
   const podeGerir   = isAdminUser || window.temPermissao('modules.reclamacoes.manage');
@@ -522,8 +521,6 @@ function openDetail(id) {
   const eLabel = ESTADO_LABEL[eKey] || eKey;
   const periodos = r.periodos || [];
   const hist     = r.historico || [];
-  const seq      = recs.findIndex(x => x.id === id) + 1;
-  const recCode  = formatRecCode(seq, true);
 
   // Períodos table
   const periodosHTML = periodos.length ? `
@@ -549,12 +546,16 @@ function openDetail(id) {
   const timelineHTML = hist.length
     ? hist.map(h => {
         const hc = estadoClass(h.estado || 'nova');
-        const tip = `Estado: ${ESTADO_LABEL[h.estado] || h.estado || '—'}\nData/Hora: ${fmtDataHora(h.em)}\nUtilizador: ${h.por || '—'}\nNota: ${h.nota || '—'}`;
-        return `<div class="timeline-step" data-tip="${escAttr(tip)}">
+        return `<div class="timeline-step">
           <div class="timeline-dot dot-${hc}"></div>
           <div class="timeline-body">
             <div class="timeline-title">${ESTADO_LABEL[h.estado]||h.estado}</div>
-            <div class="timeline-meta">${fmtData(h.em)}</div>
+            <div class="timeline-date">${fmtData(h.em)}</div>
+          </div>
+          <div class="timeline-tooltip">
+            <div class="tt-row"><span>Data/Hora</span><span>${fmtDataHora(h.em)}</span></div>
+            ${h.por ? `<div class="tt-row"><span>Por</span><span>${escHtml(h.por)}</span></div>` : ''}
+            ${h.nota ? `<div class="tt-row tt-nota"><span>Nota</span><span>${escHtml(h.nota)}</span></div>` : ''}
           </div>
         </div>`;
       }).join('')
@@ -582,15 +583,17 @@ function openDetail(id) {
           <option value="sem-fundamento"${eKey==='sem-fundamento'?'selected':''}>Sem Fundamento</option>
           <option value="negada"        ${eKey==='negada'?'selected':''}>Negada pela Empresa</option>
         </select>
-        <textarea class="notas-input-v2" id="modal-nota-input" rows="1" placeholder="Nota sobre esta alteração…"></textarea>
-        <button class="btn btn-primary btn-sm" onclick="saveEstado('${escHtml(r.id)}')">Guardar</button>
-        ${isAdminUser ? `<button class="btn btn-sm btn-danger" onclick="deleteRec('${escHtml(r.id)}')">🗑 Eliminar</button>` : ''}
+        <textarea class="notas-input-v2" id="modal-nota-input" rows="2" placeholder="Nota sobre esta alteração…"></textarea>
+        <div class="detail-gestor-actions">
+          ${isAdminUser ? `<button class="btn btn-sm btn-danger" onclick="deleteRec('${escHtml(r.id)}')">🗑 Eliminar</button>` : ''}
+          <button class="btn btn-primary btn-sm" onclick="saveEstado('${escHtml(r.id)}')">Guardar</button>
+        </div>
       </div>
     </div>` : '';
 
   // Modal title
-  document.getElementById('detailModalTitle').innerHTML =
-    `${recCode} <span style="font-weight:400;color:var(--text-3);font-size:13px">·</span> ${escHtml(r.nome||'—')}`;
+  document.getElementById('detailModalTitle').textContent =
+    `R-${recIdx+1} · ${r.nome||'—'}`;
 
   // Populate body
   document.getElementById('detailModalBody').innerHTML = `
@@ -629,7 +632,7 @@ function openDetail(id) {
 
       <!-- Sidebar -->
       <aside>
-        <div class="sidebar-section">
+        <div class="sidebar-section sidebar-history">
           <div class="sidebar-label">Histórico</div>
           <div class="timeline">${timelineHTML}</div>
         </div>
@@ -702,17 +705,16 @@ function render() {
     const eKey  = r.estado || 'nova';
     const eTone = getStateTone(eKey);
     const eLabel= ESTADO_LABEL[eKey] || eKey;
-    const estadoAccent = estadoPillClass(eKey);
     const chanIcon = CHANNEL_ICON[r.canal] || '';
 
     return `<div class="rec-row" onclick="openDetail('${r.id}')">
-      <div class="rec-priority p-${estadoAccent}"></div>
+      <div class="rec-priority s-${estadoClass(eKey)}"></div>
       <div class="rec-channel ${r.canal||''}">${chanIcon}</div>
       <div class="rec-body">
         <div class="rec-top">
-          <span class="rec-num">${formatRecCode(i + 1)}</span>
+          <span class="rec-num">R-${i+1}</span>
           <span class="rec-nome">${escHtml(r.nome||'—')}</span>
-          <span class="pill pill-${eTone} rec-status-pill">${eLabel}</span>
+          <span class="pill pill-${eTone}">${eLabel}</span>
           <span class="rec-date">${fmtData(r.criadoEm)}</span>
         </div>
         <div class="rec-sub">${escHtml(r.empresa||'—')} · ${escHtml(window.nomeEscritorio?window.nomeEscritorio(r.escritorio):(r.escritorio||''))}</div>
@@ -853,7 +855,7 @@ function exportarPDF() {
   const body = lista.map((r,i) => {
     const periodos = (r.periodos||[]).map(p => `${p.mesNome?.slice(0,3)||''} ${p.ano}: ${(p.dias||[]).join(',')} (${p.totalHoras||''})`).join('\n');
     const turnos   = (r.periodos||[]).flatMap(p => (p.turnos||[]).map(t => `${t.entrada||''}→${t.saida||''}`)).join(' ');
-    return [String(i+1).padStart(2,'0'), ESTADO_LABEL[r.estado]||r.estado||'—', r.nome||'—', r.nif||'—', r.empresa||'—',
+    return ['R-'+(i+1), ESTADO_LABEL[r.estado]||r.estado||'—', r.nome||'—', r.nif||'—', r.empresa||'—',
             window.nomeEscritorio?window.nomeEscritorio(r.escritorio):(r.escritorio||'—'),
             periodos||'—', turnos||'—', r.criadoPor||'—', fmtData(r.criadoEm)];
   });
