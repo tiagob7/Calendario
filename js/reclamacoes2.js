@@ -33,15 +33,22 @@ function getStateTone(estado) {
            confirmada:'purple', 'aguarda-proc':'teal',
            paga:'green', negada:'red', 'sem-fundamento':'neutral' }[estado] || 'neutral';
 }
-function getStatePriority(estado) {
-  if (['negada','sem-fundamento'].includes(estado)) return 'alta';
-  if (['nova','verificacao'].includes(estado)) return 'media';
-  return 'baixa';
-}
 function estadoClass(e) { return (e||'nova').replace(/-/g,''); }
 function estadoPillClass(e) {
   const c = estadoClass(e);
   return c==='aguardaproc'?'aguarda-proc':c==='semfundamento'?'sem-fundamento':c;
+}
+function formatRecCode(seq, pad = false) {
+  const safeSeq = Math.max(1, Number(seq) || 1);
+  return `R-${pad ? String(safeSeq).padStart(2, '0') : safeSeq}`;
+}
+function escAttr(v) {
+  return String(v ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 function setStatus(msg, color) {
   const el = document.getElementById('syncStatus');
@@ -121,6 +128,13 @@ function buildBlockHTML(id, d) {
           <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v12M2 8h12"/></svg>
           Adicionar turno
         </button>
+      </div>
+      <div class="turno-head-row">
+        <span>ENTRADA</span>
+        <span>SAÍDA</span>
+        <span>TOTAL</span>
+        <span>NOTURNAS</span>
+        <span>FERIADO</span>
       </div>
       <div class="turnos-wrap" id="turnos-${id}"></div>
     </div>
@@ -229,18 +243,14 @@ function adicionarTurno(pid, d) {
   row.innerHTML = `
     <span class="turno-num">Turno ${n}</span>
     <div class="turno-fields">
-      <label class="field-label" style="margin:0;white-space:nowrap">Entrada</label>
       <input type="time" class="turno-input" id="te-${tid}" value="${d?d.entrada:''}" oninput="calcTurno('${pid}','${tid}')">
-      <span class="turno-sep">→</span>
-      <label class="field-label" style="margin:0;white-space:nowrap">Saída</label>
       <input type="time" class="turno-input" id="ts-${tid}" value="${d?d.saida:''}" oninput="calcTurno('${pid}','${tid}')">
-      <span class="turno-sep" style="color:var(--text-3);font-size:10px">=</span>
-      <input type="text" class="turno-input" id="tt-${tid}" value="${d?d.total:''}" placeholder="—" style="max-width:64px;color:var(--accent);" autocomplete="off" title="Total (editável)">
-      <span class="turno-sep" style="width:1px;height:16px;background:var(--border);margin:0 4px;"></span>
-      <div class="turno-extra"><span class="turno-extra-label">🌙 Noturnas</span><input type="text" class="turno-input-sm" id="tn-${tid}" value="${d?d.noturnas:''}" placeholder="—" oninput="calcTotaisPeriodo('${pid}')" autocomplete="off"></div>
-      <div class="turno-extra"><span class="turno-extra-label">📅 Feriado</span><input type="text" class="turno-input-sm" id="tf-${tid}" value="${d?d.feriado:''}" placeholder="—" oninput="calcTotaisPeriodo('${pid}')" autocomplete="off"></div>
+      <input type="text" class="turno-input turno-input-total" id="tt-${tid}" value="${d?d.total:''}" placeholder="—" autocomplete="off" title="Total (editável)">
+      <input type="text" class="turno-input-sm" id="tn-${tid}" value="${d?d.noturnas:''}" placeholder="—" oninput="calcTotaisPeriodo('${pid}')" autocomplete="off">
+      <input type="text" class="turno-input-sm" id="tf-${tid}" value="${d?d.feriado:''}" placeholder="—" oninput="calcTotaisPeriodo('${pid}')" autocomplete="off">
     </div>
-    <button class="btn-rm-turno" onclick="removerTurno('${pid}','${tid}')" title="Remover">×</button>`;
+    <button class="btn-rm-turno" onclick="removerTurno('${pid}','${tid}')" title="Remover">×</button>
+    `;
   wrap.appendChild(row);
   renumTurnos(pid);
 }
@@ -512,6 +522,8 @@ function openDetail(id) {
   const eLabel = ESTADO_LABEL[eKey] || eKey;
   const periodos = r.periodos || [];
   const hist     = r.historico || [];
+  const seq      = recs.findIndex(x => x.id === id) + 1;
+  const recCode  = formatRecCode(seq, true);
 
   // Períodos table
   const periodosHTML = periodos.length ? `
@@ -537,12 +549,12 @@ function openDetail(id) {
   const timelineHTML = hist.length
     ? hist.map(h => {
         const hc = estadoClass(h.estado || 'nova');
-        return `<div class="timeline-step">
+        const tip = `Estado: ${ESTADO_LABEL[h.estado] || h.estado || '—'}\nData/Hora: ${fmtDataHora(h.em)}\nUtilizador: ${h.por || '—'}\nNota: ${h.nota || '—'}`;
+        return `<div class="timeline-step" data-tip="${escAttr(tip)}">
           <div class="timeline-dot dot-${hc}"></div>
           <div class="timeline-body">
             <div class="timeline-title">${ESTADO_LABEL[h.estado]||h.estado}</div>
-            ${h.nota ? `<div class="timeline-nota">${escHtml(h.nota)}</div>` : ''}
-            <div class="timeline-meta">${h.por||''} · ${fmtDataHora(h.em)}</div>
+            <div class="timeline-meta">${fmtData(h.em)}</div>
           </div>
         </div>`;
       }).join('')
@@ -578,7 +590,7 @@ function openDetail(id) {
 
   // Modal title
   document.getElementById('detailModalTitle').innerHTML =
-    `${escHtml(r.nome||'—')} <span style="font-weight:400;color:var(--text-3);font-size:13px">· ${escHtml(r.empresa||'')}</span>`;
+    `${recCode} <span style="font-weight:400;color:var(--text-3);font-size:13px">·</span> ${escHtml(r.nome||'—')}`;
 
   // Populate body
   document.getElementById('detailModalBody').innerHTML = `
@@ -617,16 +629,6 @@ function openDetail(id) {
 
       <!-- Sidebar -->
       <aside>
-        <div class="sidebar-section">
-          <div class="sidebar-label">Resumo</div>
-          <div class="sidebar-item"><span>Estado</span><span><span class="pill pill-${eTone}" style="font-size:10px">${eLabel}</span></span></div>
-          <div class="sidebar-item"><span>Criado por</span><span>${escHtml(r.criadoPor||'—')}</span></div>
-          <div class="sidebar-item"><span>Data</span><span>${fmtData(r.criadoEm)}</span></div>
-          <div class="sidebar-item"><span>Canal</span><span>${CANAL_LABEL[r.canal]||r.canal||'—'}</span></div>
-          <div class="sidebar-item"><span>Escritório</span><span>${window.nomeEscritorio?window.nomeEscritorio(r.escritorio):(r.escritorio||'—')}</span></div>
-          ${r.numFunc ? `<div class="sidebar-item"><span>Nº Func.</span><span>${escHtml(r.numFunc)}</span></div>` : ''}
-          ${r.resumoPeriodo ? `<div class="sidebar-item" style="border-bottom:none;padding-top:8px;"><span style="display:block;line-height:1.4;color:var(--text-3);">${escHtml(r.resumoPeriodo)}</span></div>` : ''}
-        </div>
         <div class="sidebar-section">
           <div class="sidebar-label">Histórico</div>
           <div class="timeline">${timelineHTML}</div>
@@ -700,17 +702,17 @@ function render() {
     const eKey  = r.estado || 'nova';
     const eTone = getStateTone(eKey);
     const eLabel= ESTADO_LABEL[eKey] || eKey;
-    const prio  = getStatePriority(eKey);
+    const estadoAccent = estadoPillClass(eKey);
     const chanIcon = CHANNEL_ICON[r.canal] || '';
 
     return `<div class="rec-row" onclick="openDetail('${r.id}')">
-      <div class="rec-priority p-${prio}"></div>
+      <div class="rec-priority p-${estadoAccent}"></div>
       <div class="rec-channel ${r.canal||''}">${chanIcon}</div>
       <div class="rec-body">
         <div class="rec-top">
-          <span class="rec-num">#${String(i+1).padStart(2,'0')}</span>
+          <span class="rec-num">${formatRecCode(i + 1)}</span>
           <span class="rec-nome">${escHtml(r.nome||'—')}</span>
-          <span class="pill pill-${eTone}">${eLabel}</span>
+          <span class="pill pill-${eTone} rec-status-pill">${eLabel}</span>
           <span class="rec-date">${fmtData(r.criadoEm)}</span>
         </div>
         <div class="rec-sub">${escHtml(r.empresa||'—')} · ${escHtml(window.nomeEscritorio?window.nomeEscritorio(r.escritorio):(r.escritorio||''))}</div>
